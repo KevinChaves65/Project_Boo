@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+    "compilerOptions": {
+      "types": ["chrome", "node", "vite/client"]
+    }
+}
