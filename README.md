@@ -41,4 +41,10 @@ npm run build
 ```sh
 npm run lint
 ```
+
+### For chrome extension use first do in the terminal
+'''sh
+npm run build
+'''
+
 >>>>>>> 4728901 (general layout of Hey Boo)
