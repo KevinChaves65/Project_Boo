@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Project_Boo
-Chrome Dating Extension 
-=======
 # boo-public
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -43,8 +39,10 @@ npm run lint
 ```
 
 ### For chrome extension use first do in the terminal
-'''sh
+```sh
 npm run build
-'''
+```
 
->>>>>>> 4728901 (general layout of Hey Boo)
+### then go to chrome://extensions/ and turn on developer mode
+### go to load unpack and select the dist folder
+
