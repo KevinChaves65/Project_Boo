@@ -9,18 +9,16 @@
     <div class="notification-box">Notifications</div>
     <div class="chat-box">Good night boo!</div>
 
-    <!-- Buttons -->
     <button class="menu-button">
     Calendar
     </button>
-    <button class="menu-button">
-    Date Ideas
+    <button class="menu-button" @click="router.push('/word-bank')">
+    Word Bank
     </button>
-    <button class="menu-button">
+    <button class="menu-button" @click="goToChat">
     Chat
     </button>
 
-    <!-- Settings Icon -->
     <div class="settings">
       <button class="settings-button">⚙️</button>
     </div>
@@ -28,6 +26,13 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const goToChat = () => {
+  router.push('/chat');
+};
 </script>
 
 <style scoped>
