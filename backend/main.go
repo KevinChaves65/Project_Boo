@@ -1,17 +1,21 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/KevinChaves65/Project_Boo/routes"
+	"github.com/KevinChaves65/Project_Boo/services"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	r := gin.Default()
+	router := mux.NewRouter()
+	routes.InitializeRoutes(router)
 
-	r.GET("/api/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Hey Boo Backend is running!"})
-	})
+	go services.HandleMessages()
 
-	r.Run(":8080")
+	log.Println("Server running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
