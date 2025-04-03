@@ -32,6 +32,12 @@
           </router-link>
         </li>
         <li>
+          <router-link to="/dashboard/WordBank">
+            <i class="fas"></i>
+            <span>Word Bank</span>
+          </router-link>
+        </li>
+        <li>
           <router-link to="/dashboard/Setttings">
             <i class="fas fa-cog"></i>
             <span>Settings</span>

@@ -155,32 +155,6 @@ export default {
       this.simulatePartnerTyping();
     },
     
-    simulatePartnerTyping() {
-      // Show typing indicator
-      this.isPartnerTyping = true;
-      
-      // Simulate a response after 2-4 seconds
-      const responseTime = Math.random() * 2000 + 2000;
-      setTimeout(() => {
-        this.isPartnerTyping = false;
-        
-        // Add partner response
-        const responses = [
-          "That sounds great!",
-          "I miss you ❤️",
-          "Can't wait to see you later!",
-          "What time should we meet?",
-          "I was just thinking about you!"
-        ];
-        
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        this.messages.push({
-          sender: "Partner",
-          text: randomResponse,
-          timestamp: new Date()
-        });
-      }, responseTime);
-    },
     
     handleTyping() {
       // In a real app, this would notify the partner that you're typing
