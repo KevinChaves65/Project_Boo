@@ -11,7 +11,7 @@ import (
 
 type Milestone struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	CoupleID    primitive.ObjectID `bson:"couple_id" json:"couple_id"` // Couple ID
+	CoupleID    primitive.ObjectID `bson:"couple_id" json:"couple_id"`
 	Title       string             `bson:"title" json:"title"`
 	Description string             `bson:"description" json:"description"`
 	Date        time.Time          `bson:"date" json:"date"`
@@ -33,13 +33,18 @@ func AddMilestone(milestone Milestone) error {
 func GetMilestones(coupleID primitive.ObjectID) ([]Milestone, error) {
 	collection := config.GetDB().Collection("milestones")
 	var milestones []Milestone
+
+	// Query the database for milestones with the given couple_id
 	cursor, err := collection.Find(context.TODO(), bson.M{"couple_id": coupleID})
 	if err != nil {
 		return milestones, err
 	}
+
+	// Decode the results into the milestones slice
 	if err := cursor.All(context.TODO(), &milestones); err != nil {
 		return milestones, err
 	}
+
 	return milestones, nil
 }
 

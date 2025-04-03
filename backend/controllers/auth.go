@@ -17,6 +17,8 @@ type RegisterUser struct {
 	Email           string `json:"email" binding:"required,email"`
 	PhoneNumber     string `json:"phone_number" binding:"required"`
 	Gender          string `json:"gender" binding:"required"`
+	FullName        string `json:"full_name" binding:"required"`
+	Birthday        string `json:"birthday" binding:"required"` // Format: YYYY-MM-DD
 }
 
 func validatePassword(password string) error {
@@ -80,6 +82,8 @@ func Register(c *gin.Context) {
 		Email:       registerUser.Email,
 		PhoneNumber: registerUser.PhoneNumber,
 		Gender:      registerUser.Gender,
+		FullName:    registerUser.FullName,
+		Birthday:    registerUser.Birthday,
 	}
 
 	// Add the user to the database
@@ -116,5 +120,23 @@ func Login(c *gin.Context) {
 
 func Profile(c *gin.Context) {
 	user, _ := c.Get("user")
-	c.JSON(http.StatusOK, gin.H{"user": user})
+
+	// Retrieve the full user profile from the database
+	dbUser, err := models.GetUser(user.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"username":     dbUser.Username,
+			"full_name":    dbUser.FullName,
+			"birthday":     dbUser.Birthday,
+			"email":        dbUser.Email,
+			"phone_number": dbUser.PhoneNumber,
+			"gender":       dbUser.Gender,
+			"couple_id":    dbUser.CoupleID, // Ensure couple_id is included
+		},
+	})
 }

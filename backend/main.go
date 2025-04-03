@@ -26,8 +26,8 @@ func main() {
 
 	// Enable CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://your-trusted-domain.com"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowOrigins:     []string{"http://localhost:5173"}, // Frontend origin
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))

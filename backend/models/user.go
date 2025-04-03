@@ -18,6 +18,8 @@ type User struct {
 	Email       string              `bson:"email" json:"email"`
 	PhoneNumber string              `bson:"phone_number" json:"phone_number"`
 	Gender      string              `bson:"gender" json:"gender"`
+	FullName    string              `bson:"full_name" json:"full_name"`
+	Birthday    string              `bson:"birthday" json:"birthday"` // Format: YYYY-MM-DD
 	CoupleID    *primitive.ObjectID `bson:"couple_id,omitempty" json:"couple_id"`
 	CreatedAt   time.Time           `bson:"created_at" json:"created_at"`
 	UpdatedAt   time.Time           `bson:"updated_at" json:"updated_at"`
@@ -65,10 +67,9 @@ func AuthenticateUser(username, password string) (User, error) {
 }
 
 // UpdateUser updates a user's information in the database
-func UpdateUser(userID primitive.ObjectID, updatedData bson.M) error {
+func UpdateUser(userID primitive.ObjectID, update bson.M) error {
 	collection := config.GetDB().Collection("users")
-	updatedData["updated_at"] = time.Now() // Update the timestamp
-	_, err := collection.UpdateOne(context.TODO(), bson.M{"_id": userID}, bson.M{"$set": updatedData})
+	_, err := collection.UpdateOne(context.TODO(), bson.M{"_id": userID}, bson.M{"$set": update})
 	return err
 }
 
