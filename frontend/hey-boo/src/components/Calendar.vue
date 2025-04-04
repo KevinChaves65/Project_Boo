@@ -1,79 +1,113 @@
 <template>
-  <div class="calendar-container">
-    <header class="calendar-header">
-  <div class="header-top">
-    <h1>Calendar</h1>
-    <router-link to="/dashboard" class="back-button">
-      <i class="fas fa-arrow-left"></i> Dashboard
-    </router-link>
-  </div>
-  <div class="calendar-navigation">
-    <button @click="prevMonth" class="nav-button"><i class="fas fa-chevron-left"></i></button>
-    <h2>{{ currentMonthName }} {{ currentYear }}</h2>
-    <button @click="nextMonth" class="nav-button"><i class="fas fa-chevron-right"></i></button>
-  </div>
-</header>
+  <!-- Root element for calendar content -->
+  <div class="calendar-view-content">
 
+    <!-- Calendar Header (Navigation Only) -->
+    <div class="calendar-navigation">
+      <button @click="prevMonth" class="nav-button" aria-label="Previous month" title="Previous month">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+      <button @click="nextMonth" class="nav-button" aria-label="Next month" title="Next month">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Calendar Body Grid (Calendar + Events Panel) -->
     <div class="calendar-body">
+
       <!-- Calendar Grid -->
-      <div class="calendar-grid">
-        <!-- Weekday headers -->
-        <div class="weekday" v-for="day in weekdays" :key="day">{{ day }}</div>
-        
-        <!-- Calendar days -->
-        <div 
-          v-for="(day, index) in calendarDays" 
-          :key="index"
-          class="calendar-day" 
-          :class="{ 
-            'current-month': day.currentMonth, 
-            'today': day.isToday,
-            'has-events': hasEvents(day.date)
-          }"
-          @click="selectDay(day)"
-        >
-          <div class="day-number">{{ day.dayNumber }}</div>
-          <!-- Event indicators -->
-          <div v-if="hasEvents(day.date)" class="event-indicator"></div>
+      <div class="calendar-grid-wrapper">
+        <div class="calendar-grid">
+          <!-- Weekday headers -->
+          <div class="weekday" v-for="day in weekdays" :key="day">{{ day }}</div>
+
+          <!-- Calendar days -->
+          <button
+            v-for="(day, index) in calendarDays"
+            :key="index"
+            class="calendar-day"
+            :class="{
+              'outside-month': !day.currentMonth,
+              'today': day.isToday,
+              'selected': selectedDate === day.date,
+              'has-events': hasEvents(day.date)
+            }"
+            @click="selectDay(day)"
+            :aria-label="`Select day ${day.dayNumber}` + (day.isToday ? ' (Today)' : '') + (hasEvents(day.date) ? ' (Has events)' : '')"
+            :aria-current="day.isToday ? 'date' : null"
+            :disabled="!day.currentMonth"
+          >
+            <span class="day-number">{{ day.dayNumber }}</span>
+            <!-- Event indicators - more visual -->
+             <div v-if="hasEvents(day.date) && day.currentMonth" class="event-indicators">
+                 <!-- Show up to 3 dots -->
+                <span v-for="i in Math.min(getEventsForDate(day.date).length, 3)" :key="`dot-${index}-${i}`" class="event-dot"></span>
+            </div>
+          </button>
         </div>
       </div>
 
       <!-- Event Panel -->
       <div class="event-panel">
-        <h3>
-          {{ selectedDate ? formatDate(selectedDate) : 'Select a date' }}
-          <button v-if="selectedDate" class="add-event-button" @click="showEventForm = true">
-            <i class="fas fa-plus"></i> Add Event
-          </button>
-        </h3>
-        
-        <!-- Event form -->
-        <form v-if="showEventForm" @submit.prevent="addEvent" class="event-form">
-          <input v-model="newEvent.name" type="text" placeholder="Event name" required>
-          <input v-model="newEvent.time" type="time" required>
-          <div class="form-actions">
-            <button type="button" @click="showEventForm = false" class="cancel-button">Cancel</button>
-            <button type="submit" class="save-button">Save</button>
-          </div>
-        </form>
-        
-        <!-- Events list for selected day -->
-        <div v-if="selectedDate && getEventsForDate(selectedDate).length > 0" class="events-list">
-          <div 
-            v-for="(evt, i) in getEventsForDate(selectedDate)" 
-            :key="i"
-            class="event-item"
-          >
-            <div class="event-time">{{ formatTime(evt.time) }}</div>
-            <div class="event-name">{{ evt.name }}</div>
-            <button @click="removeEvent(evt)" class="remove-event">
-              <i class="fas fa-times"></i>
+        <div class="panel-header">
+            <h3 v-if="selectedDate">{{ formatDate(selectedDate) }}</h3>
+            <h3 v-else>Select a Date</h3>
+            <button v-if="selectedDate" class="add-event-button" @click="showEventForm = !showEventForm" :aria-expanded="showEventForm">
+              <i :class="showEventForm ? 'fas fa-times' : 'fas fa-plus'"></i>
+              <span>{{ showEventForm ? 'Close' : 'Add Event' }}</span>
             </button>
-          </div>
         </div>
-        
-        <div v-else-if="selectedDate" class="no-events">
-          No events scheduled for this day
+
+        <!-- Event form with transition -->
+         <transition name="slide-fade">
+            <form v-if="showEventForm" @submit.prevent="addEvent" class="event-form">
+              <h4>New Event</h4>
+              <div class="form-group">
+                 <label :for="`event-name-${_uid}`">Event Name</label>
+                 <input :id="`event-name-${_uid}`" v-model="newEvent.name" type="text" placeholder="e.g., Dinner with Partner" required>
+              </div>
+              <div class="form-group">
+                  <label :for="`event-time-${_uid}`">Time</label>
+                  <input :id="`event-time-${_uid}`" v-model="newEvent.time" type="time" required>
+              </div>
+              <div class="form-actions">
+                <button type="button" @click="showEventForm = false" class="button-cancel">Cancel</button>
+                <button type="submit" class="button-save">Save Event</button>
+              </div>
+            </form>
+        </transition>
+
+        <!-- Events list for selected day -->
+        <div class="events-list-wrapper">
+            <div v-if="selectedDate && eventsForSelectedDate.length > 0" class="events-list">
+              <h4>Scheduled Events</h4>
+              <div
+                v-for="(evt, i) in eventsForSelectedDate"
+                :key="`evt-${selectedDate}-${i}`"
+                class="event-item"
+              >
+                 <span class="event-dot accent-dot" aria-hidden="true"></span>
+                <div class="event-details">
+                    <span class="event-name">{{ evt.name }}</span>
+                    <span class="event-time">{{ formatTime(evt.time) }}</span>
+                </div>
+                <button @click="removeEvent(evt)" class="remove-event-button" aria-label="Remove event">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div v-else-if="selectedDate" class="no-events">
+               <i class="fas fa-calendar-check"></i>
+              <p>No events scheduled for this day.</p>
+              <p v-if="!showEventForm">Click "Add Event" above to add one!</p>
+            </div>
+
+             <div v-else class="no-date-selected">
+                 <i class="fas fa-hand-pointer"></i>
+                <p>Select a day from the calendar to view or add events.</p>
+            </div>
         </div>
       </div>
     </div>
@@ -81,28 +115,22 @@
 </template>
 
 <script>
+// Your existing <script> block remains largely the same
+// Add computed property for eventsForSelectedDate for cleaner template
 export default {
-  name: "CalendarPage",
+  name: "CalendarPage", // Changed name to avoid conflicts if needed
+   props: { // Example if component ID needed for labels
+     _uid: { type: [String, Number], default: () => Math.random().toString(36).substr(2, 9) }
+   },
   data() {
     return {
-      // Current date tracking
       currentDate: new Date(),
-      selectedDate: null,
-      
-      // Event handling
+      selectedDate: null, // Store as 'YYYY-MM-DD' string
       showEventForm: false,
-      newEvent: {
-        name: "",
-        time: ""
-      },
-      events: [], // Will store events as {date: '2025-03-18', time: '15:30', name: 'Event name'}
-      
-      // Window dimensions
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      
-      // Calendar constants
+      newEvent: { name: "", time: "" },
+      events: [], // {date: 'YYYY-MM-DD', time: 'HH:mm', name: '...'}
       weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      // Removed windowWidth/Height as they weren't used in the template/style fix
     };
   },
   computed: {
@@ -115,36 +143,28 @@ export default {
     calendarDays() {
       const year = this.currentDate.getFullYear();
       const month = this.currentDate.getMonth();
-      
-      // Create date for first day of month
       const firstDayOfMonth = new Date(year, month, 1);
       const lastDayOfMonth = new Date(year, month + 1, 0);
-      
-      // Get day of week for first day (0-6, where 0 is Sunday)
-      const firstDayOfWeek = firstDayOfMonth.getDay();
-      
-      // Calculate days from previous month to show
-      const daysFromPrevMonth = firstDayOfWeek;
-      
-      // Get the last day of previous month
-      const lastDayOfPrevMonth = new Date(year, month, 0).getDate();
-      
+      const firstDayOfWeek = firstDayOfMonth.getDay(); // 0=Sun, 6=Sat
+      const lastDayOfPrevMonthDate = new Date(year, month, 0); // Date object for last day of prev month
+      const lastDayOfPrevMonth = lastDayOfPrevMonthDate.getDate();
+
       const days = [];
-      const today = new Date();
-      
-      // Add days from previous month
-      for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
+      const today = new Date(); // Compare against today
+
+      // Days from previous month
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
         const dayNumber = lastDayOfPrevMonth - i;
         const date = new Date(year, month - 1, dayNumber);
         days.push({
           dayNumber,
           currentMonth: false,
-          isToday: false,
+          isToday: false, // Cannot be today if not current month
           date: this.formatDateString(date)
         });
       }
-      
-      // Add days from current month
+
+      // Days from current month
       for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
         const date = new Date(year, month, i);
         days.push({
@@ -154,12 +174,10 @@ export default {
           date: this.formatDateString(date)
         });
       }
-      
-      // Calculate days needed from next month
-      const totalDaysToShow = 42; // 6 rows of 7 days
-      const daysFromNextMonth = totalDaysToShow - days.length;
-      
-      // Add days from next month
+
+      // Days from next month (ensure grid fills 6 rows = 42 cells)
+       const totalCells = days.length <= 35 ? 35 : 42; // Show 5 or 6 rows
+      const daysFromNextMonth = totalCells - days.length;
       for (let i = 1; i <= daysFromNextMonth; i++) {
         const date = new Date(year, month + 1, i);
         days.push({
@@ -169,382 +187,521 @@ export default {
           date: this.formatDateString(date)
         });
       }
-      
+
       return days;
+    },
+    // Added computed property for events on selected date
+    eventsForSelectedDate() {
+        if (!this.selectedDate) return [];
+        return this.events
+            .filter(event => event.date === this.selectedDate)
+            .sort((a, b) => a.time.localeCompare(b.time));
     }
-  },
-  created() {
-    // Add window resize event listener
-    window.addEventListener('resize', this.handleResize);
-    
-    // Load any saved events from localStorage (in a real app)
-    const savedEvents = localStorage.getItem('heyBooEvents');
-    if (savedEvents) {
-      this.events = JSON.parse(savedEvents);
-    }
-  },
-  destroyed() {
-    // Remove window resize event listener
-    window.removeEventListener('resize', this.handleResize);
   },
   methods: {
     // Calendar navigation
     prevMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+      this.selectedDate = null; // Deselect date when changing month
+      this.showEventForm = false;
     },
     nextMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
+       this.selectedDate = null; // Deselect date
+       this.showEventForm = false;
     },
-    
+
     // Date selection
     selectDay(day) {
+       if (!day.currentMonth) return; // Don't select days outside current month
       this.selectedDate = day.date;
-      this.showEventForm = false;
+      this.showEventForm = false; // Close form when selecting a new day
     },
-    
+
     // Event handling
     addEvent() {
       if (this.newEvent.name && this.newEvent.time && this.selectedDate) {
-        this.events.push({
+        const newEventData = {
           date: this.selectedDate,
           time: this.newEvent.time,
-          name: this.newEvent.name
-        });
-        
-        // In a real app, save to localStorage or backend
-        localStorage.setItem('heyBooEvents', JSON.stringify(this.events));
-        
+          name: this.newEvent.name.trim()
+        };
+        this.events.push(newEventData);
+        this.saveEvents(); // Save to localStorage
+
+        // Reset form
         this.newEvent.name = "";
         this.newEvent.time = "";
         this.showEventForm = false;
       }
     },
-    removeEvent(event) {
-      const index = this.events.findIndex(e => 
-        e.date === event.date && e.time === event.time && e.name === event.name
+    removeEvent(eventToRemove) {
+        // Find based on all properties for uniqueness (or add an ID later)
+      this.events = this.events.filter(e =>
+        !(e.date === eventToRemove.date && e.time === eventToRemove.time && e.name === eventToRemove.name)
       );
-      if (index !== -1) {
-        this.events.splice(index, 1);
-        // Update localStorage
-        localStorage.setItem('heyBooEvents', JSON.stringify(this.events));
-      }
+      this.saveEvents();
     },
-    
+     saveEvents() {
+         // In a real app, might send to backend API
+         try {
+            localStorage.setItem('heyBooEvents', JSON.stringify(this.events));
+         } catch (e) {
+             console.error("Failed to save events to localStorage:", e);
+         }
+     },
+     loadEvents() {
+         try {
+             const savedEvents = localStorage.getItem('heyBooEvents');
+             if (savedEvents) {
+               this.events = JSON.parse(savedEvents);
+             }
+         } catch (e) {
+             console.error("Failed to load events from localStorage:", e);
+             this.events = []; // Reset if data is corrupted
+         }
+     },
+
     // Helper methods
     formatDateString(date) {
+      // Ensures YYYY-MM-DD format
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     },
     isSameDay(date1, date2) {
-      return date1.getDate() === date2.getDate() && 
-             date1.getMonth() === date2.getMonth() && 
-             date1.getFullYear() === date2.getFullYear();
+      return date1.getFullYear() === date2.getFullYear() &&
+             date1.getMonth() === date2.getMonth() &&
+             date1.getDate() === date2.getDate();
     },
     formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        if (!dateString) return '';
+        // Add error handling for invalid dateString if necessary
+        const dateParts = dateString.split('-');
+        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        return date.toLocaleDateString(navigator.language || 'en-US', { // Use browser language
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
     },
-    formatTime(timeString) {
-      // Convert 24h time to 12h format
-      const [hours, minutes] = timeString.split(':');
-      const hour = parseInt(hours, 10);
-      const period = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour % 12 || 12;
-      return `${hour12}:${minutes} ${period}`;
+     formatTime(timeString) {
+        if (!timeString) return '';
+        const [hours, minutes] = timeString.split(':');
+         try {
+             const date = new Date();
+             date.setHours(parseInt(hours, 10));
+             date.setMinutes(parseInt(minutes, 10));
+              return date.toLocaleTimeString(navigator.language || 'en-US', { // Use browser language
+                 hour: 'numeric', minute: '2-digit', hour12: true
+             });
+         } catch (e) {
+             console.error("Error formatting time:", e);
+             return timeString; // Fallback
+         }
     },
-    getEventsForDate(dateString) {
+    getEventsForDate(dateString) { // Keep this if used elsewhere, otherwise computed prop is better
       return this.events.filter(event => event.date === dateString).sort((a, b) => a.time.localeCompare(b.time));
     },
     hasEvents(dateString) {
       return this.events.some(event => event.date === dateString);
     },
-    
-    // Window resize handler
-    handleResize() {
-      this.windowWidth = window.innerWidth;
-      this.windowHeight = window.innerHeight;
-    }
-  }
+     // Removed handleResize as it's not needed for the layout fix
+  },
+   created() {
+    this.loadEvents(); // Load events when component is created
+  },
+  // destroyed() - No longer needed if resize listener removed
 };
 </script>
 
 <style scoped>
-/* Main container with consistent sizing */
-.calendar-container {
-  height: 100vh;
-  overflow: hidden;
+/* Base container for this view - Handles spacing */
+.calendar-view-content {
   display: flex;
   flex-direction: column;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background-color: #f9f9f9;
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
+  gap: 1.5rem; /* Space between nav and body */
+   /* Height/Scrolling handled by parent (.router-view-wrapper) */
 }
 
-.back-button {
-  background-color: #8c68db;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s ease;
-}
-
-.back-button:hover {
-  background-color: #7a5fc7;
-}
-/* Header styling */
-.calendar-header {
-  background-color: #fff;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.calendar-header h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #333;
-}
-
+/* Calendar Navigation */
 .calendar-navigation {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: #fff; /* Give nav a background */
+  border-radius: 25px; /* Rounded pill shape */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+  flex-shrink: 0; /* Prevent shrinking */
 }
-
 .calendar-navigation h2 {
   margin: 0;
   font-size: 1.2rem;
-  flex-grow: 1;
+  font-weight: 600;
+  color: #333;
   text-align: center;
+  flex-grow: 1;
 }
-
 .nav-button {
-  background: none;
+  background: transparent;
   border: none;
   padding: 0.5rem;
   cursor: pointer;
   color: #8c68db;
   font-size: 1rem;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.nav-button:hover {
+  background-color: #f3eefc;
+  color: #7a5fc7;
 }
 
-/* Calendar body */
+/* Calendar Body Grid Layout */
 .calendar-body {
-  flex: 1;
+  flex-grow: 1; /* Takes remaining vertical space */
   display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 1rem;
-  padding: 1rem;
-  overflow: hidden;
+  grid-template-columns: 1fr minmax(300px, 360px); /* Calendar takes more space */
+  gap: 1.5rem;
+   min-height: 0; /* Crucial for nested grid/flex scrolling */
+   /* REMOVED overflow: hidden */
 }
 
-/* Calendar grid */
+/* Calendar Grid Area */
+.calendar-grid-wrapper {
+   background-color: #fff;
+   border-radius: 12px;
+   padding: 0.75rem; /* Padding around the grid */
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+   border: 1px solid #f0f0f0;
+   /* No overflow here */
+}
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: minmax(40px, 1fr);
-  gap: 1px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  grid-auto-rows: minmax(60px, auto); /* Let rows grow based on content */
+  gap: 5px; /* Subtle gap between day cells */
 }
 
 .weekday {
-  background-color: #f0f0f0;
   text-align: center;
-  padding: 0.5rem;
-  font-weight: bold;
-  color: #666;
+  padding: 0.75rem 0.25rem; /* More padding */
+  font-weight: 600; /* Bolder */
+  color: #777; /* Softer color */
+  font-size: 0.85rem;
+  text-transform: uppercase; /* Uppercase */
 }
 
+/* Calendar Day Cells */
 .calendar-day {
   position: relative;
   background-color: #fff;
-  border-bottom: 1px solid #f0f0f0;
-  border-right: 1px solid #f0f0f0;
-  min-height: 60px;
+  border-radius: 6px; /* Rounded cells */
+  border: 1px solid #f3f4f6; /* Softer border */
+  min-height: 70px; /* Min height */
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-}
-
-.calendar-day:hover {
-  background-color: #f9f9f9;
-}
-
-.day-number {
+  align-items: flex-end; /* Number to top-right */
+  justify-content: space-between; /* Push indicators down */
+  transition: all 0.2s ease;
   font-size: 0.9rem;
-  text-align: right;
-  padding: 0.25rem;
+}
+.calendar-day:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.day-number {
+  font-weight: 500;
+  color: #555;
+  padding: 0;
 }
 
-.current-month {
-  color: #333;
-}
-
-.current-month:not(.current-month) {
+/* Day States */
+.outside-month {
   color: #ccc;
+  background-color: #f9fafb; /* Slightly different background */
+  cursor: default;
+  opacity: 0.7;
 }
+.outside-month .day-number { color: #ccc; }
+.outside-month:hover { background-color: #f9fafb; border-color: #f3f4f6; box-shadow: none;} /* No hover effect */
 
 .today {
-  background-color: rgba(140, 104, 219, 0.1);
+  background-color: #f3eefc; /* Light purple */
+  border-color: #dcd1f3;
 }
-
 .today .day-number {
-  color: #8c68db;
-  font-weight: bold;
+  color: #8c68db; /* Theme color */
+  font-weight: 700;
+  background-color: #fff; /* White circle */
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(140, 104, 219, 0.2);
 }
 
-.has-events .event-indicator {
+.selected {
+  background-color: #fff !important; /* Ensure white background */
+  border-color: #8c68db !important;
+  box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.4) !important;
+}
+.selected .day-number {
+    /* Optionally highlight selected number differently */
+    /* color: #8c68db; */
+}
+
+/* Event Indicators */
+.event-indicators {
+    display: flex;
+    gap: 3px;
+    align-self: center; /* Center dots */
+    margin-top: auto; /* Push to bottom */
+    padding-bottom: 2px;
+}
+.event-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #ff80b0;
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-}
-
-/* Event panel */
-.event-panel {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.event-panel h3 {
-  margin-top: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.add-event-button {
-  background-color: #8c68db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.add-event-button:hover {
-  background-color: #7a5fc7;
-}
-
-/* Event form */
-.event-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-}
-
-.event-form input {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.cancel-button {
-  background-color: #f1f1f1;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.save-button {
-  background-color: #8c68db;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.save-button:hover {
-  background-color: #7a5fc7;
-}
-
-/* Events list */
-.events-list {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-}
-
-.event-item {
-  padding: 0.5rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-}
-
-.event-time {
-  color: #8c68db;
-  font-weight: bold;
-  margin-right: 0.5rem;
+  background-color: #ff80b0; /* HeyBoo Pink */
   flex-shrink: 0;
 }
 
-.event-name {
-  flex-grow: 1;
+/* Event Panel */
+.event-panel {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  /* REMOVED overflow: hidden */
+}
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+}
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+.add-event-button {
+  background-color: #f3eefc;
+  color: #8c68db;
+  border: 1px solid #dcd1f3;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+.add-event-button:hover {
+  background-color: #e9dffc;
+  border-color: #c8bce8;
+  color: #7a5fc7;
+}
+.add-event-button[aria-expanded="true"] { /* Style when form is open */
+    background-color: #fde8f0;
+    color: #e14f81;
+    border-color: #fbcfe0;
 }
 
-.remove-event {
+/* Event Form */
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* More space */
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.event-form h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0.25rem;
+}
+.event-form input[type="text"],
+.event-form input[type="time"] {
+  padding: 0.75rem; /* More padding */
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.event-form input:focus {
+    outline: none;
+    border-color: #8c68db;
+    box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.2);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+/* Base button style */
+.button-cancel, .button-save {
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+.button-cancel {
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  color: #555;
+}
+.button-cancel:hover { background-color: #f9fafb; border-color: #aaa; }
+.button-save {
+  background-color: #8c68db;
+  color: white;
+  border: 1px solid #8c68db;
+  box-shadow: 0 2px 5px rgba(140, 104, 219, 0.2);
+}
+.button-save:hover { background-color: #7a5fc7; border-color: #7a5fc7; }
+
+/* Form transition */
+.slide-fade-enter-active { transition: all .3s ease-out; }
+.slide-fade-leave-active { transition: all .2s cubic-bezier(1.0, 0.5, 0.8, 1.0); }
+.slide-fade-enter-from, .slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+/* Events List */
+.events-list-wrapper {
+    flex-grow: 1; /* Takes remaining space */
+    /* REMOVED overflow-y: auto */
+     min-height: 100px; /* Prevent collapsing */
+}
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.events-list h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #555;
+    margin: 0.5rem 0 0.75rem 0;
+}
+
+.event-item {
+  padding: 0.75rem 1rem;
+  background-color: #f8f5ff; /* Light purple tint */
+  border: 1px solid #e9dffc;
+  border-left: 4px solid #8c68db; /* Accent border */
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.event-dot.accent-dot { background-color: #8c68db; } /* Match accent color */
+
+.event-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.event-name { font-weight: 500; color: #333; font-size: 0.95rem;}
+.event-time { color: #777; font-size: 0.85rem; }
+
+.remove-event-button {
   background: none;
   border: none;
-  color: #ccc;
+  color: #aaa;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  padding: 5px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
+.remove-event-button:hover { color: #ff6b6b; background-color: #fff1f1; }
 
-.remove-event:hover {
-  color: #ff6b6b;
-}
-
-.no-events {
+/* Placeholder Messages */
+.no-events, .no-date-selected {
   text-align: center;
   color: #999;
-  margin-top: 1rem;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  flex-grow: 1;
+}
+.no-events i, .no-date-selected i {
+    font-size: 2.5rem;
+    color: #e0e0e0;
+}
+.no-events p, .no-date-selected p { margin: 0; line-height: 1.4;}
+
+/* Responsive */
+@media (max-width: 900px) { /* Tablet */
+  .calendar-body {
+    grid-template-columns: 1fr minmax(280px, 320px); /* Narrower event panel */
+    gap: 1rem;
+  }
+}
+@media (max-width: 768px) { /* Mobile */
+  .calendar-body {
+    grid-template-columns: 1fr; /* Stack columns */
+     min-height: initial;
+  }
+  .event-panel {
+    margin-top: 1.5rem; /* Space when stacked */
+  }
+  /* Maybe make calendar days smaller on mobile */
+  .calendar-day { min-height: 60px; font-size: 0.85rem; padding: 0.3rem;}
+  .weekday { padding: 0.5rem 0.2rem; font-size: 0.75rem; }
+  .day-number { font-size: 0.8rem; }
+  .today .day-number { width: 20px; height: 20px; }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .calendar-body {
-    grid-template-columns: 1fr;
-  }
-  
-  .event-panel {
-    margin-top: 1rem;
-  }
+/* Accessibility */
+.sr-only { /* Define if not globally available */
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
 }
 </style>

@@ -23,12 +23,22 @@ a:hover {
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: 400px;
+  min-height: 600px;
+  max-width: 1024px;
+  max-height: 800px;
+  overflow: auto;
 }
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  min-width: 400px;
+  min-height: 500px;
+  overflow: hidden;
+}
+
 
 h1 {
   font-size: 3.2em;
@@ -63,6 +73,28 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+/* Make sidebar responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+  }
+  
+  .sidebar-logo, .sidebar-links li a span {
+    display: none;
+  }
+}
+
+/* Adjust calendar for smaller screens */
+@media (max-width: 600px) {
+  .calendar-container {
+    padding: 0.5rem;
+  }
+  
+  .calendar-day {
+    font-size: 0.8rem;
+    padding: 0.25rem;
+  }
 }
 
 @media (prefers-color-scheme: light) {

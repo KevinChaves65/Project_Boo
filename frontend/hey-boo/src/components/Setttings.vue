@@ -1,11 +1,6 @@
 <template>
   <div class="settings-container">
-    <header class="settings-header">
-      <h1>Settings</h1>
-      <router-link to="/dashboard" class="back-button">
-        <i class="fas fa-arrow-left"></i> Dashboard
-      </router-link>
-    </header>
+    
 
     <div class="settings-body">
       <!-- Success message that appears after saving -->
