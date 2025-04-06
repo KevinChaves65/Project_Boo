@@ -77,13 +77,37 @@ func GetCouple(c *gin.Context) {
 		return
 	}
 
+	// Retrieve the couple by ID
 	couple, err := models.GetCoupleByID(objectID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Couple not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"couple": couple})
+	// Fetch usernames for user1 and user2
+	user1, err := models.GetUserByID(couple.User1ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user1"})
+		return
+	}
+
+	user2, err := models.GetUserByID(couple.User2ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user2"})
+		return
+	}
+
+	// Return the couple info along with usernames
+	c.JSON(http.StatusOK, gin.H{
+		"couple": gin.H{
+			"id":             couple.ID.Hex(),
+			"user1_id":       couple.User1ID.Hex(),
+			"user1_username": user1.Username,
+			"user2_id":       couple.User2ID.Hex(),
+			"user2_username": user2.Username,
+			"created_at":     couple.CreatedAt,
+		},
+	})
 }
 
 func DeleteCouple(c *gin.Context) {

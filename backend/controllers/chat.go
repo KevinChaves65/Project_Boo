@@ -15,6 +15,13 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
+	// Validate that the receiver exists
+	_, err := models.GetUserByUsername(message.Receiver)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Receiver not found"})
+		return
+	}
+
 	// Encrypt the message content
 	encryptedMessage, err := utils.EncryptMessage(message.Content)
 	if err != nil {
@@ -46,8 +53,9 @@ func ReceiveMessages(c *gin.Context) {
 	for i, msg := range messages {
 		decryptedMessage, err := utils.DecryptMessage(msg.Content)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decrypt message"})
-			return
+			// Log the error and skip this message
+			messages[i].Content = "[Failed to decrypt message]"
+			continue
 		}
 		messages[i].Content = decryptedMessage
 	}

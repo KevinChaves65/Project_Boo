@@ -19,7 +19,7 @@
           v-for="(msg, index) in messages" 
           :key="index"
           class="message-container"
-          :class="{ 'own-message': msg.sender === 'You' }"
+          :class="{ 'own-message': msg.sender === currentUsername }"
         >
           <!-- Only show date divider if the date changes between messages -->
           <div class="date-divider" v-if="index > 0 && shouldShowDateDivider(messages[index - 1], msg)">
@@ -28,7 +28,10 @@
 
           <div class="message">
             <div class="message-header">
-              <span class="sender">{{ msg.sender }}</span>
+              <!-- Show "Me" for the current user's messages, and the partner's full name for their messages -->
+              <span class="sender">
+                {{ msg.sender === currentUsername ? "Me" : partnerFullName }}
+              </span>
               <span class="time">{{ formatTime(msg.timestamp) }}</span>
             </div>
             <div class="text">{{ msg.content }}</div>
@@ -85,7 +88,7 @@
 </template>
 
 <script>
-import { fetchChats, sendChatMessage } from "../services/apiService";
+import { fetchUserProfile, fetchCoupleInfo, fetchChats, sendChatMessage, fetchPublicUserInfo } from "../services/apiService";
 
 export default {
   name: "ChatsPage",
@@ -97,38 +100,101 @@ export default {
       showEmojiPicker: false, // Show/hide emoji picker
       commonEmojis: ["❤️", "😊", "😘", "🥰", "😍", "🤗", "👋", "👍", "🎉", "🎂", "🌹", "💕"],
       typingTimeout: null, // Timeout for typing indicator
+      receiver: "", // Coupled user's username
+      currentUsername: "", // Current user's username
+      partnerFullName: "", // Partner's full name
     };
   },
   methods: {
     async loadChats() {
       try {
         const chats = await fetchChats(); // Fetch chats from the backend
+
+        if (!chats || chats.length === 0) {
+          console.log("No chats available."); // Log a message for debugging
+          this.messages = []; // Ensure messages array is empty
+          return;
+        }
+
+        // Fetch the partner's public information
+        const partnerInfo = await fetchPublicUserInfo(this.receiver); // Fetch partner's public info using their username
+        this.partnerFullName = partnerInfo.full_name; // Store the partner's full name
+
+        // Map the messages
         this.messages = chats.map((msg) => ({
           sender: msg.sender,
           content: msg.content,
           timestamp: msg.timestamp,
         }));
+
+        console.log("Partner Info:", partnerInfo); // Debug partner's public info
+        console.log("Loaded Messages:", this.messages); // Debug loaded messages
         this.scrollToBottom(); // Scroll to the bottom of the chat window
       } catch (error) {
         console.error("Failed to load chats:", error.message);
-        alert("Failed to load chats. Please try again.");
+        // Do not show an alert if chats are empty; only show an alert for actual errors
+      }
+    },
+    async fetchCoupleInfo() {
+      try {
+        // Fetch user profile to get the couple_id
+        const userProfile = await fetchUserProfile();
+        this.currentUsername = userProfile.username; // Store the current user's username
+        console.log("Fetched User Profile:", userProfile); // Debug user profile
+
+        const coupleId = userProfile.couple_id;
+
+        if (!coupleId) {
+          console.error("User is not linked to a couple.");
+          alert("You are not linked to a couple. Please link to a partner first.");
+          return;
+        }
+
+        // Fetch couple info using the couple_id
+        const coupleInfo = await fetchCoupleInfo(coupleId);
+        console.log("Fetched Couple Info:", coupleInfo); // Debug couple info
+
+        // Ensure the coupleInfo object contains the necessary fields
+        if (!coupleInfo || !coupleInfo.user1_username || !coupleInfo.user2_username) {
+          console.error("Invalid couple info:", coupleInfo);
+          alert("Failed to fetch valid couple info. Please try again.");
+          return;
+        }
+
+        // Determine the partner's username using the current user's username
+        if (coupleInfo.user1_username === this.currentUsername) {
+          this.receiver = coupleInfo.user2_username; // Partner is user2
+        } else if (coupleInfo.user2_username === this.currentUsername) {
+          this.receiver = coupleInfo.user1_username; // Partner is user1
+        } else {
+          console.error("Current user is not part of the couple.");
+          alert("Failed to determine the coupled user's username.");
+          return;
+        }
+
+        console.log("Coupled user's username (receiver):", this.receiver);
+      } catch (error) {
+        console.error("Failed to fetch couple info:", error.message);
+        alert("Failed to fetch couple info. Please try again.");
       }
     },
     async sendMessage() {
       if (!this.newMessage.trim()) return;
 
-      const message = {
-        sender: "You",
-        content: this.newMessage,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Optimistically add the message to the chat window
-      this.messages.push(message);
-      this.scrollToBottom();
-
       try {
-        await sendChatMessage(this.newMessage); // Send the message to the backend
+        const message = {
+          sender: this.currentUsername, // Set the sender to the current user's username
+          receiver: this.receiver, // Use the dynamically set receiver
+          content: this.newMessage,
+          timestamp: Date.now(), // Set the timestamp to the current time in milliseconds
+        };
+
+        // Optimistically add the message to the chat window
+        this.messages.push(message);
+        this.scrollToBottom();
+
+        // Send the message to the backend
+        await sendChatMessage(this.newMessage, this.receiver, this.currentUsername, message.timestamp); // Pass sender, receiver, content, and timestamp
         this.newMessage = ""; // Clear the input field
       } catch (error) {
         console.error("Failed to send message:", error.message);
@@ -191,9 +257,17 @@ export default {
         console.log("User stopped typing");
       }, 1000);
     },
+    async initializeChat() {
+      try {
+        await this.fetchCoupleInfo(); // Ensure receiver is set before loading chats
+        await this.loadChats(); // Load chats after receiver is set
+      } catch (error) {
+        console.error("Failed to initialize chat:", error.message);
+      }
+    },
   },
   created() {
-    this.loadChats(); // Load chats when the component is created
+    this.initializeChat();
   },
 };
 </script>

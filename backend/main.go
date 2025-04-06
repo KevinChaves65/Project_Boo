@@ -34,6 +34,7 @@ func main() {
 
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
+	r.GET("/user/public", controllers.GetPublicUserInfo)
 
 	auth := r.Group("/auth")
 	auth.Use(middlewares.JWTAuthMiddleware())

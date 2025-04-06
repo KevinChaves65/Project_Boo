@@ -47,6 +47,14 @@ func GetUser(username string) (User, error) {
 	return user, err
 }
 
+// Get a user by ID from the database
+func GetUserByID(userID primitive.ObjectID) (User, error) {
+	collection := config.GetDB().Collection("users")
+	var user User
+	err := collection.FindOne(context.TODO(), bson.M{"_id": userID}).Decode(&user)
+	return user, err
+}
+
 // Authenticate a user
 func AuthenticateUser(username, password string) (User, error) {
 	collection := config.GetDB().Collection("users")
@@ -84,4 +92,16 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func GetUserByUsername(username string) (User, error) {
+	collection := config.GetDB().Collection("users")
+	var user User
+
+	err := collection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
+	if err != nil {
+		return user, errors.New("user not found")
+	}
+
+	return user, nil
 }

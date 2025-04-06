@@ -20,6 +20,7 @@ export async function fetchUserProfile() {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    console.log("User Profile Response:", response.data); // Debug response
     return response.data.user; // Return the user object
   } catch (error) {
     console.error("Failed to fetch user profile:", error.response?.data || error.message);
@@ -44,36 +45,71 @@ export async function fetchMilestones(coupleId) {
 
 // Fetch chat messages
 export async function fetchChats() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/chat/receive`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      console.log("Chat Messages Response:", response.data); // Debug response
+      return response.data.messages; // Return the array of chat messages
+    } catch (error) {
+      console.error("Failed to fetch chats:", error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+// Send a new chat message
+export async function sendChatMessage(content, receiver, sender, timestamp) {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/chat/send`,
+        { content, receiver, sender, timestamp }, // Include the timestamp field
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      console.log("Message Sent Response:", response.data); // Debug response
+      return response.data; // Return the response from the server
+    } catch (error) {
+      console.error("Failed to send chat message:", error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+// Fetch couple info
+export async function fetchCoupleInfo(coupleId) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/chat/receive`, {
+    const response = await axios.get(`${API_BASE_URL}/couple/${coupleId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    return response.data.messages; // Return the array of chat messages
+    console.log("Couple Info Response:", response.data); // Debug response
+    return response.data.couple; // Return the couple object
   } catch (error) {
-    handleTokenError(error); // Handle token-related errors
-    console.error("Failed to fetch chats:", error.response?.data || error.message);
+    console.error("Failed to fetch couple info:", error.response?.data || error.message);
     throw error;
   }
 }
 
-// Send a new chat message
-export async function sendChatMessage(content) {
+// Fetch public user info
+export async function fetchPublicUserInfo(username) {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/chat/send`,
-      { content },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    return response.data; // Return the response from the server
+    if (!username) {
+      throw new Error("Username is required to fetch public user info");
+    }
+
+    const response = await axios.get(`http://localhost:8080/user/public`, {
+      params: { username }, // Correct endpoint
+    });
+
+    console.log("Public User Info Response:", response.data); // Debug response
+    return response.data; // Return the public user info
   } catch (error) {
-    handleTokenError(error); // Handle token-related errors
-    console.error("Failed to send chat message:", error.response?.data || error.message);
+    console.error("Failed to fetch public user info:", error.response?.data || error.message);
     throw error;
   }
 }

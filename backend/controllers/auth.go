@@ -140,3 +140,29 @@ func Profile(c *gin.Context) {
 		},
 	})
 }
+
+func GetPublicUserInfo(c *gin.Context) {
+	username := c.Query("username") // Get the username from the query parameter
+
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+		return
+	}
+
+	// Fetch user by username
+	user, err := models.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Return only public information
+	c.JSON(http.StatusOK, gin.H{
+		"full_name":    user.FullName,
+		"username":     user.Username,
+		"gender":       user.Gender,
+		"birthday":     user.Birthday,
+		"email":        user.Email,
+		"phone_number": user.PhoneNumber,
+	})
+}

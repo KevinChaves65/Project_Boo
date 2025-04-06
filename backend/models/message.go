@@ -26,7 +26,16 @@ func SaveMessage(message Message) error {
 func GetMessages(username string) ([]Message, error) {
 	collection := config.GetDB().Collection("messages")
 	var messages []Message
-	cursor, err := collection.Find(context.TODO(), bson.M{"receiver": username})
+
+	// Query for messages where the user is either the sender or receiver
+	filter := bson.M{
+		"$or": []bson.M{
+			{"receiver": username},
+			{"sender": username},
+		},
+	}
+
+	cursor, err := collection.Find(context.TODO(), filter)
 	if err != nil {
 		return messages, err
 	}
