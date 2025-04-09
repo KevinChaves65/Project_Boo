@@ -19,7 +19,7 @@
           v-for="(msg, index) in messages" 
           :key="index"
           class="message-container"
-          :class="{ 'own-message': msg.sender === currentUsername }"
+          :class="{ 'own-message': msg.sender === currentUsername, 'partner-message': msg.sender !== currentUsername }"
         >
           <!-- Only show date divider if the date changes between messages -->
           <div class="date-divider" v-if="index > 0 && shouldShowDateDivider(messages[index - 1], msg)">
@@ -132,15 +132,12 @@ export default {
         this.scrollToBottom(); // Scroll to the bottom of the chat window
       } catch (error) {
         console.error("Failed to load chats:", error.message);
-        // Do not show an alert if chats are empty; only show an alert for actual errors
       }
     },
     async fetchCoupleInfo() {
       try {
-        // Fetch user profile to get the couple_id
         const userProfile = await fetchUserProfile();
-        this.currentUsername = userProfile.username; // Store the current user's username
-        console.log("Fetched User Profile:", userProfile); // Debug user profile
+        this.currentUsername = userProfile.username;
 
         const coupleId = userProfile.couple_id;
 
@@ -150,29 +147,17 @@ export default {
           return;
         }
 
-        // Fetch couple info using the couple_id
         const coupleInfo = await fetchCoupleInfo(coupleId);
-        console.log("Fetched Couple Info:", coupleInfo); // Debug couple info
 
-        // Ensure the coupleInfo object contains the necessary fields
-        if (!coupleInfo || !coupleInfo.user1_username || !coupleInfo.user2_username) {
-          console.error("Invalid couple info:", coupleInfo);
-          alert("Failed to fetch valid couple info. Please try again.");
-          return;
-        }
-
-        // Determine the partner's username using the current user's username
         if (coupleInfo.user1_username === this.currentUsername) {
-          this.receiver = coupleInfo.user2_username; // Partner is user2
+          this.receiver = coupleInfo.user2_username;
         } else if (coupleInfo.user2_username === this.currentUsername) {
-          this.receiver = coupleInfo.user1_username; // Partner is user1
+          this.receiver = coupleInfo.user1_username;
         } else {
           console.error("Current user is not part of the couple.");
           alert("Failed to determine the coupled user's username.");
           return;
         }
-
-        console.log("Coupled user's username (receiver):", this.receiver);
       } catch (error) {
         console.error("Failed to fetch couple info:", error.message);
         alert("Failed to fetch couple info. Please try again.");
@@ -183,26 +168,24 @@ export default {
 
       try {
         const message = {
-          sender: this.currentUsername, // Set the sender to the current user's username
-          receiver: this.receiver, // Use the dynamically set receiver
+          sender: this.currentUsername,
+          receiver: this.receiver,
           content: this.newMessage,
-          timestamp: Date.now(), // Set the timestamp to the current time in milliseconds
+          timestamp: Date.now(),
         };
 
-        // Optimistically add the message to the chat window
         this.messages.push(message);
         this.scrollToBottom();
 
-        // Send the message to the backend
-        await sendChatMessage(this.newMessage, this.receiver, this.currentUsername, message.timestamp); // Pass sender, receiver, content, and timestamp
-        this.newMessage = ""; // Clear the input field
+        await sendChatMessage(this.newMessage, this.receiver, this.currentUsername, message.timestamp);
+        this.newMessage = "";
       } catch (error) {
         console.error("Failed to send message:", error.message);
         alert("Failed to send message. Please try again.");
       }
     },
     refreshMessages() {
-      this.loadChats(); // Reload chats from the backend
+      this.loadChats();
     },
     scrollToBottom() {
       if (this.$refs.chatWindow) {
@@ -247,8 +230,6 @@ export default {
       });
     },
     handleTyping() {
-      console.log("User is typing...");
-
       if (this.typingTimeout) {
         clearTimeout(this.typingTimeout);
       }
@@ -259,8 +240,8 @@ export default {
     },
     async initializeChat() {
       try {
-        await this.fetchCoupleInfo(); // Ensure receiver is set before loading chats
-        await this.loadChats(); // Load chats after receiver is set
+        await this.fetchCoupleInfo();
+        await this.loadChats();
       } catch (error) {
         console.error("Failed to initialize chat:", error.message);
       }
@@ -388,6 +369,10 @@ export default {
   align-self: flex-end;
 }
 
+.partner-message {
+  align-self: flex-start;
+}
+
 .message {
   padding: 0.75rem;
   border-radius: 8px;
@@ -397,6 +382,11 @@ export default {
 
 .own-message .message {
   background-color: #e1d5f5;
+  color: #333;
+}
+
+.partner-message .message {
+  background-color: #f9f9f9;
   color: #333;
 }
 

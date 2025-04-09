@@ -115,7 +115,7 @@
 </template>
 
 <script>
-import { fetchUserProfile, fetchMilestones } from "../services/apiService";
+import { initializeUser, fetchCoupleMilestones, calculateRelationshipStats, formatDate } from "../services/script";
 
 export default {
   name: "Dashboard",
@@ -134,7 +134,7 @@ export default {
     async fetchUserData() {
       try {
         // Fetch user profile
-        const user = await fetchUserProfile();
+        const user = await initializeUser();
         this.fullName = user.full_name;
 
         // Ensure couple_id is retrieved from the user profile
@@ -146,37 +146,23 @@ export default {
         }
 
         // Fetch milestones using the couple_id
-        this.milestones = await fetchMilestones(coupleId);
+        this.milestones = await fetchCoupleMilestones(coupleId);
 
         // Calculate relationship stats
-        this.calculateRelationshipStats();
+        const stats = calculateRelationshipStats(this.milestones);
+        this.relationshipDuration = stats.relationshipDuration;
+        this.nextAnniversary = stats.nextAnniversary;
+        this.nextMilestone = stats.nextMilestone;
       } catch (error) {
         console.error("Failed to fetch user data or milestones:", error.message);
         this.milestonesError = "Failed to load milestones. Please try again later.";
       }
     },
-    calculateRelationshipStats() {
-      // Example logic for relationship duration and next anniversary
-      this.relationshipDuration = "1 year, 3 months"; // Replace with actual calculation
-      this.nextAnniversary = "April 15, 2025"; // Replace with actual calculation
-
-      // Find the next milestone
-      const now = new Date();
-      this.nextMilestone = this.milestones
-        .filter((milestone) => new Date(milestone.date) > now)
-        .sort((a, b) => new Date(a.date) - new Date(b.date))[0] || {};
-    },
+    formatDate,
     isMilestoneCompleted(date) {
+      const milestoneDate = new Date(date);
       const now = new Date();
-      return new Date(date) < now;
-    },
-    formatDate(date) {
-      if (!date) return "N/A";
-      const options = { year: "numeric", month: "long", day: "numeric" };
-      return new Date(date).toLocaleDateString(undefined, options);
-    },
-    refreshData() {
-      this.fetchUserData();
+      return milestoneDate < now; // Returns true if the milestone date is in the past
     },
   },
   created() {

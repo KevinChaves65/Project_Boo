@@ -28,7 +28,8 @@
           :class="{ 
             'current-month': day.currentMonth, 
             'today': day.isToday, 
-            'has-events': hasEvents(day.date) 
+            'has-events': hasEvents(day.date),
+            'selected': day.date === selectedDate // Highlight the selected tile
           }"
           @click="selectDay(day)"
         >
@@ -39,7 +40,9 @@
 
       <!-- Event Panel -->
       <div class="event-panel">
-        <h3>{{ selectedDate ? formatDate(selectedDate) : 'Select a date' }}</h3>
+        <h3>
+          {{ selectedDate ? formatDate(new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1))) : 'Select a date' }}
+        </h3>
         <div v-if="selectedDate && getEventsForDate(selectedDate).length > 0" class="events-list">
           <div v-for="(milestone, index) in getEventsForDate(selectedDate)" :key="index" class="event-item">
             <div class="event-name">{{ milestone.title }}</div>
@@ -48,14 +51,12 @@
         </div>
         <div v-else-if="selectedDate" class="no-events">No events scheduled for this day</div>
       </div>
-
-      
     </div>
   </div>
 </template>
 
 <script>
-import { fetchUserProfile, fetchMilestones } from "../services/apiService";
+import { initializeUser, fetchCoupleMilestones, formatDate } from "../services/script";
 
 export default {
   name: "CalendarPage",
@@ -94,7 +95,7 @@ export default {
           dayNumber,
           currentMonth: false,
           isToday: this.isSameDay(date, today),
-          date: this.formatDateString(date),
+          date: date.toISOString().split("T")[0], // Ensure consistent date format
         });
       }
 
@@ -105,7 +106,7 @@ export default {
           dayNumber: i,
           currentMonth: true,
           isToday: this.isSameDay(date, today),
-          date: this.formatDateString(date),
+          date: date.toISOString().split("T")[0], // Ensure consistent date format
         });
       }
 
@@ -117,7 +118,7 @@ export default {
           dayNumber: i,
           currentMonth: false,
           isToday: this.isSameDay(date, today),
-          date: this.formatDateString(date),
+          date: date.toISOString().split("T")[0], // Ensure consistent date format
         });
       }
 
@@ -128,7 +129,7 @@ export default {
     async fetchCalendarData() {
       try {
         // Fetch user profile
-        const user = await fetchUserProfile();
+        const user = await initializeUser();
         const coupleId = user.couple_id;
 
         if (!coupleId) {
@@ -137,9 +138,9 @@ export default {
         }
 
         // Fetch milestones using the couple_id
-        this.milestones = await fetchMilestones(coupleId);
+        this.milestones = await fetchCoupleMilestones(coupleId);
 
-        // Format milestone dates
+        // Ensure milestone dates are in consistent format
         this.milestones = this.milestones.map((milestone) => ({
           ...milestone,
           date: new Date(milestone.date).toISOString().split("T")[0], // Ensure date is in YYYY-MM-DD format
@@ -157,16 +158,15 @@ export default {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
     },
     selectDay(day) {
-      this.selectedDate = day.date;
+      const selected = new Date(day.date);
+      selected.setDate(selected.getDate()); // Add 1 day to fix the timezone issue
+      this.selectedDate = selected.toISOString().split("T")[0]; // Ensure consistent date format
     },
     hasEvents(dateString) {
       return this.milestones.some((milestone) => milestone.date === dateString);
     },
     getEventsForDate(dateString) {
       return this.milestones.filter((milestone) => milestone.date === dateString);
-    },
-    formatDateString(date) {
-      return date.toISOString().split("T")[0];
     },
     isSameDay(date1, date2) {
       return (
@@ -175,11 +175,7 @@ export default {
         date1.getFullYear() === date2.getFullYear()
       );
     },
-    formatDate(dateString) {
-      const date = new Date(dateString);
-      date.setDate(date.getDate() + 1); // Add 1 day to the selected date
-      return date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-    },
+    formatDate,
   },
   created() {
     this.fetchCalendarData(); // Fetch user profile and milestones when the component is created
@@ -501,5 +497,11 @@ export default {
   .event-panel {
     margin-top: 1rem;
   }
+}
+
+.selected {
+  background-color: rgba(140, 104, 219, 0.2); /* Light purple background */
+  border: 2px solid #8c68db; /* Purple border */
+  border-radius: 4px;
 }
 </style>
