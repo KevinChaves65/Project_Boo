@@ -63,6 +63,10 @@
           <i class="far fa-smile"></i>
         </button>
 
+        <button @click="openTextEnhancer" class="input-action-button enhancer-button" title="Enhance Text">
+          <i class="fas fa-magic"></i>
+        </button>
+
         <textarea
           ref="inputArea"
           v-model="newMessage"
@@ -81,15 +85,25 @@
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
+
+      <!-- Text Enhancer Modal -->
+      <transition name="fade">
+        <div v-if="showTextEnhancer" class="text-enhancer-modal">
+          <TextEnhancer @text-selected="useEnhancedText" />
+          <button @click="closeTextEnhancer" class="close-button">Close</button>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script>
-import { fetchChats, fetchCoupleInfo, fetchUserProfile } from "../services/apiService";
+import { fetchChats, fetchCoupleInfo, fetchUserProfile, sendChatMessage } from "../services/apiService";
+import TextEnhancer from "./TextEnhancer.vue";
 
 export default {
   name: "ChatsPage",
+  components: { TextEnhancer },
   data() {
     return {
       messages: [], // Chat messages
@@ -101,6 +115,7 @@ export default {
       typingTimeout: null, // Timeout for typing indicator
       showEmojiPicker: false, // Emoji picker visibility
       commonEmojis: ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"], // Emoji list
+      showTextEnhancer: false, // Text enhancer modal visibility
     };
   },
   computed: {
@@ -158,23 +173,27 @@ export default {
       if (!this.isMessageValid) return;
 
       try {
+        // Construct the message object
         const message = {
           sender: this.currentUsername,
           receiver: this.partnerUsername,
-          content: this.newMessage.trim(),
+          text: this.newMessage.trim(), // Use `text` instead of `content`
           timestamp: Date.now(),
         };
 
-        // Add the message to the chat window
+        // Optimistically add the message to the chat window
         this.messages.push(message);
 
         // Clear the input field
         this.newMessage = "";
 
-        // Simulate partner typing and responding
-        this.simulatePartnerTyping();
+        // Send the message to the backend
+        await sendChatMessage(message.text, message.receiver, message.sender, message.timestamp);
+
+        // Scroll to the bottom of the chat window
+        this.scrollToBottom();
       } catch (error) {
-        console.error("Failed to send message:", error.message);
+        console.error("Failed to send message:", error.response?.data || error.message);
         alert("Failed to send message. Please try again.");
       }
     },
@@ -244,6 +263,21 @@ export default {
     },
     addEmoji(emoji) {
       this.newMessage += emoji;
+    },
+    scrollToBottom() {
+      if (this.$refs.chatWindow) {
+        this.$refs.chatWindow.scrollTop = this.$refs.chatWindow.scrollHeight;
+      }
+    },
+    openTextEnhancer() {
+      this.showTextEnhancer = true;
+    },
+    closeTextEnhancer() {
+      this.showTextEnhancer = false;
+    },
+    useEnhancedText(enhancedText) {
+      this.newMessage = enhancedText;
+      this.closeTextEnhancer();
     },
   },
   created() {
@@ -410,6 +444,7 @@ export default {
   align-self: center; /* Vertically center text cursor initially */
   scrollbar-width: thin;
   scrollbar-color: #ccc #f5f8fa;
+  color: black; /* Ensure font color is black */
 }
 .chat-input textarea::placeholder {
   color: #aab8c2;
@@ -501,6 +536,44 @@ export default {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
   transform: translateY(5px);
+}
+
+/* Text Enhancer Modal */
+.text-enhancer-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  z-index: 200;
+  width: 90%;
+  max-width: 500px;
+}
+.text-enhancer-modal .close-button {
+  background: transparent;
+  border: none;
+  color: #657786;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.text-enhancer-modal .close-button:hover {
+  color: #8c68db;
+  background-color: #e8e4f5;
 }
 
 /* Responsive adjustments */

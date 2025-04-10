@@ -185,3 +185,43 @@ export async function deleteMilestone(milestoneId) {
     throw error;
   }
 }
+
+// Link couple
+export async function linkCouple(partnerId) {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/couple/link`,
+      { partner_id: partnerId }, // Send the partner ID in the request body
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+        },
+      }
+    );
+    console.log("Link Couple Response:", response.data); // Debug response
+    return response.data;
+  } catch (error) {
+    console.error("Failed to link couple:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+export async function addPhrase(userId, text) {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/wordbank/add`, { userId, text });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to add phrase:", error);
+    throw error;
+  }
+}
+
+export async function getPhrases(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/wordbank`, { params: { userId } });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch phrases:", error);
+    throw error;
+  }
+}

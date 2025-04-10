@@ -30,6 +30,10 @@
             <h3>Gender</h3>
             <p>{{ gender }}</p>
           </div>
+          <div class="settings-card">
+            <h3>User ID</h3>
+            <p>{{ userId }}</p>
+          </div>
         </div>
       </section>
 
@@ -301,6 +305,7 @@ export default {
       phoneNumber: "",
       birthday: "",
       gender: "",
+      userId: "",
 
       // Password change
       oldPassword: "",
@@ -388,6 +393,7 @@ export default {
         this.phoneNumber = user.phone_number;
         this.birthday = user.birthday;
         this.gender = user.gender;
+        this.userId = user.id;
       } catch (error) {
         console.error("Failed to fetch user profile:", error.response?.data || error.message);
         alert("Failed to load profile information. Please log in again.");

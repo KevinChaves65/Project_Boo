@@ -84,23 +84,35 @@
           </div>
        </transition>
 
+      <!-- Word Bank Section -->
+      <div class="word-bank">
+        <h3>Your Word Bank</h3>
+        <ul>
+          <li v-for="phrase in phrases" :key="phrase.id">
+            <span>{{ phrase.text }}</span>
+            <button @click="usePhrase(phrase)">Use</button>
+          </li>
+        </ul>
+      </div>
+
     </div>
 
   </div>
 </template>
 
 <script>
-// Your existing script logic (data, methods: enhanceText, copyToClipboard, useEnhancedText)
-// Add a new method: clearAll
+import { addPhrase, getPhrases } from "../services/apiService";
+
 export default {
-  name: 'TextEnhancer', // Ensure name matches component registration
+  name: "TextEnhancer",
   data() {
     return {
-      originalText: '',
-      enhancedText: '',
-      paraphraseMode: 'standard',
+      originalText: "",
+      enhancedText: "",
+      paraphraseMode: "standard",
       isProcessing: false,
-      copySuccess: false, // Optional state for copy feedback
+      copySuccess: false,
+      phrases: [], // Store phrases from the word bank
     };
   },
   methods: {
@@ -108,43 +120,39 @@ export default {
       if (!this.originalText.trim() || this.isProcessing) return;
 
       this.isProcessing = true;
-      this.enhancedText = '';
-      this.copySuccess = false; // Reset copy state
-
-      // --- Simulate API Call ---
-       console.log(`Simulating API call for mode: ${this.paraphraseMode}`);
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000)); // Simulate delay
+      this.enhancedText = "";
+      this.copySuccess = false;
 
       try {
-          // --- Replace with ACTUAL API call ---
-          // const response = await fetch('/api/paraphrase', { ... });
-          // const data = await response.json();
-          // if (!response.ok) throw new Error(data.error || 'API Error');
-          // this.enhancedText = data.result || '';
-          // -------------------------
+        // Simulate API call for text enhancement
+        const modes = {
+          standard: `This is a standard enhancement of your text.`,
+          creative: `This creatively enhanced version adds flair and imagination.`,
+          fluent: `Your text now flows smoothly, ensuring readability.`,
+          formal: `This is a formal enhancement suitable for professional settings.`,
+        };
+        this.enhancedText = `${modes[this.paraphraseMode]} (Original: "${this.originalText}")`;
 
-          // --- Simulated Result ---
-          const modes = {
-              standard: `This is a standard, well-balanced enhancement of your original text, aiming for clarity and correctness.`,
-              creative: `Imagine your text blossoming! ✨ This creatively enhanced version adds flair and imagination.`,
-              fluent: `Your text now flows smoothly, like a gentle stream, ensuring readability and natural language.`,
-              formal: `Here is the formally enhanced text, suitable for professional correspondence or academic settings.`,
-              concise: `Getting straight to the point: this is the concise version.`,
-              casual: `Hey! Just keeping it chill, here's the casual take on your text. 😉`
-          };
-          this.enhancedText = `${modes[this.paraphraseMode]} (Original: "${this.originalText.substring(0, 30)}...")`;
-          // -------------------------
-
+        // Save the enhanced text to the word bank
+        await addPhrase("userId", this.enhancedText); // Replace "userId" with the actual user ID
+        alert("Enhanced text saved to your word bank!");
       } catch (error) {
-        console.error('Error enhancing text:', error);
-        // Show user-friendly error feedback (e.g., using a toast notification component)
-        alert(`Failed to enhance text: ${error.message || 'Please try again.'}`);
-        this.enhancedText = ''; // Clear any partial result
+        console.error("Error enhancing text:", error);
+        alert("Failed to enhance text. Please try again.");
       } finally {
         this.isProcessing = false;
       }
     },
-
+    async fetchPhrases() {
+      try {
+        this.phrases = await getPhrases("userId"); // Replace "userId" with the actual user ID
+      } catch (error) {
+        console.error("Failed to fetch phrases:", error);
+      }
+    },
+    usePhrase(phrase) {
+      this.originalText = phrase.text;
+    },
     copyToClipboard() {
       if (!this.enhancedText) return;
       navigator.clipboard.writeText(this.enhancedText)
@@ -176,7 +184,10 @@ export default {
       // Example: Maybe navigate to chat with this text pre-filled
        alert('Using enhanced text! (Implement navigation or action)');
     }
-  }
+  },
+  created() {
+    this.fetchPhrases();
+  },
 };
 </script>
 
@@ -463,6 +474,49 @@ export default {
 .fade-result-enter-from, .fade-result-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+/* Word Bank Section */
+.word-bank {
+  background-color: #f9fafb;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+.word-bank h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 1rem;
+}
+.word-bank ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.word-bank li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+.word-bank li:last-child {
+  border-bottom: none;
+}
+.word-bank button {
+  background-color: #8c68db;
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.word-bank button:hover {
+  background-color: #7a5fc7;
 }
 
 /* Responsive Adjustments */

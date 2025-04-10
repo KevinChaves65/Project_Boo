@@ -1,6 +1,4 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-
-// 1) Import components
 import LoginScreen from "../components/LoginScreen.vue";
 import SignupScreen from "../components/SignupScreen.vue";
 import NoPartner from "../components/NoPartner.vue";
@@ -12,19 +10,13 @@ import Calendar from "../components/Calendar.vue";
 import Chats from "../components/Chats.vue";
 import Settings from "../components/Settings.vue";
 import TextEnhancer from "../components/TextEnhancer.vue";
+import { fetchUserProfile } from "../services/apiService";
 
-// 2) Define routes
 const routes = [
-  // Redirect root to dashboard
-  { path: "/", redirect: "/dashboard" },
-
-  // Authentication routes
   { path: "/login", name: "Login", component: LoginScreen },
   { path: "/signup", name: "Signup", component: SignupScreen },
   { path: "/no-partner", name: "NoPartner", component: NoPartner },
   { path: "/link-partner", name: "LinkPartner", component: LinkPartner },
-
-  // Dashboard routes
   {
     path: "/dashboard",
     component: Dashboard,
@@ -37,25 +29,39 @@ const routes = [
       { path: "word-bank", name: "WordBank", component: TextEnhancer },
     ],
   },
-
-  // Optional: Catch-all 404 route
+  { path: "/", redirect: "/dashboard" }, // Default route
   { path: "/:pathMatch(.*)*", name: "NotFound", redirect: "/login" },
 ];
 
-// 3) Create and export the router
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
 });
 
-// 4) Add navigation guard
-router.beforeEach((to, from, next) => {
+// Add navigation guard
+router.beforeEach(async (to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("token"); // Check if token exists
-  if (to.name !== "Login" && to.name !== "Signup" && !isAuthenticated) {
+  if (!isAuthenticated && to.name !== "Login" && to.name !== "Signup") {
     next({ name: "Login" }); // Redirect to login if not authenticated
-  } else {
-    next(); // Allow navigation
+    return;
   }
+
+  if (isAuthenticated && to.name !== "Login" && to.name !== "Signup") {
+    try {
+      const userProfile = await fetchUserProfile();
+      if (!userProfile.couple_id && to.name !== "LinkPartner") {
+        // Redirect to LinkPartner if couple_id is null
+        next({ name: "LinkPartner" });
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error.message);
+      next({ name: "Login" }); // Redirect to login on error
+      return;
+    }
+  }
+
+  next(); // Allow navigation
 });
 
 export default router;

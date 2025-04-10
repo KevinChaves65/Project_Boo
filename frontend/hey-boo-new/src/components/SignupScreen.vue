@@ -118,8 +118,15 @@
     },
     methods: {
       async handleSignup() {
+        // Validate input
+        if (this.password !== this.confirmPassword) {
+          alert("Passwords do not match!");
+          return;
+        }
+
         this.isLoading = true;
         try {
+          // Send sign-up request to the backend
           const response = await axios.post("http://localhost:8080/register", {
             full_name: this.fullName,
             username: this.username,
@@ -129,10 +136,11 @@
             phone_number: this.phoneNumber,
             birthday: this.birthday,
             gender: this.gender,
+            couple_id: null, // Set couple_id to null during sign-up
           });
   
           alert(response.data.message);
-          this.$router.push("/login");
+          this.$router.push("/login"); // Redirect to login page
         } catch (error) {
           console.error("Sign-up failed:", error.response?.data || error.message);
           alert("Failed to create an account. Please try again.");
