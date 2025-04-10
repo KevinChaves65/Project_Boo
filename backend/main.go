@@ -7,9 +7,13 @@ import (
 	"github.com/KevinChaves65/Project_Boo/config"
 	"github.com/KevinChaves65/Project_Boo/controllers"
 	"github.com/KevinChaves65/Project_Boo/middlewares"
+	"github.com/KevinChaves65/Project_Boo/routes"
+	"github.com/KevinChaves65/Project_Boo/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -18,6 +22,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
+	router := mux.NewRouter()
+	routes.InitializeRoutes(router)
+
+	go services.HandleMessages()
 
 	// Connect to the database
 	config.ConnectDB()
