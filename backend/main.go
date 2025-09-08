@@ -66,6 +66,20 @@ func main() {
 	// Calendar routes
 	auth.POST("/calendar/sync", controllers.SyncCalendar)
 
+	// Word Bank routes
+	auth.POST("/wordbank", func(c *gin.Context) {
+		controllers.AddPhraseHandler(c.Writer, c.Request)
+	}) // Add a phrase
+	auth.GET("/wordbank", func(c *gin.Context) {
+		controllers.GetPhrasesHandler(c.Writer, c.Request)
+	}) // Get all phrases
+	auth.PUT("/wordbank", func(c *gin.Context) {
+		controllers.EditPhraseHandler(c.Writer, c.Request)
+	}) // Edit a phrase
+	auth.DELETE("/wordbank", func(c *gin.Context) {
+		controllers.DeletePhraseHandler(c.Writer, c.Request)
+	}) // Delete a phrase
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Default port if not specified

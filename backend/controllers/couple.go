@@ -11,8 +11,7 @@ import (
 
 func LinkCouple(c *gin.Context) {
 	var request struct {
-		User1Username string `json:"user1_username"`
-		User2Username string `json:"user2_username"`
+		PartnerID string `json:"partner_id"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -20,49 +19,65 @@ func LinkCouple(c *gin.Context) {
 		return
 	}
 
-	// Retrieve users by username
-	user1, err := models.GetUser(request.User1Username)
+	// Get current user from JWT token
+	currentUsername, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// Retrieve current user by username
+	currentUser, err := models.GetUser(currentUsername.(string))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User1 not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Current user not found"})
 		return
 	}
 
-	user2, err := models.GetUser(request.User2Username)
+	// Convert partner ID string to ObjectID
+	partnerObjectID, err := primitive.ObjectIDFromHex(request.PartnerID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User2 not found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid partner ID format"})
 		return
 	}
 
-	// Check if either user is already in a couple
-	_, err = models.GetCoupleByUserID(user1.ID)
-	if err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "User1 is already in a couple"})
+	// Retrieve partner by ID
+	partner, err := models.GetUserByID(partnerObjectID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Partner not found"})
 		return
 	}
 
-	_, err = models.GetCoupleByUserID(user2.ID)
+	// Check if current user is already in a couple
+	_, err = models.GetCoupleByUserID(currentUser.ID)
 	if err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "User2 is already in a couple"})
+		c.JSON(http.StatusConflict, gin.H{"error": "You are already in a couple"})
+		return
+	}
+
+	// Check if partner is already in a couple
+	_, err = models.GetCoupleByUserID(partner.ID)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Partner is already in a couple"})
 		return
 	}
 
 	// Create a couple entry
-	coupleID, err := models.AddCouple(user1.ID, user2.ID)
+	coupleID, err := models.AddCouple(currentUser.ID, partner.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link couple"})
 		return
 	}
 
 	// Update users with the couple ID
-	err = models.UpdateUser(user1.ID, bson.M{"couple_id": coupleID})
+	err = models.UpdateUser(currentUser.ID, bson.M{"couple_id": coupleID})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update User1"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update current user"})
 		return
 	}
 
-	err = models.UpdateUser(user2.ID, bson.M{"couple_id": coupleID})
+	err = models.UpdateUser(partner.ID, bson.M{"couple_id": coupleID})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update User2"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update partner"})
 		return
 	}
 

@@ -208,20 +208,33 @@ export async function linkCouple(partnerId) {
 
 export async function addPhrase(userId, text) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/wordbank/add`, { userId, text });
+    const response = await axios.post(
+      `${API_BASE_URL}/wordbank`,
+      { userId, text },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+        },
+      }
+    );
     return response.data;
   } catch (error) {
-    console.error("Failed to add phrase:", error);
+    console.error("Failed to add phrase:", error.response?.data || error.message);
     throw error;
   }
 }
 
 export async function getPhrases(userId) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/wordbank`, { params: { userId } });
+    const response = await axios.get(`${API_BASE_URL}/wordbank`, {
+      params: { userId }, // Pass userId as a query parameter
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+      },
+    });
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch phrases:", error);
+    console.error("Failed to fetch phrases:", error.response?.data || error.message);
     throw error;
   }
 }

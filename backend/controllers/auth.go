@@ -130,6 +130,7 @@ func Profile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
+			"id":           dbUser.ID.Hex(), // Include user ID as string
 			"username":     dbUser.Username,
 			"full_name":    dbUser.FullName,
 			"birthday":     dbUser.Birthday,
