@@ -238,3 +238,26 @@ export async function getPhrases(userId) {
     throw error;
   }
 }
+
+// Generate AI-powered date ideas
+export async function generateDateIdeas(location, preferences = "", budget = "") {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/dateideas/generate`,
+      { 
+        location: location,
+        preferences: preferences,
+        budget: budget
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to generate date ideas:", error.response?.data || error.message);
+    throw error;
+  }
+}

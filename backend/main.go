@@ -66,6 +66,9 @@ func main() {
 	// Calendar routes
 	auth.POST("/calendar/sync", controllers.SyncCalendar)
 
+	// Date Ideas routes
+	auth.POST("/dateideas/generate", controllers.GenerateDateIdeas)
+
 	// Word Bank routes
 	auth.POST("/wordbank", func(c *gin.Context) {
 		controllers.AddPhraseHandler(c.Writer, c.Request)

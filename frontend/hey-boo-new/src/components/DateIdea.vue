@@ -4,6 +4,61 @@
 
     <!-- Search Section - Enhanced Look -->
     <div class="search-section">
+      <!-- AI Date Ideas Generator -->
+      <div class="ai-generator-section">
+        <h3 class="ai-section-title">
+          <i class="fas fa-robot"></i> AI-Powered Date Ideas
+        </h3>
+        <div class="ai-form">
+          <div class="ai-form-row">
+            <div class="input-group">
+              <label for="location-input">Location</label>
+              <input
+                id="location-input"
+                v-model="aiForm.location"
+                type="text"
+                placeholder="e.g., Toronto, Ontario or specific address"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label for="preferences-input">Preferences (Optional)</label>
+              <input
+                id="preferences-input"
+                v-model="aiForm.preferences"
+                type="text"
+                placeholder="e.g., outdoor, romantic, adventurous"
+              />
+            </div>
+          </div>
+          <div class="ai-form-row">
+            <div class="input-group">
+              <label for="budget-select">Budget</label>
+              <select id="budget-select" v-model="aiForm.budget">
+                <option value="">Any Budget</option>
+                <option value="low">Low Budget ($0-50)</option>
+                <option value="medium">Medium Budget ($50-150)</option>
+                <option value="high">High Budget ($150+)</option>
+              </select>
+            </div>
+            <div class="input-group generate-button-group">
+              <button 
+                @click="generateAIIdeas" 
+                class="ai-generate-button"
+                :disabled="isGenerating || !aiForm.location.trim()"
+                :title="!aiForm.location.trim() ? 'Please enter a location' : 'Generate AI date ideas'"
+              >
+                <i class="fas fa-magic" v-if="!isGenerating"></i>
+                <i class="fas fa-spinner fa-spin" v-if="isGenerating"></i>
+                <span v-if="!isGenerating">Generate Ideas</span>
+                <span v-if="isGenerating">Generating...</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regular Search Bar -->
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
         <input
@@ -49,7 +104,7 @@
                 <i
                   v-for="star in 5"
                   :key="`s-${index}-star-${star}`"
-                  :class="['fas', star <= suggest.rating ? 'fa-star' : 'fa-star-o']"
+                  :class="star <= Math.floor(suggest.rating) ? 'fas fa-star' : (star === Math.ceil(suggest.rating) && suggest.rating % 1 !== 0) ? 'fas fa-star-half-alt' : 'far fa-star'"
                   aria-hidden="true"
                 ></i>
               </div>
@@ -77,18 +132,12 @@
                 <div class="rating-large">
                    <span class="sr-only">Rating: {{ detailedSuggestion.rating }} out of 5 stars</span>
                   <i
-                    v-for="star in detailedSuggestion.rating"
+                    v-for="star in 5"
                     :key="'detail-star-' + star"
-                    class="fas fa-star"
+                    :class="star <= Math.floor(detailedSuggestion.rating) ? 'fas fa-star' : (star === Math.ceil(detailedSuggestion.rating) && detailedSuggestion.rating % 1 !== 0) ? 'fas fa-star-half-alt' : 'far fa-star'"
                     aria-hidden="true"
                   ></i>
-                  <i
-                    v-for="emptyStar in 5 - detailedSuggestion.rating"
-                    :key="'detail-empty-' + emptyStar"
-                    class="far fa-star"
-                    aria-hidden="true"
-                  ></i>
-                  <span class="rating-text">({{ detailedSuggestion.rating }}.0)</span>
+                  <span class="rating-text">({{ detailedSuggestion.rating }})</span>
                 </div>
               </div>
 
@@ -116,7 +165,61 @@
               <div class="tab-content">
                 <transition name="fade" mode="out-in">
                   <div v-if="activeTab === 'info'" key="info" class="info-content">
-                    <p>{{ detailedSuggestion.info }}</p>
+                    <p class="main-description">{{ detailedSuggestion.info }}</p>
+                    
+                    <!-- Enhanced AI Information -->
+                    <div v-if="detailedSuggestion.isAIGenerated" class="ai-enhanced-info">
+                      
+                      <!-- Business Details -->
+                      <div v-if="detailedSuggestion.businessName" class="info-section">
+                        <h4><i class="fas fa-store"></i> Business Details</h4>
+                        <div class="business-info">
+                          <p class="business-name">{{ detailedSuggestion.businessName }}</p>
+                          <p v-if="detailedSuggestion.address" class="address">
+                            <i class="fas fa-map-marker-alt"></i> {{ detailedSuggestion.address }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <!-- Cost & Timing -->
+                      <div class="cost-timing-section">
+                        <div v-if="detailedSuggestion.cost" class="info-section">
+                          <h4><i class="fas fa-dollar-sign"></i> Cost</h4>
+                          <p class="cost-info">{{ detailedSuggestion.cost }}</p>
+                        </div>
+                        
+                        <div v-if="detailedSuggestion.timing" class="info-section">
+                          <h4><i class="fas fa-clock"></i> Best Time</h4>
+                          <p class="timing-info">{{ detailedSuggestion.timing }}</p>
+                        </div>
+                      </div>
+
+                      <!-- Special Note -->
+                      <div v-if="detailedSuggestion.specialNote" class="info-section">
+                        <h4><i class="fas fa-heart"></i> Why It's Special</h4>
+                        <p class="special-note">{{ detailedSuggestion.specialNote }}</p>
+                      </div>
+
+                      <!-- Amenities -->
+                      <div v-if="detailedSuggestion.amenities && detailedSuggestion.amenities.length > 0" class="info-section">
+                        <h4><i class="fas fa-list"></i> Amenities</h4>
+                        <div class="amenities-list">
+                          <span 
+                            v-for="amenity in detailedSuggestion.amenities" 
+                            :key="amenity" 
+                            class="amenity-tag"
+                          >
+                            {{ amenity }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- AI Badge -->
+                      <div class="ai-badge">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Generated Suggestion</span>
+                      </div>
+                    </div>
                   </div>
                   <div v-else key="reviews" class="reviews-content">
                     <div v-if="formattedReviews.length > 0">
@@ -154,6 +257,8 @@
 </template>
 
 <script>
+import { generateDateIdeas } from "../services/apiService";
+
 // Your existing <script> block remains the same
 // ... (methods: performSearch, selectSuggestion, chooseSuggestion, generateMore)
 // Make sure data properties (searchQuery, activeTab, suggestions, detailedSuggestion) exist
@@ -188,7 +293,15 @@ export default {
       suggestions: enrichedSuggestions,
       allSuggestions: [...enrichedSuggestions], // Keep a copy for resetting search
       // Start with the first suggestion selected, or null for placeholder
-      detailedSuggestion: enrichedSuggestions.length > 0 ? { ...enrichedSuggestions[0] } : null
+      detailedSuggestion: enrichedSuggestions.length > 0 ? { ...enrichedSuggestions[0] } : null,
+      // AI form data
+      aiForm: {
+        location: "",
+        preferences: "",
+        budget: ""
+      },
+      isGenerating: false,
+      aiGeneratedIdeas: []
     };
   },
  computed: {
@@ -251,6 +364,135 @@ export default {
       // Implement logic to fetch/suggest more ideas
       alert("Generating more date ideas... (API call needed)");
        // Example: fetch('/api/more-ideas?based_on=' + this.detailedSuggestion.title)
+    },
+    async generateAIIdeas() {
+      if (!this.aiForm.location.trim()) {
+        alert("Please enter a location to generate ideas.");
+        return;
+      }
+
+      this.isGenerating = true;
+      try {
+        const response = await generateDateIdeas(
+          this.aiForm.location,
+          this.aiForm.preferences,
+          this.aiForm.budget
+        );
+
+        if (response.success) {
+          // Parse the AI response and convert to our format
+          this.parseAndAddAIIdeas(response.ideas);
+          alert(`Generated new AI-powered date ideas for ${response.location}!`);
+        } else {
+          throw new Error("Failed to generate ideas");
+        }
+      } catch (error) {
+        console.error("Failed to generate AI ideas:", error);
+        alert("Failed to generate AI date ideas. Please try again.");
+      } finally {
+        this.isGenerating = false;
+      }
+    },
+    parseAndAddAIIdeas(aiResponse) {
+      try {
+        // Try to parse JSON if the AI returned structured data
+        let ideas;
+        if (aiResponse.includes('[') && aiResponse.includes(']')) {
+          // Extract JSON from the response
+          const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            ideas = JSON.parse(jsonMatch[0]);
+          }
+        }
+        
+        if (!ideas || !Array.isArray(ideas)) {
+          // Fallback: parse text response
+          ideas = this.parseTextResponse(aiResponse);
+        }
+
+        // Convert AI ideas to our format
+        const convertedIdeas = ideas.map((idea, index) => ({
+          title: idea.title || `AI Idea ${index + 1}`,
+          rating: idea.rating || 4, // Use AI-provided rating or default
+          image: idea.imageUrl || `/images/ai-generated-${index + 1}.jpg`,
+          info: idea.description || idea.info || "AI-generated date idea",
+          cost: idea.cost || "Varies",
+          timing: idea.timing || "Anytime",
+          specialNote: idea.specialNote || "Generated by AI based on your preferences",
+          businessName: idea.businessName || "",
+          address: idea.address || "",
+          amenities: idea.amenities || [],
+          sampleReviews: idea.sampleReviews || [],
+          reviews: this.formatAIReviews(idea.sampleReviews || []),
+          isAIGenerated: true
+        }));
+
+        // Add to suggestions
+        this.aiGeneratedIdeas = convertedIdeas;
+        this.allSuggestions = [...this.allSuggestions, ...convertedIdeas];
+        this.suggestions = [...this.suggestions, ...convertedIdeas];
+
+        // Select the first AI-generated idea
+        if (convertedIdeas.length > 0) {
+          this.selectSuggestion(convertedIdeas[0]);
+        }
+      } catch (error) {
+        console.error("Failed to parse AI response:", error);
+        // Fallback: create a single idea from the raw response
+        this.createFallbackIdea(aiResponse);
+      }
+    },
+    parseTextResponse(text) {
+      // Simple text parsing for non-JSON responses
+      const lines = text.split('\n').filter(line => line.trim());
+      const ideas = [];
+      let currentIdea = {};
+      
+      lines.forEach(line => {
+        if (line.includes(':')) {
+          const [key, value] = line.split(':').map(s => s.trim());
+          if (key.toLowerCase().includes('title') || (!currentIdea.title && ideas.length < 6)) {
+            if (currentIdea.title) {
+              ideas.push(currentIdea);
+              currentIdea = {};
+            }
+            currentIdea.title = value;
+          } else if (key.toLowerCase().includes('description')) {
+            currentIdea.description = value;
+          } else if (key.toLowerCase().includes('cost')) {
+            currentIdea.cost = value;
+          }
+        } else if (line.trim() && !currentIdea.description) {
+          currentIdea.description = line.trim();
+        }
+      });
+      
+      if (currentIdea.title) {
+        ideas.push(currentIdea);
+      }
+      
+      return ideas.length > 0 ? ideas : [{ title: "AI Date Idea", description: text.substring(0, 200) }];
+    },
+    createFallbackIdea(response) {
+      const fallbackIdea = {
+        title: `AI Date Ideas for ${this.aiForm.location}`,
+        rating: 4,
+        image: '/images/ai-generated-fallback.jpg',
+        info: response.substring(0, 300) + '...',
+        reviews: "AI-generated suggestions based on your location and preferences.",
+        isAIGenerated: true
+      };
+      
+      this.allSuggestions.push(fallbackIdea);
+      this.suggestions.push(fallbackIdea);
+      this.selectSuggestion(fallbackIdea);
+    },
+    formatAIReviews(reviewsArray) {
+      if (!reviewsArray || reviewsArray.length === 0) {
+        return "\"Great AI suggestion! We had an amazing time.\" - AI User\n\n\"Unique and thoughtful idea we wouldn't have thought of ourselves.\" - Happy Couple";
+      }
+      
+      return reviewsArray.map(review => `"${review}"`).join('\n\n');
     }
   },
    // Handle potential missing images
@@ -278,7 +520,127 @@ export default {
 /* Enhanced Search Bar */
 .search-section {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
+
+/* AI Generator Section */
+.ai-generator-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.ai-section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-section-title i {
+  color: #ffd700;
+}
+
+.ai-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ai-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .ai-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.input-group input,
+.input-group select {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.input-group input::placeholder {
+  color: #666;
+  opacity: 0.8;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.generate-button-group {
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.ai-generate-button {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+}
+
+.ai-generate-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffed4e, #ffd700);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+}
+
+.ai-generate-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ai-generate-button i.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .search-bar {
   display: flex;
   align-items: center;
@@ -737,6 +1099,124 @@ export default {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Enhanced AI Information Styles */
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.main-description {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+.ai-enhanced-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-section {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  border-left: 4px solid #667eea;
+}
+
+.info-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.info-section h4 i {
+  color: #667eea;
+  width: 16px;
+  text-align: center;
+}
+
+.business-info .business-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.business-info .address {
+  margin: 0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cost-timing-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .cost-timing-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cost-info, .timing-info {
+  margin: 0;
+  font-weight: 500;
+  color: #555;
+}
+
+.special-note {
+  margin: 0;
+  font-style: italic;
+  color: #555;
+  line-height: 1.5;
+}
+
+.amenities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.amenity-tag {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.ai-badge {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333;
+  padding: 0.75rem 1rem;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+}
+
+.ai-badge i {
+  font-size: 1.1rem;
 }
 
 </style>
