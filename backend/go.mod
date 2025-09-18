@@ -13,6 +13,8 @@ require (
 	golang.org/x/crypto v0.36.0
 )
 
+require go.mongodb.org/mongo-driver/v2 v2.3.0 // indirect
+
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect

@@ -94,7 +94,7 @@
             tabindex="0" @keyup.enter="selectSuggestion(suggest)" @keyup.space="selectSuggestion(suggest)"
           >
             <div class="suggestion-preview"
-                 :style="{ backgroundImage: `url(${suggest.image || '/images/placeholder-card.jpg'})` }">
+                 :style="{ backgroundImage: `url(${suggest.image || 'https://picsum.photos/seed/default-date/400/300'})` }">
                  <div class="preview-overlay"></div>
             </div>
             <div class="suggestion-info">
@@ -123,7 +123,11 @@
         <!-- Display Details Card -->
         <div class="suggestion-detailed-card" v-if="detailedSuggestion">
             <div class="suggestion-image">
-              <img :src="detailedSuggestion.image || '/images/placeholder-detail.jpg'" :alt="detailedSuggestion.title" />
+              <img 
+                :src="detailedSuggestion.image || 'https://picsum.photos/seed/default-detail/400/300'" 
+                :alt="detailedSuggestion.title"
+                @error="handleImageError"
+              />
             </div>
 
             <div class="detail-content-wrapper">
@@ -265,35 +269,16 @@ import { generateDateIdeas } from "../services/apiService";
 export default {
   name: "DateIdeas",
   data() {
-    // Using placeholder images - replace with your actual paths or logic
-    const placeholderImg = (title) => `/images/${title.toLowerCase().replace(/\s+/g, '-')}.jpg`; // Basic slugify
-     const initialSuggestions = [
-      { title: "Romantic Dinner", rating: 5 },
-      { title: "Outdoor Picnic", rating: 4 },
-      { title: "Movie Night", rating: 3 },
-      { title: "Hiking Adventure", rating: 4 }
-     
-    ];
-
-    // Add images and enrich initial data
-     const enrichedSuggestions = initialSuggestions.map(s => ({
-        ...s,
-        image: placeholderImg(s.title), // Generate image path
-         info: s.title === "Romantic Dinner"
-          ? "A romantic dinner provides a classic setting to connect. Look for a cozy restaurant with ambient lighting and soft music, or try a new cuisine you both want to explore. Making a reservation, especially somewhere meaningful, adds a thoughtful touch."
-          : `Explore the unique experience of ${s.title}. This idea is great for couples seeking quality time and shared memories. It offers opportunities for conversation and connection in a fun ${s.rating > 3 ? 'and engaging' : 'and relaxed'} atmosphere.`,
-        reviews: s.title === "Romantic Dinner"
-          ? "\"Magical anniversary dinner! The ambiance was perfect.\" - Sarah & Mike\n\n\"Sparked great conversation, we talked for hours!\" - Jamie & Taylor"
-          : `"Absolutely loved our ${s.title} date! So refreshing and fun.` + (s.rating > 4 ? ` Highly recommended!" - Chloe & Ben` : `" - Anonymous` ) + `\n\n"A great break from the usual routine. Enjoyed it a lot." - John & Lisa`,
-    }));
+    // Start with empty suggestions - only show AI-generated ideas
+    const enrichedSuggestions = [];
 
     return {
       searchQuery: "",
       activeTab: "info",
       suggestions: enrichedSuggestions,
       allSuggestions: [...enrichedSuggestions], // Keep a copy for resetting search
-      // Start with the first suggestion selected, or null for placeholder
-      detailedSuggestion: enrichedSuggestions.length > 0 ? { ...enrichedSuggestions[0] } : null,
+      // Start with no suggestion selected - show placeholder
+      detailedSuggestion: null,
       // AI form data
       aiForm: {
         location: "",
@@ -414,7 +399,7 @@ export default {
         const convertedIdeas = ideas.map((idea, index) => ({
           title: idea.title || `AI Idea ${index + 1}`,
           rating: idea.rating || 4, // Use AI-provided rating or default
-          image: idea.imageUrl || `/images/ai-generated-${index + 1}.jpg`,
+          image: this.getImageForIdea(idea, index),
           info: idea.description || idea.info || "AI-generated date idea",
           cost: idea.cost || "Varies",
           timing: idea.timing || "Anytime",
@@ -477,7 +462,7 @@ export default {
       const fallbackIdea = {
         title: `AI Date Ideas for ${this.aiForm.location}`,
         rating: 4,
-        image: '/images/ai-generated-fallback.jpg',
+        image: '/images/sample-idea.jpg',
         info: response.substring(0, 300) + '...',
         reviews: "AI-generated suggestions based on your location and preferences.",
         isAIGenerated: true
@@ -493,6 +478,76 @@ export default {
       }
       
       return reviewsArray.map(review => `"${review}"`).join('\n\n');
+    },
+    getImageForIdea(idea, index) {
+      // Use Picsum (Lorem Picsum) - more reliable than Unsplash Source
+      const getPicsumImage = (seed, width = 400, height = 300) => {
+        return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+      };
+
+      // Smart image selection based on content
+      const title = (idea.title || '').toLowerCase();
+      const description = (idea.description || idea.info || '').toLowerCase();
+      const content = title + ' ' + description;
+
+      // Create unique seeds based on content for consistent images
+      let seed = 'couple-date';
+      
+      if (content.includes('dinner') || content.includes('restaurant') || content.includes('wine') || content.includes('romantic') || content.includes('date night')) {
+        seed = 'romantic-dinner';
+      } else if (content.includes('outdoor') || content.includes('picnic') || content.includes('park') || content.includes('garden') || content.includes('nature')) {
+        seed = 'outdoor-picnic';
+      } else if (content.includes('hiking') || content.includes('adventure') || content.includes('active') || content.includes('sports') || content.includes('bike')) {
+        seed = 'hiking-adventure';
+      } else if (content.includes('movie') || content.includes('theater') || content.includes('show') || content.includes('entertainment') || content.includes('concert')) {
+        seed = 'movie-theater';
+      } else if (content.includes('museum') || content.includes('art') || content.includes('gallery')) {
+        seed = 'museum-art';
+      } else if (content.includes('beach') || content.includes('water') || content.includes('swim')) {
+        seed = 'beach-sunset';
+      } else if (content.includes('coffee') || content.includes('cafe') || content.includes('brunch')) {
+        seed = 'coffee-cafe';
+      } else if (content.includes('shopping') || content.includes('market')) {
+        seed = 'shopping-market';
+      } else if (content.includes('music') || content.includes('concert') || content.includes('festival')) {
+        seed = 'music-concert';
+      }
+
+      // Add index to seed for variety while keeping consistency
+      return getPicsumImage(`${seed}-${index}`);
+    },
+    getValidImageUrl(imageUrl) {
+      // Check if the AI provided a valid image URL
+      if (!imageUrl || typeof imageUrl !== 'string') return null;
+      
+      // Check if it's a valid HTTP/HTTPS URL
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        // For now, we'll return null to use fallback images
+        // In the future, you could implement actual image validation
+        return null;
+      }
+      
+      // If it's a local path, check if it exists in our images
+      const validLocalImages = [
+        '/images/romantic-dinner.jpg',
+        '/images/outdoor-picnic.jpg', 
+        '/images/hiking-adventure.jpg',
+        '/images/movie-night.jpg',
+        '/images/sample-idea.jpg'
+      ];
+      
+      return validLocalImages.includes(imageUrl) ? imageUrl : null;
+    },
+    handleImageError(event) {
+      // Fallback to a generic couple date image if any image fails to load
+      console.warn('Image failed to load:', event.target.src);
+      // Try a different Picsum fallback first
+      if (!event.target.src.includes('picsum.photos')) {
+        event.target.src = 'https://picsum.photos/seed/fallback-couple/400/300';
+      } else {
+        // Final fallback to local image
+        event.target.src = '/images/sample-idea.jpg';
+      }
     }
   },
    // Handle potential missing images

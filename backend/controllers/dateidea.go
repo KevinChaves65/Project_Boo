@@ -84,7 +84,7 @@ func GenerateDateIdeas(c *gin.Context) {
 6) Specific business name and address if applicable
 7) Google Maps star rating (if available, use realistic ratings 3.5-4.8)
 8) Sample Google Maps review quotes (create realistic positive reviews)
-9) High-quality image URLs (suggest relevant stock photo search terms or actual place photos if known)
+9) High-quality image URLs (use Picsum format: https://picsum.photos/seed/[descriptive-seed]/400/300)
 10) Additional amenities or features
 
 Format as a JSON array with objects containing these fields:
@@ -101,7 +101,7 @@ Format as a JSON array with objects containing these fields:
     "Great place for a romantic evening! - Sarah M.",
     "Perfect atmosphere for couples! - John D."
   ],
-  "imageUrl": "https://example.com/image.jpg or suggested search term",
+  "imageUrl": "https://picsum.photos/seed/descriptive-seed/400/300",
   "amenities": ["parking", "outdoor seating", "live music"]
 }
 
