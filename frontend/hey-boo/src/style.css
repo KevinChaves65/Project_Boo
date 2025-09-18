@@ -4,7 +4,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(0, 0, 0, 0.87);
   background-color: #242424;
 
   font-synthesis: none;
@@ -23,6 +23,7 @@ a:hover {
 }
 
 body {
+<<<<<<< HEAD
   min-width: 400px;
   min-height: 600px;
   max-width: 1024px;
@@ -40,6 +41,15 @@ body {
 }
 
 
+=======
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+>>>>>>> Security_Test
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -74,6 +84,7 @@ button:focus-visible {
   padding: 2rem;
   text-align: center;
 }
+<<<<<<< HEAD
 /* Make sidebar responsive */
 @media (max-width: 768px) {
   .sidebar {
@@ -96,6 +107,8 @@ button:focus-visible {
     padding: 0.25rem;
   }
 }
+=======
+>>>>>>> Security_Test
 
 @media (prefers-color-scheme: light) {
   :root {

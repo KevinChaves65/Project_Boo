@@ -1,159 +1,136 @@
 <template>
-  <!-- Root element for this specific view's content -->
-  <div class="date-ideas-view-content">
-
-    <!-- Search Section - Enhanced Look -->
-    <div class="search-section">
-      <div class="search-bar">
-        <i class="fas fa-search search-icon"></i>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search specific date ideas (e.g., 'picnic', 'museum')"
-          @keyup.enter="performSearch"
-        />
-        <button @click="performSearch" class="search-button" title="Search">
-          <i class="fas fa-search"></i>
-          <span>Search</span>
-        </button>
+  <div class="date-ideas-container">
+    <header class="date-ideas-header">
+      <div class="header-top">
+        <h1>Date Ideas</h1>
+        <router-link to="/dashboard" class="back-button">
+          <i class="fas fa-arrow-left"></i> Dashboard
+        </router-link>
       </div>
-    </div>
+    </header>
 
-    <!-- Main Content Area: Suggestions List + Detailed View -->
-    <div class="ideas-layout-grid">
-
-      <!-- Suggestion List Column -->
-      <div class="suggestion-list-column">
-        <h2 class="column-title">
-          <i class="fas fa-lightbulb"></i> Suggestions
-        </h2>
-        <div class="suggestion-cards-container">
-          <!-- Card Loop -->
-          <div
-            v-for="(suggest, index) in suggestions"
-            :key="`suggest-${index}`"
-            class="suggestion-card"
-            :class="{ active: detailedSuggestion && suggest.title === detailedSuggestion.title }"
-            @click="selectSuggestion(suggest)"
-            :title="`View details for ${suggest.title}`"
-            tabindex="0" @keyup.enter="selectSuggestion(suggest)" @keyup.space="selectSuggestion(suggest)"
-          >
-            <div class="suggestion-preview"
-                 :style="{ backgroundImage: `url(${suggest.image || '/images/placeholder-card.jpg'})` }">
-                 <div class="preview-overlay"></div>
-            </div>
-            <div class="suggestion-info">
-              <h4>{{ suggest.title }}</h4>
-              <div class="rating">
-                 <span class="sr-only">Rating: {{ suggest.rating }} out of 5 stars</span>
-                <i
-                  v-for="star in 5"
-                  :key="`s-${index}-star-${star}`"
-                  :class="['fas', star <= suggest.rating ? 'fa-star' : 'fa-star-o']"
-                  aria-hidden="true"
-                ></i>
-              </div>
-            </div>
-             <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
-          </div>
-          <!-- No results message -->
-          <p v-if="suggestions.length === 0" class="no-suggestions">
-            <i class="fas fa-search"></i> No suggestions match your search.
-          </p>
+    <div class="date-ideas-body">
+      <!-- Search section -->
+      <div class="search-section">
+        <div class="search-bar">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search for date ideas..."
+            @keyup.enter="performSearch"
+          />
+          <button @click="performSearch" class="search-button">
+            Search
+          </button>
         </div>
       </div>
 
-      <!-- Detailed View Column -->
-      <div class="suggestion-detail-column">
-        <!-- Display Details Card -->
-        <div class="suggestion-detailed-card" v-if="detailedSuggestion">
-            <div class="suggestion-image">
-              <img :src="detailedSuggestion.image || '/images/placeholder-detail.jpg'" :alt="detailedSuggestion.title" />
-            </div>
-
-            <div class="detail-content-wrapper">
-              <div class="suggestion-header">
-                <h2>{{ detailedSuggestion.title }}</h2>
-                <div class="rating-large">
-                   <span class="sr-only">Rating: {{ detailedSuggestion.rating }} out of 5 stars</span>
-                  <i
-                    v-for="star in detailedSuggestion.rating"
-                    :key="'detail-star-' + star"
-                    class="fas fa-star"
-                    aria-hidden="true"
-                  ></i>
-                  <i
-                    v-for="emptyStar in 5 - detailedSuggestion.rating"
-                    :key="'detail-empty-' + emptyStar"
-                    class="far fa-star"
-                    aria-hidden="true"
-                  ></i>
-                  <span class="rating-text">({{ detailedSuggestion.rating }}.0)</span>
+      <!-- Content section -->
+      <div class="content-container">
+        <!-- Suggestion list -->
+        <div class="suggestion-list">
+          <h3 class="section-title">
+            <i class="fas fa-lightbulb"></i> Suggestions
+          </h3>
+          
+          <div class="suggestion-cards">
+            <div
+              v-for="(suggest, index) in suggestions"
+              :key="index"
+              class="suggestion-card"
+              :class="{ active: suggest.title === detailedSuggestion.title }"
+              @click="selectSuggestion(suggest)"
+            >
+              <div class="card-content">
+                <div class="suggestion-preview" 
+                     :style="{ backgroundImage: `url(${suggest.image})` }">
+                </div>
+                <div class="suggestion-info">
+                  <h4>{{ suggest.title }}</h4>
+                  <div class="rating">
+                    <i
+                      v-for="star in 5"
+                      :key="star"
+                      :class="[
+                        'fas', 
+                        star <= suggest.rating ? 'fa-star' : 'fa-star-o'
+                      ]"
+                      :style="{ color: star <= suggest.rating ? '#ffcc00' : '#ccc' }"
+                    ></i>
+                  </div>
                 </div>
               </div>
-
-
-              <!-- Using Tabs for Info/Reviews -->
-              <div class="suggestion-tabs">
-                <button
-                  class="tab-button"
-                  :class="{ active: activeTab === 'info' }"
-                  @click="activeTab = 'info'"
-                  :aria-pressed="activeTab === 'info'"
-                >
-                  <i class="fas fa-info-circle"></i> Info
-                </button>
-                <button
-                  class="tab-button"
-                  :class="{ active: activeTab === 'reviews' }"
-                  @click="activeTab = 'reviews'"
-                   :aria-pressed="activeTab === 'reviews'"
-                >
-                  <i class="fas fa-comments"></i> Reviews ({{ formattedReviews.length }})
-                </button>
-              </div>
-
-              <div class="tab-content">
-                <transition name="fade" mode="out-in">
-                  <div v-if="activeTab === 'info'" key="info" class="info-content">
-                    <p>{{ detailedSuggestion.info }}</p>
-                  </div>
-                  <div v-else key="reviews" class="reviews-content">
-                    <div v-if="formattedReviews.length > 0">
-                      <div v-for="(review, idx) in formattedReviews" :key="`review-${idx}`" class="review-item">
-                         <blockquote>"{{ review.text }}"</blockquote>
-                         <cite>- {{ review.author }}</cite>
-                      </div>
-                    </div>
-                    <p v-else class="no-reviews-message">
-                        <i class="fas fa-comment-slash"></i> No reviews available yet.
-                    </p>
-                  </div>
-                 </transition>
-              </div>
-
-              <div class="action-buttons">
-                <button @click="chooseSuggestion" class="primary-action-button">
-                  <i class="fas fa-calendar-plus"></i> Add to Calendar
-                </button>
-                 <button @click="generateMore" class="secondary-action-button">
-                  <i class="fas fa-sync-alt"></i> Get More Ideas
-                </button>
-              </div>
-           </div>
+            </div>
+          </div>
         </div>
-         <!-- Placeholder when nothing is selected -->
-         <div class="suggestion-detailed-placeholder" v-else>
-            <i class="fas fa-hand-pointer"></i>
-            <p>Select a suggestion from the list to see the details.</p>
+
+        <!-- Detailed view -->
+        <div class="suggestion-detailed">
+          <div class="suggestion-header">
+            <h2>{{ detailedSuggestion.title }}</h2>
+            <div class="rating-large">
+              <i
+                v-for="star in detailedSuggestion.rating"
+                :key="'star-' + star"
+                class="fas fa-star"
+                style="color: #ffcc00;"
+              ></i>
+              <i
+                v-for="emptyStar in 5 - detailedSuggestion.rating"
+                :key="'empty-' + emptyStar"
+                class="far fa-star"
+                style="color: #ffcc00;"
+              ></i>
+            </div>
+          </div>
+          
+          <div class="suggestion-image">
+            <img :src="detailedSuggestion.image" :alt="detailedSuggestion.title" />
+          </div>
+          
+          <div class="suggestion-tabs">
+            <button 
+              class="tab-button" 
+              :class="{ active: activeTab === 'info' }"
+              @click="activeTab = 'info'"
+            >
+              <i class="fas fa-info-circle"></i> Information
+            </button>
+            <button 
+              class="tab-button" 
+              :class="{ active: activeTab === 'reviews' }"
+              @click="activeTab = 'reviews'"
+            >
+              <i class="fas fa-comment"></i> Reviews
+            </button>
+          </div>
+          
+          <div class="tab-content">
+            <div v-if="activeTab === 'info'" class="info-content">
+              <p>{{ detailedSuggestion.info }}</p>
+            </div>
+            <div v-if="activeTab === 'reviews'" class="reviews-content">
+              <p>{{ detailedSuggestion.reviews }}</p>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button @click="chooseSuggestion" class="primary-button">
+              <i class="fas fa-heart"></i> Choose This Date
+            </button>
+            <button @click="generateMore" class="secondary-button">
+              <i class="fas fa-sync-alt"></i> Generate More
+            </button>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <script>
+<<<<<<< HEAD
 // Your existing <script> block remains the same
 // ... (methods: performSearch, selectSuggestion, chooseSuggestion, generateMore)
 // Make sure data properties (searchQuery, activeTab, suggestions, detailedSuggestion) exist
@@ -262,11 +239,96 @@ export default {
      if (this.detailedSuggestion && !checkImage(this.detailedSuggestion.image)) {
          this.detailedSuggestion.image = '/images/placeholder-detail.jpg';
      }
+=======
+export default {
+  name: "DateIdeas",
+  data() {
+    return {
+      searchQuery: "",
+      activeTab: "info",
+      detailedSuggestion: {
+        title: "Romantic Dinner",
+        image: "/images/dinner.jpg",
+        info: "A romantic dinner is a perfect way to connect with your partner. Find a cozy restaurant with ambient lighting, soft music, and delicious food. Consider making a reservation at a place with a special meaning to both of you, or try a new cuisine you've been wanting to explore together.",
+        reviews: "\"We tried this for our anniversary and it was magical! The ambiance really set the mood for a perfect evening.\" - Sarah & Mike\n\n\"Great conversation starter! We ended up talking for hours.\" - Jamie & Taylor",
+        rating: 5
+      },
+      suggestions: [
+        {
+          title: "Romantic Dinner",
+          rating: 5,
+          image: "/images/dinner.jpg"
+        },
+        {
+          title: "Outdoor Picnic",
+          rating: 4,
+          image: "/images/picnic.jpg"
+        },
+        {
+          title: "Movie Night",
+          rating: 3,
+          image: "/images/movie-night.jpg"
+        },
+        {
+          title: "Hiking Adventure",
+          rating: 4,
+          image: "/images/hiking.jpg"
+        },
+        {
+          title: "Cooking Class",
+          rating: 5,
+          image: "/images/cooking.jpg"
+        }
+      ]
+    };
+  },
+  methods: {
+    performSearch() {
+      if (!this.searchQuery.trim()) return;
+      
+      // Show loading state in a real app
+      console.log("Searching for:", this.searchQuery);
+      
+      // Simulate search results
+      setTimeout(() => {
+        // In a real app, this would be an API call
+        this.suggestions = this.suggestions.filter(item => 
+          item.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+        
+        if (this.suggestions.length > 0) {
+          this.selectSuggestion(this.suggestions[0]);
+        }
+      }, 500);
+    },
+    selectSuggestion(suggest) {
+      this.detailedSuggestion = {
+        title: suggest.title,
+        image: suggest.image,
+        info: suggest.title === "Romantic Dinner" 
+          ? "A romantic dinner is a perfect way to connect with your partner. Find a cozy restaurant with ambient lighting, soft music, and delicious food. Consider making a reservation at a place with a special meaning to both of you, or try a new cuisine you've been wanting to explore together."
+          : `Detailed information about ${suggest.title}. This date idea is perfect for couples looking to spend quality time together and create lasting memories. Try it out and see how it strengthens your connection!`,
+        reviews: suggest.title === "Romantic Dinner"
+          ? "\"We tried this for our anniversary and it was magical! The ambiance really set the mood for a perfect evening.\" - Sarah & Mike\n\n\"Great conversation starter! We ended up talking for hours.\" - Jamie & Taylor"
+          : `"We had an amazing time with this ${suggest.title} date idea! Highly recommend it." - Anonymous\n\n"This was such a refreshing change from our usual routine." - John & Lisa`,
+        rating: suggest.rating
+      };
+    },
+    chooseSuggestion() {
+      // In a real app, save to calendar or favorites
+      alert(`Added "${this.detailedSuggestion.title}" to your date plans!`);
+    },
+    generateMore() {
+      // Simulate loading new suggestions
+      alert("Generating more date ideas based on your preferences...");
+    }
+>>>>>>> Security_Test
   }
 };
 </script>
 
 <style scoped>
+<<<<<<< HEAD
 /* Base container for this view - Handles spacing */
 .date-ideas-view-content {
   display: flex;
@@ -398,11 +460,170 @@ export default {
 .suggestion-card.active .card-arrow {
     opacity: 1;
     transform: translateX(0);
+=======
+/* Container with consistent sizing */
+.date-ideas-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+
+/* Header styling */
+.date-ideas-header {
+  background-color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.date-ideas-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.back-button {
+  background-color: #8c68db;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #7a5fc7;
+}
+
+/* Main content area */
+.date-ideas-body {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Search section */
+.search-section {
+  margin-bottom: 1rem;
+}
+
+.search-bar {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+  color: #8c68db;
+  margin-left: 0.5rem;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.search-button {
+  background-color: #8c68db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.search-button:hover {
+  background-color: #7a5fc7;
+}
+
+/* Content container */
+.content-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Section titles */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.section-title i {
+  color: #ffcc00;
+}
+
+/* Suggestion list */
+.suggestion-list {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.suggestion-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.suggestion-card {
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #eee;
+}
+
+.suggestion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-card.active {
+  border-color: #8c68db;
+  box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.2);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+>>>>>>> Security_Test
 }
 
 .suggestion-preview {
   width: 60px;
   height: 60px;
+<<<<<<< HEAD
   border-radius: 6px;
   background-size: cover;
   background-position: center;
@@ -513,10 +734,41 @@ export default {
     display: flex;
     flex-direction: column;
     flex-grow: 1; /* Takes remaining space */
+=======
+  background-size: cover;
+  background-position: center;
+}
+
+.suggestion-info {
+  padding: 0.75rem;
+  flex: 1;
+}
+
+.suggestion-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: #333;
+}
+
+.rating {
+  display: flex;
+  gap: 2px;
+}
+
+/* Detailed suggestion */
+.suggestion-detailed {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+>>>>>>> Security_Test
 }
 
 .suggestion-header {
   display: flex;
+<<<<<<< HEAD
   flex-wrap: wrap; /* Allow wrap on small screens */
   justify-content: space-between;
   align-items: center;
@@ -543,11 +795,42 @@ export default {
     color: #777;
     margin-left: 0.5rem;
     font-weight: 500;
+=======
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.suggestion-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.rating-large {
+  display: flex;
+  gap: 3px;
+  font-size: 1.1rem;
+}
+
+.suggestion-image {
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-image img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+>>>>>>> Security_Test
 }
 
 /* Tabs */
 .suggestion-tabs {
   display: flex;
+<<<<<<< HEAD
   border-bottom: 1px solid #e5e7eb;
   margin-bottom: 1.5rem;
   flex-shrink: 0;
@@ -651,10 +934,54 @@ export default {
 .primary-action-button, .secondary-action-button {
   padding: 0.8rem 1.5rem;
   border-radius: 25px; /* Fully rounded */
+=======
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: #8c68db;
+}
+
+.tab-button.active {
+  color: #8c68db;
+  border-bottom-color: #8c68db;
+}
+
+.tab-content {
+  flex: 1;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.primary-button, .secondary-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+>>>>>>> Security_Test
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
+<<<<<<< HEAD
   justify-content: center;
   gap: 0.6rem;
   transition: all 0.25s ease;
@@ -740,3 +1067,53 @@ export default {
 }
 
 </style>
+=======
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
+  border: none;
+}
+
+.primary-button {
+  background-color: #ff80b0;
+  color: white;
+}
+
+.primary-button:hover {
+  background-color: #ff66a3;
+}
+
+.secondary-button {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.secondary-button:hover {
+  background-color: #e0e0e0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .suggestion-list {
+    margin-bottom: 1rem;
+  }
+  
+  .suggestion-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .card-content {
+    flex-direction: column;
+  }
+  
+  .suggestion-preview {
+    width: 100%;
+    height: 100px;
+  }
+}
+</style>
+>>>>>>> Security_Test

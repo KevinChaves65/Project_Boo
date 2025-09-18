@@ -1,0 +1,22 @@
+/* global.css */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Common container to standardize layout width */
+  /* In your global.css */
+.heyboo-container {
+  width: 400px; /* Set a consistent width */
+  min-height: 500px;
+  overflow-y: auto; /* Allow scrolling for content that's too tall */
+  padding: 1rem;
+}
+.dashboard-container, .calendar-container, .date-ideas-container, .chats-container, .settings-container {
+  width:1024px;
+  min-height: 600px;
+  overflow: auto;
+}

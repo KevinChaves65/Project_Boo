@@ -16,7 +16,7 @@
   padding: 1rem;
 }
 .dashboard-container, .calendar-container, .date-ideas-container, .chats-container, .settings-container {
-  width:1024px;
+  width: 800px;
   min-height: 600px;
   overflow: auto;
 }

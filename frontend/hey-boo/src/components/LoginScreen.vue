@@ -1,61 +1,36 @@
 <template>
   <div class="login-container">
-    <div class="login-card">
+    <div class="login-box">
       <img src="/logo.jpeg" alt="Hey Boo Logo" class="heyboo-logo" />
-      <h2>Welcome Back!</h2>
-      <p class="subtitle">Log in to continue your journey.</p>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <!-- Email Input -->
-        <div class="form-group">
-          <label for="email-input" class="sr-only">Email</label>
-          <div class="input-wrapper">
-             <i class="fas fa-envelope input-icon"></i>
-             <input
-                id="email-input"
-                v-model="email"
-                type="email"
-                placeholder="Email Address"
-                required
-                aria-required="true"
-             />
-          </div>
-        </div>
-
-        <!-- Password Input -->
-        <div class="form-group">
-            <label for="password-input" class="sr-only">Password</label>
-           <div class="input-wrapper">
-              <i class="fas fa-lock input-icon"></i>
-              <input
-                 id="password-input"
-                 v-model="password"
-                 type="password"
-                 placeholder="Password"
-                 required
-                 aria-required="true"
-              />
-              <!-- Optional: Add show/hide password toggle -->
-           </div>
-            <!-- Optional: Forgot Password Link -->
-           <a href="#" class="forgot-password-link">Forgot Password?</a>
-        </div>
-
-        <!-- Login Button with Loading State -->
-        <button class="login-button" type="submit" :disabled="isLoading || !email || !password">
-          <span v-if="isLoading">
-            <i class="fas fa-spinner fa-spin"></i> Logging In...
-          </span>
-          <span v-else>
-             <i class="fas fa-sign-in-alt"></i> Log In
-          </span>
+      <form @submit.prevent="handleLogin">
+        <input 
+          v-model="username" 
+          type="text" 
+          placeholder="Username" 
+          required 
+        />
+        <input 
+          v-model="password" 
+          type="password" 
+          placeholder="Password" 
+          required 
+        />
+        <button class="login-button" type="submit" :disabled="isLoading">
+          <span v-if="!isLoading">Log In</span>
+          <span v-else>Logging in...</span>
         </button>
       </form>
+      
+      <router-link to="/signup">
+        <button class="signup-button">
+          Sign Up
+        </button>
+      </router-link>
 
-      <!-- Sign Up Link -->
-      <div class="signup-prompt">
-        Don't have an account?
-        <router-link to="/signup" class="signup-link">Sign Up</router-link>
+      <!-- Loading overlay -->
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
       </div>
 
     </div>
@@ -63,17 +38,27 @@
 </template>
 
 <script>
+<<<<<<< HEAD
+=======
+import axios from "axios";
+
+>>>>>>> Security_Test
 export default {
   name: "LoginScreen",
   data() {
     return {
+<<<<<<< HEAD
       email: "",
+=======
+      username: "",
+>>>>>>> Security_Test
       password: "",
       isLoading: false,
     };
   },
   methods: {
     async handleLogin() {
+<<<<<<< HEAD
       // Basic validation client-side (HTML5 required handles empty)
       if (!this.email || !this.password || this.isLoading) return;
 
@@ -108,15 +93,42 @@ export default {
        // For simulation, we set it false here on failure, success navigates away.
     }
   }
+=======
+      this.isLoading = true;
+      try {
+        const response = await axios.post("http://localhost:8080/login", {
+          username: this.username,
+          password: this.password,
+        });
+
+        // Save the token to localStorage
+        localStorage.setItem("token", response.data.token);
+
+        // Redirect to the dashboard
+        this.$router.push("/dashboard");
+      } catch (error) {
+        console.error("Login failed:", error.response?.data || error.message);
+        alert("Invalid username or password. Please try again.");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+>>>>>>> Security_Test
 };
 </script>
 
 <style scoped>
+<<<<<<< HEAD
 /* Container styling - Keeping gradient, ensure full coverage */
+=======
+/* Container styling */
+>>>>>>> Security_Test
 .login-container {
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
   min-height: 100vh; /* Full viewport height */
   background: linear-gradient(135deg, rgba(255, 128, 176, 0.9), rgba(168, 102, 221, 0.9)); /* Slightly stronger gradient */
   padding: 1rem; /* Add padding for small screens */
@@ -134,10 +146,27 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
   backdrop-filter: blur(5px); /* Optional blur effect if background is complex */
   background-clip: padding-box; /* Fix potential border issues with blur */
+=======
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(255, 128, 176, 0.8), rgba(168, 102, 221, 0.8));
+}
+
+/* Box styling */
+.login-box {
+  position: relative; /* Needed for loading overlay positioning */
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+>>>>>>> Security_Test
 }
 
 /* Logo styling */
 .heyboo-logo {
+<<<<<<< HEAD
   width: 70px; /* Slightly smaller */
   height: auto;
   margin-bottom: 1.5rem; /* More space below */
@@ -281,3 +310,86 @@ input[type="password"]:focus {
 }
 
 </style>
+=======
+  width: 80px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+/* Form styling */
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap:10px;
+}
+
+/* Input fields */
+.login-box input {
+  padding:12px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  font-size:16px;
+}
+
+/* Buttons styling */
+.login-button,
+.signup-button {
+  width:100%;
+  height:45px;
+  padding:10px;
+  font-size:16px;
+  font-weight:bold;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.login-button {
+   background-color:#ff80b0;
+   color:white;  
+}
+
+.login-button:hover{
+   background-color:#ff66a3;  
+}
+
+.signup-button{
+   background-color:#8c68db;  
+   color:white;  
+   margin-top:10px;  
+}
+
+.signup-button:hover{
+   background-color:#7a5fc7;  
+}
+
+/* Loading Overlay Styling */
+.loading-overlay {
+   position:absolute;  
+   top:0;  
+   left:0;  
+   width:100%;  
+   height:100%;  
+   background-color:rgba(255,255,255,0.7);  
+   display:flex;  
+   align-items:center;  
+   justify-content:center;  
+   border-radius:8px; /* match login-box radius */
+}
+
+/* Spinner animation */
+.spinner{
+   width:40px;  
+   height:40px;  
+   border-radius:50%;  
+   border-top:4px solid #ff80b0;  
+   border-right:4px solid transparent;  
+   animation:spin-animation .8s linear infinite;  
+}
+
+@keyframes spin-animation{
+   from{transform:rotate(0deg);}  
+   to{transform:rotate(360deg);}  
+}
+</style>
+>>>>>>> Security_Test
