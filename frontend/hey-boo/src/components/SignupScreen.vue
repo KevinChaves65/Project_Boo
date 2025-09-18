@@ -90,49 +90,6 @@
               Prefer not to say
             </label>
           </div>
-<<<<<<< HEAD
-  
-          <!-- Sign Up Button -->
-          <button type="submit">Sign Up</button>
-        </form>
-      </div>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "SignupScreen",
-    data() {
-      return {
-        username: "",
-        password: "",
-        confirmPassword: "",
-        email: "",
-        phoneNumber: "",
-        address: "",
-        gender: ""
-      };
-    },
-    methods: {
-      handleSignup() {
-        // Basic sign-up logic placeholder
-        console.log("Signing up with:", {
-          username: this.username,
-          password: this.password,
-          confirmPassword: this.confirmPassword,
-          email: this.email,
-          phoneNumber: this.phoneNumber,
-          address: this.address,
-          gender: this.gender
-        });
-        alert("Sign up button clicked!");
-      }
-    }
-  };
-  </script>
-  
-  <style scoped>
-=======
         </div>
 
         <!-- Sign Up Button -->
@@ -194,7 +151,6 @@ export default {
 </script>
 
 <style scoped>
->>>>>>> Security_Test
 .signup-container {
   display: flex;
   align-items: center;

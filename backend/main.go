@@ -17,15 +17,6 @@ import (
 )
 
 func main() {
-<<<<<<< HEAD
-	router := mux.NewRouter()
-	routes.InitializeRoutes(router)
-
-	go services.HandleMessages()
-
-	log.Println("Server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
-=======
 	// Load .env file from the root directory
 	err := godotenv.Load("../.env") // Adjust the path if the .env file is in the root directory
 	if err != nil {
@@ -98,5 +89,4 @@ func main() {
 	}
 
 	r.Run(":" + port)
->>>>>>> Security_Test
 }
