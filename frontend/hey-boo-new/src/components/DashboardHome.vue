@@ -45,7 +45,7 @@
           </div>
         </div>
         <!-- Link to a milestones page or settings -->
-        <router-link to="/dashboard/settings" class="card-action">
+        <router-link to="/dashboard/calendar" class="card-action">
           Manage Milestones <i class="fas fa-arrow-right"></i>
         </router-link>
       </div>

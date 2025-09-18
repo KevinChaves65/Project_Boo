@@ -205,14 +205,22 @@ export default {
           return;
         }
 
-        this.milestones = await fetchCoupleMilestones(coupleId);
-
-        this.milestones = this.milestones.map((milestone) => ({
-          ...milestone,
-          date: new Date(milestone.date).toISOString().split("T")[0],
-        }));
+        const fetchedMilestones = await fetchCoupleMilestones(coupleId);
+        
+        // Ensure milestones is always an array
+        if (Array.isArray(fetchedMilestones)) {
+          this.milestones = fetchedMilestones.map((milestone) => ({
+            ...milestone,
+            date: new Date(milestone.date).toISOString().split("T")[0],
+          }));
+        } else {
+          console.warn("fetchCoupleMilestones did not return an array, initializing empty array");
+          this.milestones = [];
+        }
       } catch (error) {
         console.error("Failed to fetch calendar data:", error.message);
+        // Ensure milestones is always an array even on error
+        this.milestones = [];
       }
     },
     async addOrUpdateEvent() {
@@ -282,10 +290,10 @@ export default {
       this.selectedDate = day.date;
     },
     hasEvents(dateString) {
-      return this.milestones.some((milestone) => milestone.date === dateString);
+      return Array.isArray(this.milestones) && this.milestones.some((milestone) => milestone.date === dateString);
     },
     getEventsForDate(dateString) {
-      return this.milestones.filter((milestone) => milestone.date === dateString);
+      return Array.isArray(this.milestones) ? this.milestones.filter((milestone) => milestone.date === dateString) : [];
     },
     isSameDay(date1, date2) {
       return (
