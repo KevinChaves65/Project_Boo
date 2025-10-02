@@ -39,3 +39,27 @@ frontend/boo-public/package-lock.json
 
 # Ignore TypeScript build files
 *.tsbuildinfo
+
+# Environment variables and sensitive files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+!.env.example
+
+# API Keys and secrets
+*.key
+*.pem
+secrets/
+config/local.json
+
+# Database dumps and backups
+*.sql
+*.dump
+*.backup
+
+# Configuration files with sensitive data
+config.json
+settings.json
