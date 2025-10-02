@@ -4,6 +4,10 @@
       <div class="sidebar">
         <div class="sidebar-header">
           <h2>Hey Boo</h2>
+          <!-- Session indicator for development -->
+          <div v-if="sessionId" class="session-indicator">
+            <small>Session: {{ sessionId }}</small>
+          </div>
         </div>
         
         <nav class="sidebar-nav">
@@ -58,7 +62,13 @@
   
   <script>
   export default {
-    name: "SidebarLayout"
+    name: "SidebarLayout",
+    computed: {
+      sessionId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('session') || null;
+      }
+    }
   }
   </script>
   
@@ -88,6 +98,20 @@
     margin: 0;
     color: #8c68db;
     font-size: 1.5rem;
+  }
+  
+  .session-indicator {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: #e8f4fd;
+    border-radius: 4px;
+    border-left: 3px solid #2196f3;
+  }
+  
+  .session-indicator small {
+    color: #1976d2;
+    font-weight: 500;
+    font-size: 0.75rem;
   }
   
   .sidebar-nav {

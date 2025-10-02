@@ -65,9 +65,16 @@ func main() {
 
 	// Calendar routes
 	auth.POST("/calendar/sync", controllers.SyncCalendar)
+	auth.POST("/calendar/add", controllers.AddToCalendar)
 
 	// Date Ideas routes
 	auth.POST("/dateideas/generate", controllers.GenerateDateIdeas)
+
+	// Saved Suggestions routes
+	auth.POST("/saved-suggestions", controllers.SaveSuggestion)
+	auth.GET("/saved-suggestions", controllers.GetSavedSuggestions)
+	auth.DELETE("/saved-suggestions/:id", controllers.DeleteSavedSuggestion)
+	auth.GET("/saved-suggestions/check", controllers.CheckIfSaved)
 
 	// Word Bank routes
 	auth.POST("/wordbank", func(c *gin.Context) {

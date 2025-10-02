@@ -2,11 +2,35 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/auth";
 
+// Developer Testing Mode - allows multiple sessions on same browser
+const DEV_MODE = true; // Set to false in production
+let currentSession = null;
+
+// Get session identifier (for testing multiple accounts)
+function getSessionId() {
+  if (!DEV_MODE) return '';
+  
+  // Check URL params for session ID
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionParam = urlParams.get('session');
+  
+  if (sessionParam) {
+    currentSession = sessionParam;
+    return `_session_${sessionParam}`;
+  }
+  
+  // Use default session if no param
+  if (!currentSession) {
+    currentSession = 'default';
+  }
+  return currentSession === 'default' ? '' : `_session_${currentSession}`;
+}
+
 // Utility function to handle token-related errors
 function handleTokenError(error) {
   if (error.response && error.response.status === 401) {
     // Token is invalid or expired
-    localStorage.removeItem("token"); // Clear the token
+    localStorage.removeItem(`token${getSessionId()}`); // Clear the token
     window.location.href = "/login"; // Redirect to login page
   }
   throw error; // Re-throw the error for further handling
@@ -14,7 +38,7 @@ function handleTokenError(error) {
 
 // Utility function to get the authorization token
 function getAuthToken() {
-  return localStorage.getItem("token");
+  return localStorage.getItem(`token${getSessionId()}`);
 }
 
 // Function to fetch user profile

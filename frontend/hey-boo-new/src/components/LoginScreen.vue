@@ -73,6 +73,13 @@ export default {
     };
   },
   methods: {
+    // Get session identifier for multi-user testing
+    getSessionId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionParam = urlParams.get('session');
+      return sessionParam ? `_session_${sessionParam}` : '';
+    },
+    
     async handleLogin() {
       this.isLoading = true;
       try {
@@ -82,8 +89,8 @@ export default {
           password: this.password,
         });
 
-        // Save token to localStorage and redirect to dashboard
-        localStorage.setItem("token", response.data.token);
+        // Save token to localStorage with session support
+        localStorage.setItem(`token${this.getSessionId()}`, response.data.token);
         this.$router.push("/dashboard");
       } catch (error) {
         console.error("Login failed:", error.response?.data || error.message);

@@ -79,14 +79,34 @@
 
       <!-- Suggestion List Column -->
       <div class="suggestion-list-column">
+        <!-- Tabs for different suggestion types -->
+        <div class="suggestion-tabs-header">
+          <button
+            class="tab-header-button"
+            :class="{ active: currentTab === 'generated' }"
+            @click="switchTab('generated')"
+          >
+            <i class="fas fa-magic"></i> AI Generated
+          </button>
+          <button
+            class="tab-header-button"
+            :class="{ active: currentTab === 'saved' }"
+            @click="switchTab('saved')"
+          >
+            <i class="fas fa-heart"></i> Saved ({{ savedSuggestions.length }})
+          </button>
+        </div>
+        
         <h2 class="column-title">
-          <i class="fas fa-lightbulb"></i> Suggestions
+          <i class="fas fa-lightbulb" v-if="currentTab === 'generated'"></i>
+          <i class="fas fa-heart" v-if="currentTab === 'saved'"></i>
+          {{ currentTab === 'generated' ? 'AI Suggestions' : 'Saved Suggestions' }}
         </h2>
         <div class="suggestion-cards-container">
           <!-- Card Loop -->
           <div
-            v-for="(suggest, index) in suggestions"
-            :key="`suggest-${index}`"
+            v-for="(suggest, index) in currentSuggestions"
+            :key="`suggest-${currentTab}-${index}`"
             class="suggestion-card"
             :class="{ active: detailedSuggestion && suggest.title === detailedSuggestion.title }"
             @click="selectSuggestion(suggest)"
@@ -94,26 +114,22 @@
             tabindex="0" @keyup.enter="selectSuggestion(suggest)" @keyup.space="selectSuggestion(suggest)"
           >
             <div class="suggestion-preview"
-                 :style="{ backgroundImage: `url(${suggest.image || 'https://picsum.photos/seed/default-date/400/300'})` }">
+                 :style="{ backgroundImage: `url(${suggest.image || suggest.image_url || 'https://source.unsplash.com/400x300/?couple,date&sig=default'})` }">
                  <div class="preview-overlay"></div>
             </div>
             <div class="suggestion-info">
               <h4>{{ suggest.title }}</h4>
-              <div class="rating">
-                 <span class="sr-only">Rating: {{ suggest.rating }} out of 5 stars</span>
-                <i
-                  v-for="star in 5"
-                  :key="`s-${index}-star-${star}`"
-                  :class="star <= Math.floor(suggest.rating) ? 'fas fa-star' : (star === Math.ceil(suggest.rating) && suggest.rating % 1 !== 0) ? 'fas fa-star-half-alt' : 'far fa-star'"
-                  aria-hidden="true"
-                ></i>
+              <div class="suggestion-meta" v-if="currentTab === 'saved'">
+                <small><i class="fas fa-clock"></i> Saved {{ formatSavedDate(suggest.saved_at) }}</small>
               </div>
             </div>
              <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
           </div>
           <!-- No results message -->
-          <p v-if="suggestions.length === 0" class="no-suggestions">
-            <i class="fas fa-search"></i> No suggestions match your search.
+          <p v-if="currentSuggestions.length === 0" class="no-suggestions">
+            <i class="fas fa-search" v-if="currentTab === 'generated'"></i>
+            <i class="fas fa-heart" v-if="currentTab === 'saved'"></i>
+            {{ currentTab === 'generated' ? 'No suggestions match your search.' : 'No saved suggestions yet. Save some ideas from the AI generated tab!' }}
           </p>
         </div>
       </div>
@@ -122,57 +138,19 @@
       <div class="suggestion-detail-column">
         <!-- Display Details Card -->
         <div class="suggestion-detailed-card" v-if="detailedSuggestion">
-            <div class="suggestion-image">
-              <img 
-                :src="detailedSuggestion.image || 'https://picsum.photos/seed/default-detail/400/300'" 
-                :alt="detailedSuggestion.title"
-                @error="handleImageError"
-              />
-            </div>
-
             <div class="detail-content-wrapper">
               <div class="suggestion-header">
                 <h2>{{ detailedSuggestion.title }}</h2>
-                <div class="rating-large">
-                   <span class="sr-only">Rating: {{ detailedSuggestion.rating }} out of 5 stars</span>
-                  <i
-                    v-for="star in 5"
-                    :key="'detail-star-' + star"
-                    :class="star <= Math.floor(detailedSuggestion.rating) ? 'fas fa-star' : (star === Math.ceil(detailedSuggestion.rating) && detailedSuggestion.rating % 1 !== 0) ? 'fas fa-star-half-alt' : 'far fa-star'"
-                    aria-hidden="true"
-                  ></i>
-                  <span class="rating-text">({{ detailedSuggestion.rating }})</span>
-                </div>
+                <!-- Removed rating stars section -->
               </div>
 
 
-              <!-- Using Tabs for Info/Reviews -->
-              <div class="suggestion-tabs">
-                <button
-                  class="tab-button"
-                  :class="{ active: activeTab === 'info' }"
-                  @click="activeTab = 'info'"
-                  :aria-pressed="activeTab === 'info'"
-                >
-                  <i class="fas fa-info-circle"></i> Info
-                </button>
-                <button
-                  class="tab-button"
-                  :class="{ active: activeTab === 'reviews' }"
-                  @click="activeTab = 'reviews'"
-                   :aria-pressed="activeTab === 'reviews'"
-                >
-                  <i class="fas fa-comments"></i> Reviews ({{ formattedReviews.length }})
-                </button>
-              </div>
-
-              <div class="tab-content">
-                <transition name="fade" mode="out-in">
-                  <div v-if="activeTab === 'info'" key="info" class="info-content">
-                    <p class="main-description">{{ detailedSuggestion.info }}</p>
+              <!-- Info Content -->
+              <div class="info-content">
+                    <p class="main-description">{{ detailedSuggestion.info || detailedSuggestion.description }}</p>
                     
-                    <!-- Enhanced AI Information -->
-                    <div v-if="detailedSuggestion.isAIGenerated" class="ai-enhanced-info">
+                    <!-- Enhanced Information -->
+                    <div class="ai-enhanced-info">
                       
                       <!-- Business Details -->
                       <div v-if="detailedSuggestion.businessName" class="info-section">
@@ -182,6 +160,28 @@
                           <p v-if="detailedSuggestion.address" class="address">
                             <i class="fas fa-map-marker-alt"></i> {{ detailedSuggestion.address }}
                           </p>
+                          
+                          <!-- Navigation Actions -->
+                          <div class="navigation-actions">
+                            <a 
+                              :href="detailedSuggestion.mapUrl || `https://maps.google.com/maps?q=${encodeURIComponent(detailedSuggestion.address || detailedSuggestion.businessName)}`"
+                              target="_blank"
+                              class="navigate-button"
+                              title="Open in Google Maps"
+                            >
+                              <i class="fas fa-directions"></i>
+                              <span>Navigate with Google Maps</span>
+                            </a>
+                            
+                            <button 
+                              @click="copyLocation"
+                              class="copy-location-button"
+                              title="Copy address to clipboard"
+                            >
+                              <i class="fas fa-copy"></i>
+                              <span>Copy Address</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -198,11 +198,7 @@
                         </div>
                       </div>
 
-                      <!-- Special Note -->
-                      <div v-if="detailedSuggestion.specialNote" class="info-section">
-                        <h4><i class="fas fa-heart"></i> Why It's Special</h4>
-                        <p class="special-note">{{ detailedSuggestion.specialNote }}</p>
-                      </div>
+                      <!-- Removed "Why It's Special" section -->
 
                       <!-- Amenities -->
                       <div v-if="detailedSuggestion.amenities && detailedSuggestion.amenities.length > 0" class="info-section">
@@ -225,24 +221,27 @@
                       </div>
                     </div>
                   </div>
-                  <div v-else key="reviews" class="reviews-content">
-                    <div v-if="formattedReviews.length > 0">
-                      <div v-for="(review, idx) in formattedReviews" :key="`review-${idx}`" class="review-item">
-                         <blockquote>"{{ review.text }}"</blockquote>
-                         <cite>- {{ review.author }}</cite>
-                      </div>
-                    </div>
-                    <p v-else class="no-reviews-message">
-                        <i class="fas fa-comment-slash"></i> No reviews available yet.
-                    </p>
-                  </div>
-                 </transition>
-              </div>
 
               <div class="action-buttons">
-                <button @click="chooseSuggestion" class="primary-action-button">
-                  <i class="fas fa-calendar-plus"></i> Add to Calendar
+                <button @click="addToCalendar" class="primary-action-button" :disabled="isAddingToCalendar">
+                  <i class="fas fa-calendar-plus" v-if="!isAddingToCalendar"></i>
+                  <i class="fas fa-spinner fa-spin" v-if="isAddingToCalendar"></i>
+                  {{ isAddingToCalendar ? 'Adding...' : 'Add to Calendar' }}
                 </button>
+                
+                <!-- Save/Delete Button -->
+                <button 
+                  @click="toggleSaveSuggestion" 
+                  class="save-action-button"
+                  :class="{ saved: isSuggestionSaved }"
+                  :disabled="isSavingToggle"
+                >
+                  <i class="fas fa-heart" v-if="isSuggestionSaved && !isSavingToggle"></i>
+                  <i class="far fa-heart" v-if="!isSuggestionSaved && !isSavingToggle"></i>
+                  <i class="fas fa-spinner fa-spin" v-if="isSavingToggle"></i>
+                  {{ isSavingToggle ? 'Saving...' : (isSuggestionSaved ? 'Saved' : 'Save') }}
+                </button>
+                
                  <button @click="generateMore" class="secondary-action-button">
                   <i class="fas fa-sync-alt"></i> Get More Ideas
                 </button>
@@ -265,7 +264,7 @@ import { generateDateIdeas } from "../services/apiService";
 
 // Your existing <script> block remains the same
 // ... (methods: performSearch, selectSuggestion, chooseSuggestion, generateMore)
-// Make sure data properties (searchQuery, activeTab, suggestions, detailedSuggestion) exist
+// Make sure data properties (searchQuery, suggestions, detailedSuggestion) exist
 export default {
   name: "DateIdeas",
   data() {
@@ -274,7 +273,6 @@ export default {
 
     return {
       searchQuery: "",
-      activeTab: "info",
       suggestions: enrichedSuggestions,
       allSuggestions: [...enrichedSuggestions], // Keep a copy for resetting search
       // Start with no suggestion selected - show placeholder
@@ -286,24 +284,29 @@ export default {
         budget: ""
       },
       isGenerating: false,
-      aiGeneratedIdeas: []
+      aiGeneratedIdeas: [],
+      // New properties for save/calendar functionality
+      currentTab: 'generated', // 'generated' or 'saved'
+      savedSuggestions: [],
+      isSuggestionSaved: false,
+      currentSavedId: null,
+      isSavingToggle: false,
+      isAddingToCalendar: false,
+      showCalendarModal: false,
+      calendarForm: {
+        date: '',
+        startTime: '19:00',
+        endTime: '21:00'
+      }
     };
   },
  computed: {
-    formattedReviews() {
-      if (!this.detailedSuggestion || !this.detailedSuggestion.reviews) return [];
-      // Simple split logic, improved robustness
-      return this.detailedSuggestion.reviews.split('\n\n')
-        .map(reviewText => {
-          const parts = reviewText.trim().split(' - ');
-          if (parts.length === 2) {
-            return { text: parts[0].replace(/^"|"$/g, ''), author: parts[1] }; // Remove surrounding quotes
-          } else if (parts.length === 1 && parts[0]) {
-             return { text: parts[0].replace(/^"|"$/g, ''), author: 'Anonymous' }; // Fallback author
-          }
-          return null; // Ignore empty lines or invalid formats
-        })
-        .filter(review => review !== null); // Filter out null entries
+    currentSuggestions() {
+      if (this.currentTab === 'generated') {
+        return this.suggestions;
+      } else {
+        return this.savedSuggestions;
+      }
     }
   },
   methods: {
@@ -323,7 +326,6 @@ export default {
           }
           // Select the first result after search, or null if no results
           this.detailedSuggestion = this.suggestions.length > 0 ? { ...this.suggestions[0] } : null;
-          this.activeTab = 'info';
           // Remove loading state here
       }, 300); // Small delay for visual feedback
     },
@@ -332,18 +334,233 @@ export default {
          this.detailedSuggestion = null;
          return;
        }
-      // Ensure we're using the full data from allSuggestions
-      const fullSuggestData = this.allSuggestions.find(s => s.title === suggest.title);
+      // Ensure we're using the full data from allSuggestions or savedSuggestions
+      let fullSuggestData;
+      if (this.currentTab === 'generated') {
+        fullSuggestData = this.allSuggestions.find(s => s.title === suggest.title);
+      } else {
+        fullSuggestData = suggest; // Already has full data from saved suggestions
+      }
+      
       if (fullSuggestData) {
            this.detailedSuggestion = { ...fullSuggestData };
-           this.activeTab = 'info'; // Reset tab on selection change
+           this.checkIfSuggestionSaved();
       }
     },
     chooseSuggestion() {
-       if (!this.detailedSuggestion) return;
-      // Integrate with actual calendar logic
-      alert(`Adding "${this.detailedSuggestion.title}" to your calendar! (Implementation pending)`);
-      // Example: this.$store.dispatch('addToCalendar', this.detailedSuggestion);
+       // This method is now replaced by addToCalendar
+       this.addToCalendar();
+    },
+    copyLocation() {
+      if (!this.detailedSuggestion) return;
+      
+      const locationText = this.detailedSuggestion.address || this.detailedSuggestion.businessName || 'Location not available';
+      
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(locationText).then(() => {
+          alert('Location copied to clipboard!');
+        }).catch(() => {
+          // Fallback for clipboard API failure
+          this.fallbackCopyLocation(locationText);
+        });
+      } else {
+        // Fallback for older browsers
+        this.fallbackCopyLocation(locationText);
+      }
+    },
+    fallbackCopyLocation(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('Location copied to clipboard!');
+      } catch (err) {
+        alert('Could not copy location. Please copy manually: ' + text);
+      }
+      document.body.removeChild(textArea);
+    },
+    // Tab switching methods
+    switchTab(tab) {
+      this.currentTab = tab;
+      this.detailedSuggestion = null; // Clear selection when switching tabs
+      
+      if (tab === 'saved') {
+        this.loadSavedSuggestions();
+      }
+    },
+    
+    // Save/Delete suggestion methods
+    async toggleSaveSuggestion() {
+      if (!this.detailedSuggestion) return;
+      
+      this.isSavingToggle = true;
+      
+      try {
+        if (this.isSuggestionSaved) {
+          // Delete the suggestion
+          await this.deleteSavedSuggestion();
+        } else {
+          // Save the suggestion
+          await this.saveSuggestion();
+        }
+      } catch (error) {
+        console.error('Error toggling suggestion save:', error);
+        alert('Error saving/deleting suggestion. Please try again.');
+      } finally {
+        this.isSavingToggle = false;
+      }
+    },
+    
+    async saveSuggestion() {
+      const suggestionData = {
+        title: this.detailedSuggestion.title,
+        description: this.detailedSuggestion.info || this.detailedSuggestion.description,
+        cost: this.detailedSuggestion.cost,
+        timing: this.detailedSuggestion.timing,
+        business_name: this.detailedSuggestion.businessName,
+        address: this.detailedSuggestion.address,
+        map_url: this.detailedSuggestion.mapUrl,
+        image_url: this.detailedSuggestion.image,
+        is_ai_generated: this.detailedSuggestion.isAIGenerated !== undefined ? this.detailedSuggestion.isAIGenerated : true
+      };
+      
+      // For now, we'll simulate the API call since auth isn't fully implemented
+      // Replace this with actual API call when authentication is ready
+      console.log('Saving suggestion:', suggestionData);
+      
+      // Simulate API success
+      this.isSuggestionSaved = true;
+      this.currentSavedId = 'temp-id-' + Date.now();
+      
+      // Add to local savedSuggestions array
+      const savedSuggestion = {
+        ...suggestionData,
+        id: this.currentSavedId,
+        saved_at: new Date().toISOString()
+      };
+      
+      this.savedSuggestions.unshift(savedSuggestion);
+      
+      alert('Suggestion saved successfully!');
+    },
+    
+    async deleteSavedSuggestion() {
+      // For now, simulate the delete operation
+      console.log('Deleting suggestion with ID:', this.currentSavedId);
+      
+      // Remove from local array
+      this.savedSuggestions = this.savedSuggestions.filter(s => s.id !== this.currentSavedId);
+      
+      this.isSuggestionSaved = false;
+      this.currentSavedId = null;
+      
+      alert('Suggestion removed successfully!');
+    },
+    
+    async loadSavedSuggestions() {
+      // For now, use local storage or static data
+      // Replace with actual API call when authentication is ready
+      console.log('Loading saved suggestions...');
+    },
+    
+    async checkIfSuggestionSaved() {
+      if (!this.detailedSuggestion) {
+        this.isSuggestionSaved = false;
+        this.currentSavedId = null;
+        return;
+      }
+      
+      // Check if current suggestion is saved
+      const saved = this.savedSuggestions.find(s => s.title === this.detailedSuggestion.title);
+      this.isSuggestionSaved = !!saved;
+      this.currentSavedId = saved ? saved.id : null;
+    },
+    
+    // Calendar methods
+    async addToCalendar() {
+      if (!this.detailedSuggestion) return;
+      
+      this.isAddingToCalendar = true;
+      
+      try {
+        // Get today's date as default
+        const today = new Date();
+        const defaultDate = today.toISOString().split('T')[0];
+        
+        const calendarData = {
+          title: this.detailedSuggestion.title,
+          description: `${this.detailedSuggestion.info || this.detailedSuggestion.description}\n\nCost: ${this.detailedSuggestion.cost || 'Varies'}\nLocation: ${this.detailedSuggestion.address || this.detailedSuggestion.businessName}`,
+          start_date: defaultDate,
+          start_time: '19:00',
+          end_time: '21:00',
+          location: this.detailedSuggestion.address || this.detailedSuggestion.businessName
+        };
+        
+        // For now, generate calendar URLs directly
+        const calendarUrls = this.generateCalendarUrls(calendarData);
+        
+        // Show calendar options to user
+        this.showCalendarOptions(calendarUrls);
+        
+      } catch (error) {
+        console.error('Error adding to calendar:', error);
+        alert('Error adding to calendar. Please try again.');
+      } finally {
+        this.isAddingToCalendar = false;
+      }
+    },
+    
+    generateCalendarUrls(data) {
+      const { title, description, start_date, start_time, end_time, location } = data;
+      
+      // Convert to the format needed for calendar URLs
+      const startDateTime = new Date(`${start_date}T${start_time}:00`);
+      const endDateTime = new Date(`${start_date}T${end_time}:00`);
+      
+      const startFormatted = startDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const endFormatted = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      
+      return {
+        google: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startFormatted}/${endFormatted}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`,
+        outlook: `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(title)}&startdt=${startFormatted}&enddt=${endFormatted}&body=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`,
+        yahoo: `https://calendar.yahoo.com/?v=60&view=d&type=20&title=${encodeURIComponent(title)}&st=${startFormatted}&et=${endFormatted}&desc=${encodeURIComponent(description)}&in_loc=${encodeURIComponent(location)}`
+      };
+    },
+    
+    showCalendarOptions(urls) {
+      const message = `Choose your calendar app:\n\n` +
+        `• Google Calendar\n` +
+        `• Outlook Calendar\n` +
+        `• Yahoo Calendar\n\n` +
+        `Click OK to open Google Calendar, or cancel to see other options.`;
+      
+      if (confirm(message)) {
+        window.open(urls.google, '_blank');
+      } else {
+        // Show a modal or prompt with all options
+        const choice = prompt(`Enter 1 for Google, 2 for Outlook, 3 for Yahoo:`);
+        if (choice === '1') window.open(urls.google, '_blank');
+        else if (choice === '2') window.open(urls.outlook, '_blank');
+        else if (choice === '3') window.open(urls.yahoo, '_blank');
+      }
+    },
+    
+    formatSavedDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'today';
+      if (diffDays === 1) return 'yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      return `${Math.floor(diffDays / 30)} months ago`;
     },
     generateMore() {
       // Implement logic to fetch/suggest more ideas
@@ -395,22 +612,23 @@ export default {
           ideas = this.parseTextResponse(aiResponse);
         }
 
-        // Convert AI ideas to our format
-        const convertedIdeas = ideas.map((idea, index) => ({
-          title: idea.title || `AI Idea ${index + 1}`,
-          rating: idea.rating || 4, // Use AI-provided rating or default
-          image: this.getImageForIdea(idea, index),
-          info: idea.description || idea.info || "AI-generated date idea",
-          cost: idea.cost || "Varies",
-          timing: idea.timing || "Anytime",
-          specialNote: idea.specialNote || "Generated by AI based on your preferences",
-          businessName: idea.businessName || "",
-          address: idea.address || "",
-          amenities: idea.amenities || [],
-          sampleReviews: idea.sampleReviews || [],
-          reviews: this.formatAIReviews(idea.sampleReviews || []),
-          isAIGenerated: true
-        }));
+        // Convert AI ideas to our new simplified format (no ratings, reviews, or special notes)
+        const convertedIdeas = ideas.map((idea, index) => {
+          const baseIdea = {
+            title: idea.title || `Date Idea ${index + 1}`,
+            info: idea.description || "AI-generated date idea",
+            cost: idea.cost || "Varies",
+            timing: idea.bestTime || "Flexible timing", // Use bestTime from AI response
+            businessName: idea.businessName || "Local Venue",
+            address: idea.address || this.aiForm.location,
+            mapUrl: idea.mapUrl || `https://maps.google.com/maps?q=${encodeURIComponent(idea.address || this.aiForm.location)}`,
+            isAIGenerated: true,
+            hasNavigation: true // New flag for Google Maps integration
+          };
+          // Generate dynamic image based on the idea content
+          baseIdea.image = this.getImageForIdea(baseIdea, index);
+          return baseIdea;
+        });
 
         // Add to suggestions
         this.aiGeneratedIdeas = convertedIdeas;
@@ -461,60 +679,59 @@ export default {
     createFallbackIdea(response) {
       const fallbackIdea = {
         title: `AI Date Ideas for ${this.aiForm.location}`,
-        rating: 4,
-        image: '/images/sample-idea.jpg',
         info: response.substring(0, 300) + '...',
-        reviews: "AI-generated suggestions based on your location and preferences.",
         isAIGenerated: true
       };
+      
+      // Generate dynamic image for fallback idea
+      fallbackIdea.image = this.getImageForIdea(fallbackIdea, 0);
       
       this.allSuggestions.push(fallbackIdea);
       this.suggestions.push(fallbackIdea);
       this.selectSuggestion(fallbackIdea);
     },
-    formatAIReviews(reviewsArray) {
-      if (!reviewsArray || reviewsArray.length === 0) {
-        return "\"Great AI suggestion! We had an amazing time.\" - AI User\n\n\"Unique and thoughtful idea we wouldn't have thought of ourselves.\" - Happy Couple";
-      }
-      
-      return reviewsArray.map(review => `"${review}"`).join('\n\n');
-    },
     getImageForIdea(idea, index) {
-      // Use Picsum (Lorem Picsum) - more reliable than Unsplash Source
-      const getPicsumImage = (seed, width = 400, height = 300) => {
-        return `https://picsum.photos/seed/${seed}/${width}/${height}`;
-      };
-
-      // Smart image selection based on content
+      // Use Unsplash Source API for relevant, high-quality images
       const title = (idea.title || '').toLowerCase();
       const description = (idea.description || idea.info || '').toLowerCase();
       const content = title + ' ' + description;
-
-      // Create unique seeds based on content for consistent images
-      let seed = 'couple-date';
+      
+      // Map content to relevant Unsplash categories/keywords
+      let category = 'couple,date';
       
       if (content.includes('dinner') || content.includes('restaurant') || content.includes('wine') || content.includes('romantic') || content.includes('date night')) {
-        seed = 'romantic-dinner';
+        category = 'restaurant,dinner,romantic';
       } else if (content.includes('outdoor') || content.includes('picnic') || content.includes('park') || content.includes('garden') || content.includes('nature')) {
-        seed = 'outdoor-picnic';
+        category = 'picnic,park,nature';
       } else if (content.includes('hiking') || content.includes('adventure') || content.includes('active') || content.includes('sports') || content.includes('bike')) {
-        seed = 'hiking-adventure';
-      } else if (content.includes('movie') || content.includes('theater') || content.includes('show') || content.includes('entertainment') || content.includes('concert')) {
-        seed = 'movie-theater';
+        category = 'hiking,adventure,outdoor';
+      } else if (content.includes('movie') || content.includes('theater') || content.includes('cinema') || content.includes('entertainment') || content.includes('concert')) {
+        category = 'cinema,theater,entertainment';
       } else if (content.includes('museum') || content.includes('art') || content.includes('gallery')) {
-        seed = 'museum-art';
-      } else if (content.includes('beach') || content.includes('water') || content.includes('swim')) {
-        seed = 'beach-sunset';
-      } else if (content.includes('coffee') || content.includes('cafe') || content.includes('brunch')) {
-        seed = 'coffee-cafe';
-      } else if (content.includes('shopping') || content.includes('market')) {
-        seed = 'shopping-market';
-      } else if (content.includes('music') || content.includes('concert') || content.includes('festival')) {
-        seed = 'music-concert';
+        category = 'museum,art,gallery';
+      } else if (content.includes('beach') || content.includes('water') || content.includes('swim') || content.includes('ocean')) {
+        category = 'beach,ocean,sunset';
+      } else if (content.includes('coffee') || content.includes('cafe') || content.includes('brunch') || content.includes('breakfast')) {
+        category = 'coffee,cafe,brunch';
+      } else if (content.includes('shopping') || content.includes('market') || content.includes('mall')) {
+        category = 'shopping,market,city';
+      } else if (content.includes('music') || content.includes('concert') || content.includes('festival') || content.includes('live')) {
+        category = 'concert,music,festival';
+      } else if (content.includes('cooking') || content.includes('kitchen') || content.includes('chef') || content.includes('recipe')) {
+        category = 'cooking,kitchen,food';
+      } else if (content.includes('spa') || content.includes('massage') || content.includes('relax') || content.includes('wellness')) {
+        category = 'spa,wellness,relaxation';
+      } else if (content.includes('wine') || content.includes('tasting') || content.includes('vineyard')) {
+        category = 'wine,vineyard,tasting';
+      } else if (content.includes('dance') || content.includes('dancing') || content.includes('ballroom')) {
+        category = 'dancing,dance,couples';
+      } else if (content.includes('game') || content.includes('arcade') || content.includes('bowling') || content.includes('mini golf')) {
+        category = 'games,fun,entertainment';
       }
 
-      // Add index to seed for variety while keeping consistency
-      return getPicsumImage(`${seed}-${index}`);
+      // Use Unsplash Source API with specific dimensions and category
+      // Format: https://source.unsplash.com/400x300/?category,keyword&sig=index
+      return `https://source.unsplash.com/400x300/?${category}&sig=${index}`;
     },
     getValidImageUrl(imageUrl) {
       // Check if the AI provided a valid image URL
@@ -541,8 +758,11 @@ export default {
     handleImageError(event) {
       // Fallback to a generic couple date image if any image fails to load
       console.warn('Image failed to load:', event.target.src);
-      // Try a different Picsum fallback first
-      if (!event.target.src.includes('picsum.photos')) {
+      // Try Unsplash fallback with generic couple/date keywords
+      if (!event.target.src.includes('source.unsplash.com') && !event.target.src.includes('fallback')) {
+        event.target.src = 'https://source.unsplash.com/400x300/?couple,date,love&sig=fallback';
+      } else if (!event.target.src.includes('picsum.photos')) {
+        // If Unsplash fails, try Picsum
         event.target.src = 'https://picsum.photos/seed/fallback-couple/400/300';
       } else {
         // Final fallback to local image
@@ -904,25 +1124,113 @@ export default {
   flex-direction: column;
    /* Allow content to determine height, REMOVED overflow */
 }
-.suggestion-image {
+
+/* Navigation Section (replacing suggestion-image) */
+.navigation-section {
   width: 100%;
-  height: 280px; /* Fixed height for consistency */
   border-radius: 10px;
-  overflow: hidden;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
-  background-color: #f0f0f0;
-  flex-shrink: 0;
-  position: relative; /* For potential overlays */
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
-.suggestion-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
+
+.location-info {
+  margin-bottom: 1rem;
 }
-.suggestion-image:hover img {
-    transform: scale(1.05);
+
+.location-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.address-display {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.navigation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.navigate-button,
+.copy-location-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 0.95rem;
+}
+
+.navigate-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navigate-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.copy-location-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.copy-location-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Navigation actions within business info context */
+.business-info .navigation-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.business-info .navigate-button,
+.business-info .copy-location-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.business-info .navigate-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.business-info .copy-location-button {
+  background-color: #2196F3;
+}
+
+.business-info .copy-location-button:hover {
+  background-color: #1976D2;
+  transform: translateY(-1px);
 }
 
 /* Wrapper for content below image */
@@ -1065,7 +1373,7 @@ export default {
   border-top: 1px solid #eee;
   flex-shrink: 0;
 }
-.primary-action-button, .secondary-action-button {
+.primary-action-button, .secondary-action-button, .save-action-button {
   padding: 0.8rem 1.5rem;
   border-radius: 25px; /* Fully rounded */
   font-weight: 500;
@@ -1100,6 +1408,77 @@ export default {
   background-color: #f9f9f9;
   border-color: #aaa;
   color: #333;
+}
+
+/* Save button styles */
+.save-action-button {
+  background-color: #f8f9fa;
+  color: #666;
+  border-color: #dee2e6;
+}
+
+.save-action-button.saved {
+  background-color: #e91e63;
+  color: white;
+  border-color: #e91e63;
+}
+
+.save-action-button:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.save-action-button.saved:hover {
+  background-color: #c2185b;
+  border-color: #c2185b;
+}
+
+/* Tab header styles */
+.suggestion-tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0.25rem;
+}
+
+.tab-header-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tab-header-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #333;
+}
+
+.tab-header-button.active {
+  background-color: white;
+  color: #8c68db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Suggestion meta info */
+.suggestion-meta {
+  margin-top: 0.25rem;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.suggestion-meta i {
+  margin-right: 0.25rem;
 }
 
 /* Placeholder */
@@ -1139,8 +1518,20 @@ export default {
      /* Consider limiting height or making cards horizontal scroll on mobile? */
      /* max-height: 50vh; overflow-y: auto; */ /* If you MUST scroll list on mobile */
   }
-   .suggestion-image { height: 220px; } /* Smaller image */
+   .navigation-section { padding: 1rem; } /* Smaller padding on mobile */
    .action-buttons { flex-direction: column; } /* Stack buttons */
+   
+   /* Business navigation on mobile */
+   .business-info .navigation-actions {
+     flex-direction: column;
+     gap: 0.5rem;
+   }
+   
+   .business-info .navigate-button,
+   .business-info .copy-location-button {
+     width: 100%;
+     justify-content: center;
+   }
 }
 
 /* Accessibility */

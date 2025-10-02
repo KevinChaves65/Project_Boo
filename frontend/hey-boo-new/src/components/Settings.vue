@@ -499,8 +499,13 @@ export default {
       }
     },
     logout() {
+      // Get session identifier for multi-user testing
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionParam = urlParams.get('session');
+      const sessionId = sessionParam ? `_session_${sessionParam}` : '';
+      
       // Clear the token from localStorage
-      localStorage.removeItem("token");
+      localStorage.removeItem(`token${sessionId}`);
 
       // Redirect to the login page
       this.$router.push("/login");

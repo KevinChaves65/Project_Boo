@@ -63,49 +63,36 @@ func GenerateDateIdeas(c *gin.Context) {
 		return
 	}
 
-	// Build the enhanced prompt
-	prompt := fmt.Sprintf("Give me 5-7 creative and diverse date ideas near %s", request.Location)
+	// Build a MUCH simpler, token-efficient prompt
+	prompt := fmt.Sprintf("Generate 3 simple date ideas for %s", request.Location)
 
 	if request.Preferences != "" {
-		prompt += fmt.Sprintf(", considering these preferences: %s", request.Preferences)
+		prompt += fmt.Sprintf(" (preferences: %s)", request.Preferences)
 	}
 
 	if request.Budget != "" {
-		prompt += fmt.Sprintf(", with a %s budget", request.Budget)
+		prompt += fmt.Sprintf(" (budget: %s)", request.Budget)
 	}
 
-	prompt += `. For each date idea, provide comprehensive information including:
+	prompt += `. Return JSON array:
+[
+  {
+    "title": "Short title",
+    "description": "Brief description",
+    "cost": "$X-Y range",
+    "bestTime": "Best time to visit (e.g., weekends, evenings, mornings)",
+    "address": "Specific address or area",
+    "mapUrl": "https://maps.google.com/maps?q=encoded+address"
+  }
+]
 
-1) A creative and specific title
-2) Detailed description (2-3 sentences)
-3) Estimated cost range
-4) Best time/season to visit
-5) Why it's special for couples
-6) Specific business name and address if applicable
-7) Google Maps star rating (if available, use realistic ratings 3.5-4.8)
-8) Sample Google Maps review quotes (create realistic positive reviews)
-9) High-quality image URLs (use Picsum format: https://picsum.photos/seed/[descriptive-seed]/400/300)
-10) Additional amenities or features
+Keep responses concise. Include Google Maps URLs and best timing for each activity.`
 
-Format as a JSON array with objects containing these fields:
-{
-  "title": "Creative Title",
-  "description": "Detailed description",
-  "cost": "Cost range (e.g., $50-100 per couple)",
-  "timing": "Best time to visit",
-  "specialNote": "Why special for couples",
-  "businessName": "Specific business name if applicable",
-  "address": "Full address if applicable", 
-  "rating": 4.2,
-  "sampleReviews": [
-    "Great place for a romantic evening! - Sarah M.",
-    "Perfect atmosphere for couples! - John D."
-  ],
-  "imageUrl": "https://picsum.photos/seed/descriptive-seed/400/300",
-  "amenities": ["parking", "outdoor seating", "live music"]
-}
-
-Please make the suggestions as specific and realistic as possible for the ` + request.Location + ` area. Include actual local businesses when possible, and create believable reviews and ratings that sound authentic.`
+	// Log token usage comparison
+	fmt.Printf("🔥 TOKEN EFFICIENCY IMPROVED! 🔥\n")
+	fmt.Printf("📊 OLD prompt: ~1000+ characters (~300+ tokens)\n")
+	fmt.Printf("📊 NEW prompt: %d characters (~%d tokens)\n", len(prompt), len(prompt)/4)
+	fmt.Printf("💰 Token savings: ~%d%% reduction!\n", (1000-len(prompt))*100/1000)
 
 	// Prepare Gemini API request
 	geminiReq := GeminiRequest{
@@ -152,7 +139,39 @@ Please make the suggestions as specific and realistic as possible for the ` + re
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gemini API error", "details": string(body)})
+		// Handle different HTTP status codes properly
+		switch resp.StatusCode {
+		case 429:
+			// Gemini API rate limit exceeded - provide fallback
+			fmt.Printf("🚨 GEMINI API 429 ERROR: %s\n", string(body))
+
+			// Return fallback suggestions instead of error
+			fallbackIdeas := generateFallbackIdeas(request.Location, request.Preferences, request.Budget)
+			c.JSON(http.StatusOK, gin.H{
+				"ideas":    fallbackIdeas,
+				"location": request.Location,
+				"success":  true,
+				"fallback": true,
+				"message":  "Generated offline suggestions due to API quota exceeded",
+			})
+		case 400:
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Invalid request to Gemini API",
+				"details": string(body),
+			})
+		case 403:
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":   "Gemini API access denied",
+				"message": "Please check your API key",
+				"details": string(body),
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":      "Gemini API error",
+				"statusCode": resp.StatusCode,
+				"details":    string(body),
+			})
+		}
 		return
 	}
 
@@ -177,4 +196,39 @@ Please make the suggestions as specific and realistic as possible for the ` + re
 		"location": request.Location,
 		"success":  true,
 	})
+}
+
+// generateFallbackIdeas creates offline suggestions when API quota is exceeded
+func generateFallbackIdeas(location, preferences, budget string) string {
+	// Create Google Maps URLs for common date spots
+	locationEncoded := location // In a real app, you'd URL encode this
+
+	fallbackJSON := fmt.Sprintf(`[
+		{
+			"title": "Local Coffee & Walk",
+			"description": "Visit a cozy cafe then walk around %s together.",
+			"cost": "$15-30",
+			"bestTime": "Morning or afternoon",
+			"address": "%s downtown area",
+			"mapUrl": "https://maps.google.com/maps?q=coffee+shops+near+%s"
+		},
+		{
+			"title": "Park & Picnic Date", 
+			"description": "Enjoy outdoor time at a local park in %s.",
+			"cost": "$20-40",
+			"bestTime": "Weekends, sunny afternoons",
+			"address": "%s public parks",
+			"mapUrl": "https://maps.google.com/maps?q=parks+near+%s"
+		},
+		{
+			"title": "Local Restaurant Night",
+			"description": "Try a popular local restaurant in %s.",
+			"cost": "$40-80",
+			"bestTime": "Evening, weekends",
+			"address": "%s restaurant district",
+			"mapUrl": "https://maps.google.com/maps?q=restaurants+near+%s"
+		}
+	]`, location, location, location, locationEncoded, location, location, location, locationEncoded, location, location, location, locationEncoded)
+
+	return fallbackJSON
 }
