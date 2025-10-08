@@ -140,10 +140,10 @@ export default {
 .sidebar-logo { font-size: 1.4rem; font-weight: bold; }
 .sidebar-links { list-style: none; margin: 0; padding: 0; }
 .sidebar-links li { margin-bottom: 0.5rem; }
-.sidebar-links li a { display: flex; align-items: center; width: 100%; color: #fff; text-decoration: none; font-weight: 500; padding: 0.75rem; border-radius: 6px; transition: all 0.2s ease; }
-.sidebar-links li a.router-link-exact-active { background-color: rgba(255, 255, 255, 0.2); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+.sidebar-links li a { display: flex; align-items: center; width: 100%; color: var(--text-white); text-decoration: none; font-weight: 500; padding: 0.75rem; border-radius: 6px; transition: all 0.2s ease; }
+.sidebar-links li a.router-link-exact-active { background-color: var(--bg-white-translucent); box-shadow: var(--shadow-sm); }
 .sidebar-links li a i { width: 24px; text-align: center; margin-right: 10px; font-size: 1rem; }
-.sidebar-links li a:hover { background-color: rgba(255, 255, 255, 0.15); transform: translateX(2px); }
+.sidebar-links li a:hover { background-color: var(--bg-white-hover); transform: translateX(2px); }
 
 /* Main Content Area */
 .main-content {
@@ -164,10 +164,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0; /* IMPORTANT: Prevent top bar from shrinking */
 }
-.topbar h1 { margin: 0; font-size: 1.2rem; font-weight: 600; color: #333; }
+.topbar h1 { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--text-primary); }
 /* ... other topbar styles (.user-actions, etc.) ... */
 .user-actions { display: flex; align-items: center; gap: 1rem; }
 .refresh-button { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 1.1rem; padding: 5px; line-height: 1; } /* Adjusted size/padding */

@@ -44,17 +44,37 @@
        <!-- Emoji picker popover -->
       <transition name="fade">
         <div v-if="showEmojiPicker" class="emoji-picker-popover" ref="emojiPicker">
-           <div class="emoji-grid">
-              <button
-                v-for="emoji in commonEmojis"
-                :key="emoji"
-                class="emoji-button"
-                @click="addEmoji(emoji)"
-                :title="`Add ${emoji}`"
-              >
-                {{ emoji }}
-              </button>
-           </div>
+          <!-- Emoji Categories -->
+          <div class="emoji-categories">
+            <button 
+              v-for="(groupName, index) in availableGroups" 
+              :key="groupName"
+              @click="selectEmojiGroup(groupName)"
+              :class="['category-btn', { active: selectedGroup === groupName }]"
+              :title="formatGroupName(groupName)"
+            >
+              {{ getGroupIcon(groupName) }}
+            </button>
+          </div>
+          
+          <!-- Loading state -->
+          <div v-if="loadingEmojis" class="emoji-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading emojis...</span>
+          </div>
+          
+          <!-- Emoji Grid -->
+          <div v-else class="emoji-grid">
+            <button
+              v-for="emoji in currentEmojis"
+              :key="emoji.unicodeCodePoint"
+              class="emoji-button"
+              @click="addEmoji(emoji.character)"
+              :title="emoji.unicodeName || emoji.slug"
+            >
+              {{ emoji.character }}
+            </button>
+          </div>
         </div>
       </transition>
 
@@ -100,6 +120,7 @@
 <script>
 import { fetchChats, fetchCoupleInfo, fetchUserProfile, sendChatMessage } from "../services/apiService";
 import chatWebSocket from "../services/chatWebSocket.js";
+import emojiService from "../services/emojiService.js";
 import TextEnhancer from "./TextEnhancer.vue";
 
 export default {
@@ -117,9 +138,15 @@ export default {
       typingTimeout: null, // Timeout for typing indicator
       userTypingTimeout: null, // Timeout for user's typing indicator
       showEmojiPicker: false, // Emoji picker visibility
-      commonEmojis: ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"], // Emoji list
       showTextEnhancer: false, // Text enhancer modal visibility
       isConnected: false, // WebSocket connection status
+      
+      // Emoji-related data
+      loadingEmojis: false,
+      availableGroups: [],
+      selectedGroup: 'popular',
+      currentEmojis: [],
+      emojiGroups: {},
     };
   },
   computed: {
@@ -351,9 +378,118 @@ export default {
     },
     toggleEmojiPicker() {
       this.showEmojiPicker = !this.showEmojiPicker;
+      
+      if (this.showEmojiPicker) {
+        // Add click outside handler
+        this.$nextTick(() => {
+          document.addEventListener('click', this.handleClickOutside);
+        });
+      } else {
+        // Remove click outside handler
+        document.removeEventListener('click', this.handleClickOutside);
+      }
+    },
+
+    handleClickOutside(event) {
+      const emojiPicker = this.$refs.emojiPicker;
+      const emojiButton = event.target.closest('.emoji-toggle-button');
+      
+      // Close if clicking outside picker and not on the emoji button
+      if (emojiPicker && !emojiPicker.contains(event.target) && !emojiButton) {
+        this.showEmojiPicker = false;
+        document.removeEventListener('click', this.handleClickOutside);
+      }
     },
     addEmoji(emoji) {
       this.newMessage += emoji;
+      this.showEmojiPicker = false; // Close picker after selection
+    },
+
+    // Initialize emoji data
+    async initializeEmojis() {
+      this.loadingEmojis = true;
+      try {
+        // Get all available groups
+        const groupNames = await emojiService.getGroupNames();
+        this.availableGroups = ['popular', 'relationship', ...groupNames];
+        
+        // Load popular emojis by default
+        await this.selectEmojiGroup('popular');
+      } catch (error) {
+        console.error('Error initializing emojis:', error);
+        // Fall back to relationship emojis
+        try {
+          this.availableGroups = ['popular', 'relationship'];
+          this.currentEmojis = await emojiService.getRelationshipEmojis();
+          this.selectedGroup = 'relationship';
+        } catch (fallbackError) {
+          console.error('Error loading fallback emojis:', fallbackError);
+          // Use hardcoded fallback
+          this.currentEmojis = [
+            { character: "❤️", unicodeCodePoint: "2764-fe0f", group: "symbols" },
+            { character: "😊", unicodeCodePoint: "1f60a", group: "smileys-emotion" },
+            { character: "😘", unicodeCodePoint: "1f618", group: "smileys-emotion" },
+            { character: "🥰", unicodeCodePoint: "1f970", group: "smileys-emotion" },
+            { character: "😍", unicodeCodePoint: "1f60d", group: "smileys-emotion" },
+            { character: "🤗", unicodeCodePoint: "1f917", group: "smileys-emotion" },
+            { character: "😂", unicodeCodePoint: "1f602", group: "smileys-emotion" },
+            { character: "💕", unicodeCodePoint: "1f495", group: "symbols" }
+          ];
+          this.availableGroups = ['popular'];
+          this.selectedGroup = 'popular';
+        }
+      }
+      this.loadingEmojis = false;
+    },
+
+    // Select emoji group and load emojis
+    async selectEmojiGroup(groupName) {
+      this.selectedGroup = groupName;
+      this.loadingEmojis = true;
+      
+      try {
+        if (groupName === 'popular') {
+          this.currentEmojis = await emojiService.getPopularEmojis();
+        } else if (groupName === 'relationship') {
+          this.currentEmojis = await emojiService.getRelationshipEmojis();
+        } else {
+          this.currentEmojis = await emojiService.getEmojisByGroup(groupName);
+        }
+      } catch (error) {
+        console.error('Error loading emoji group:', error);
+        this.currentEmojis = [];
+      }
+      
+      this.loadingEmojis = false;
+    },
+
+    // Format group name for display
+    formatGroupName(groupName) {
+      if (groupName === 'popular') return 'Popular';
+      if (groupName === 'relationship') return 'Love & Relationships';
+      
+      return groupName
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' & ');
+    },
+
+    // Get icon for emoji group
+    getGroupIcon(groupName) {
+      const icons = {
+        'popular': '⭐',
+        'relationship': '❤️',
+        'smileys-emotion': '😊',
+        'people-body': '👋',
+        'animals-nature': '🐶',
+        'food-drink': '🍕',
+        'activities': '⚽',
+        'travel-places': '✈️',
+        'objects': '💡',
+        'symbols': '❤️',
+        'flags': '🏳️'
+      };
+      return icons[groupName] || '📁';
     },
     scrollToBottom() {
       if (this.$refs.chatWindow) {
@@ -390,6 +526,7 @@ export default {
 
   created() {
     this.fetchChatData();
+    this.initializeEmojis();
   },
 
   beforeUnmount() {
@@ -399,6 +536,9 @@ export default {
       chatWebSocket.sendTypingStop();
     }
     chatWebSocket.disconnect();
+    
+    // Clean up event listeners
+    document.removeEventListener('click', this.handleClickOutside);
   },
 };
 </script>
@@ -615,30 +755,91 @@ export default {
   border-radius: 10px;
   box-shadow: var(--shadow);
   padding: 0.75rem;
-  width: 280px; /* Adjust width */
+  width: 320px; /* Wider for categories */
   z-index: 100;
   border: 1px solid var(--border-color);
 }
+
+/* Emoji Categories */
+.emoji-categories {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.category-btn.active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-white);
+}
+
+/* Loading State */
+.emoji-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  gap: 0.5rem;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .emoji-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-    gap: 5px;
-    max-height: 200px; /* Limit height */
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 4px;
+    max-height: 180px; /* Limit height to account for categories */
     overflow-y: auto;
-     scrollbar-width: thin;
-     scrollbar-color: var(--border-color) var(--bg-secondary);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-secondary);
+    padding: 2px; /* Small padding */
 }
 .emoji-button {
   background: none;
   border: none;
   padding: 0;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.4rem; /* Larger emojis */
+  font-size: 1.3rem; /* Slightly smaller for better fit */
   transition: background-color 0.15s ease;
   border-radius: 6px;
 }
