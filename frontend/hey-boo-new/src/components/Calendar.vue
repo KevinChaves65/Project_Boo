@@ -2,15 +2,38 @@
   <!-- Root element for calendar content -->
   <div class="calendar-view-content">
 
-    <!-- Calendar Header (Navigation Only) -->
+    <!-- Calendar Header (Enhanced Navigation) -->
     <div class="calendar-navigation">
       <button @click="prevMonth" class="nav-button" aria-label="Previous month" title="Previous month">
         <i class="fas fa-chevron-left"></i>
       </button>
-      <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+      
+      <!-- Month and Year Selectors -->
+      <div class="date-selectors">
+        <select v-model="selectedMonth" @change="updateCalendar" class="month-selector">
+          <option v-for="(month, index) in monthNames" :key="index" :value="index">
+            {{ month }}
+          </option>
+        </select>
+        
+        <select v-model="selectedYear" @change="updateCalendar" class="year-selector">
+          <option v-for="year in availableYears" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+      
       <button @click="nextMonth" class="nav-button" aria-label="Next month" title="Next month">
         <i class="fas fa-chevron-right"></i>
       </button>
+      
+      <!-- Quick navigation buttons -->
+      <div class="quick-nav">
+        <button @click="goToToday" class="today-button" title="Go to today">
+          <i class="fas fa-calendar-day"></i>
+          Today
+        </button>
+      </div>
     </div>
 
     <!-- Calendar Body Grid (Calendar + Events Panel) -->
@@ -128,6 +151,10 @@ export default {
       selectedDate: null,
       milestones: [],
       weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      monthNames: [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ],
       showAddEventForm: false,
       isEditing: false,
       eventForm: {
@@ -144,6 +171,31 @@ export default {
     },
     currentYear() {
       return this.currentDate.getFullYear();
+    },
+    selectedMonth: {
+      get() {
+        return this.currentDate.getMonth();
+      },
+      set(month) {
+        this.currentDate = new Date(this.currentDate.getFullYear(), month, 1);
+      }
+    },
+    selectedYear: {
+      get() {
+        return this.currentDate.getFullYear();
+      },
+      set(year) {
+        this.currentDate = new Date(year, this.currentDate.getMonth(), 1);
+      }
+    },
+    availableYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      // Show 10 years before and 10 years after current year
+      for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+        years.push(year);
+      }
+      return years;
     },
     calendarDays() {
       const year = this.currentDate.getFullYear();
@@ -195,6 +247,28 @@ export default {
     },
   },
   methods: {
+    // Calendar navigation methods
+    updateCalendar() {
+      // Force reactivity update when month/year changes
+      this.$forceUpdate();
+    },
+    goToToday() {
+      const today = new Date();
+      this.currentDate = today;
+      this.selectedDate = today.toISOString().split("T")[0];
+      
+      // If the add event form is open, update the date field to today
+      if (this.showAddEventForm && !this.isEditing) {
+        this.eventForm.date = this.selectedDate;
+      }
+    },
+    prevMonth() {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+    },
+    nextMonth() {
+      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
+    },
+    
     async fetchCalendarData() {
       try {
         const user = await initializeUser();
@@ -277,17 +351,14 @@ export default {
       };
       this.isEditing = false;
     },
-    prevMonth() {
-      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
-      this.selectedDate = null;
-    },
-    nextMonth() {
-      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-      this.selectedDate = null;
-    },
     selectDay(day) {
       if (!day.currentMonth) return;
       this.selectedDate = day.date;
+      
+      // If the add event form is open, update the date field
+      if (this.showAddEventForm && !this.isEditing) {
+        this.eventForm.date = day.date;
+      }
     },
     hasEvents(dateString) {
       return Array.isArray(this.milestones) && this.milestones.some((milestone) => milestone.date === dateString);
@@ -318,7 +389,20 @@ export default {
     },
     toggleAddEventForm() {
       this.showAddEventForm = !this.showAddEventForm;
-      if (!this.showAddEventForm) this.resetEventForm();
+      
+      if (this.showAddEventForm) {
+        // When opening the form, pre-fill the date with selected date or today
+        const dateToUse = this.selectedDate || new Date().toISOString().split("T")[0];
+        this.eventForm.date = dateToUse;
+        
+        // If no date is selected, also select the date we're using
+        if (!this.selectedDate) {
+          this.selectedDate = dateToUse;
+        }
+      } else {
+        // When closing the form, reset it
+        this.resetEventForm();
+      }
     },
   },
   created() {
@@ -347,14 +431,76 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #eee;
   flex-shrink: 0; /* Prevent shrinking */
+  gap: 1rem;
 }
-.calendar-navigation h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
+
+.date-selectors {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   flex-grow: 1;
+  justify-content: center;
+}
+
+.month-selector, .year-selector {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-selector:hover, .year-selector:hover {
+  border-color: #8c68db;
+  background-color: #f3eefc;
+}
+
+.month-selector:focus, .year-selector:focus {
+  outline: none;
+  border-color: #8c68db;
+  box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.2);
+}
+
+.month-selector {
+  min-width: 120px;
+}
+
+.year-selector {
+  min-width: 80px;
+}
+
+.quick-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.today-button {
+  background: #8c68db;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.today-button:hover {
+  background: #7a5fc7;
+  transform: translateY(-1px);
+}
+
+.today-button i {
+  font-size: 0.8rem;
 }
 .nav-button {
   background: transparent;
@@ -470,10 +616,6 @@ export default {
   background-color: #fff !important; /* Ensure white background */
   border-color: #8c68db !important;
   box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.4) !important;
-}
-.selected .day-number {
-    /* Optionally highlight selected number differently */
-    /* color: #8c68db; */
 }
 
 /* Event Indicators */
