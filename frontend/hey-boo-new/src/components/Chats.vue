@@ -99,6 +99,7 @@
 
 <script>
 import { fetchChats, fetchCoupleInfo, fetchUserProfile, sendChatMessage } from "../services/apiService";
+import chatWebSocket from "../services/chatWebSocket.js";
 import TextEnhancer from "./TextEnhancer.vue";
 
 export default {
@@ -112,10 +113,13 @@ export default {
       currentUsername: "", // Current user's username
       partnerUsername: "", // Partner's username
       partnerFullName: "", // Partner's full name
+      coupleId: "", // Current couple ID
       typingTimeout: null, // Timeout for typing indicator
+      userTypingTimeout: null, // Timeout for user's typing indicator
       showEmojiPicker: false, // Emoji picker visibility
       commonEmojis: ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"], // Emoji list
       showTextEnhancer: false, // Text enhancer modal visibility
+      isConnected: false, // WebSocket connection status
     };
   },
   computed: {
@@ -129,17 +133,16 @@ export default {
         // Fetch user profile
         const userProfile = await fetchUserProfile();
         this.currentUsername = userProfile.username;
+        this.coupleId = userProfile.couple_id;
 
-        const coupleId = userProfile.couple_id;
-
-        if (!coupleId) {
+        if (!this.coupleId) {
           console.error("User is not linked to a couple.");
           alert("You are not linked to a couple. Please link to a partner first.");
           return;
         }
 
         // Fetch couple info
-        const coupleInfo = await fetchCoupleInfo(coupleId);
+        const coupleInfo = await fetchCoupleInfo(this.coupleId);
 
         // Determine partner's username
         if (coupleInfo.user1_username === this.currentUsername) {
@@ -164,20 +167,105 @@ export default {
         }));
 
         console.log("Loaded Messages:", this.messages); // Debug loaded messages
+
+        // Initialize WebSocket connection
+        this.initializeWebSocket();
       } catch (error) {
         console.error("Failed to load chats:", error.message);
         alert("Failed to load chats. Please try again.");
       }
     },
+
+    // Initialize WebSocket connection
+    initializeWebSocket() {
+      // Set up event handlers
+      chatWebSocket.onMessage(this.handleIncomingMessage);
+      chatWebSocket.onTyping(this.handleTypingIndicator);
+      chatWebSocket.onConnection(this.handleConnectionStatus);
+
+      // Connect to WebSocket
+      chatWebSocket.connect(this.currentUsername, this.coupleId);
+    },
+
+    // Handle incoming WebSocket messages
+    handleIncomingMessage(message) {
+      // Only add messages from partner (avoid duplicates of own messages)
+      if (message.sender !== this.currentUsername) {
+        const newMessage = {
+          sender: message.sender,
+          text: message.content,
+          timestamp: message.timestamp * 1000, // Convert to milliseconds
+        };
+        
+        this.messages.push(newMessage);
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      }
+    },
+
+    // Handle typing indicators
+    handleTypingIndicator(sender, isTyping) {
+      if (sender !== this.currentUsername) {
+        this.isPartnerTyping = isTyping;
+        
+        if (isTyping) {
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
+        }
+      }
+    },
+
+    // Handle connection status
+    handleConnectionStatus(status, error) {
+      this.isConnected = status === 'connected';
+      
+      if (status === 'connected') {
+        console.log('Connected to real-time chat');
+      } else if (status === 'disconnected') {
+        console.log('Disconnected from real-time chat');
+      } else if (status === 'error') {
+        console.error('WebSocket error:', error);
+      }
+    },
+
+    // Handle input changes (for typing indicators)
+    onInputChange() {
+      // Send typing start indicator
+      if (!this.typingTimeout) {
+        chatWebSocket.sendTypingStart();
+      }
+
+      // Clear existing timeout
+      if (this.userTypingTimeout) {
+        clearTimeout(this.userTypingTimeout);
+      }
+
+      // Set new timeout to stop typing indicator
+      this.userTypingTimeout = setTimeout(() => {
+        chatWebSocket.sendTypingStop();
+        this.userTypingTimeout = null;
+      }, 1000); // Stop typing indicator after 1 second of inactivity
+    },
+
     async sendMessage() {
       if (!this.isMessageValid) return;
 
       try {
-        // Construct the message object
+        const messageText = this.newMessage.trim();
+        
+        // Stop typing indicator
+        if (this.userTypingTimeout) {
+          clearTimeout(this.userTypingTimeout);
+          this.userTypingTimeout = null;
+          chatWebSocket.sendTypingStop();
+        }
+
+        // Construct the message object for display
         const message = {
           sender: this.currentUsername,
-          receiver: this.partnerUsername,
-          text: this.newMessage.trim(), // Use `text` instead of `content`
+          text: messageText,
           timestamp: Date.now(),
         };
 
@@ -187,8 +275,11 @@ export default {
         // Clear the input field
         this.newMessage = "";
 
-        // Send the message to the backend
-        await sendChatMessage(message.text, message.receiver, message.sender, message.timestamp);
+        // Send message via WebSocket for real-time delivery
+        chatWebSocket.sendMessage(messageText);
+
+        // Also send to backend for persistence
+        await sendChatMessage(messageText, this.partnerUsername, this.currentUsername, message.timestamp);
 
         // Scroll to the bottom of the chat window
         this.scrollToBottom();
@@ -279,9 +370,35 @@ export default {
       this.newMessage = enhancedText;
       this.closeTextEnhancer();
     },
+
+    // Handle input changes for typing indicators
+    handleInput() {
+      this.onInputChange();
+    },
+
+    // Handle Enter key press
+    handleEnterKey(event) {
+      if (event.shiftKey) {
+        // Allow Shift+Enter for new lines
+        return;
+      }
+      
+      // Send message on Enter
+      this.sendMessage();
+    },
   },
+
   created() {
     this.fetchChatData();
+  },
+
+  beforeUnmount() {
+    // Clean up WebSocket connection
+    if (this.userTypingTimeout) {
+      clearTimeout(this.userTypingTimeout);
+      chatWebSocket.sendTypingStop();
+    }
+    chatWebSocket.disconnect();
   },
 };
 </script>

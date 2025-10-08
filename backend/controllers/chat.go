@@ -4,9 +4,15 @@ import (
 	"net/http"
 
 	"github.com/KevinChaves65/Project_Boo/models"
+	"github.com/KevinChaves65/Project_Boo/services"
 	"github.com/KevinChaves65/Project_Boo/utils"
 	"github.com/gin-gonic/gin"
 )
+
+// ChatHandler handles WebSocket connections for real-time chat
+func ChatHandler(w http.ResponseWriter, r *http.Request) {
+	services.HandleConnections(w, r)
+}
 
 func SendMessage(c *gin.Context) {
 	var message models.Message
