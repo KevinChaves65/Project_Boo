@@ -116,13 +116,13 @@ export default {
 
 /* Card styling - Modernized */
 .login-card {
-  background-color: #ffffff;
+  background-color: var(--bg-white);
   padding: 2.5rem 2rem; /* More padding */
   border-radius: 16px; /* More rounded */
   max-width: 380px; /* Slightly wider */
   width: 100%;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); /* Softer, larger shadow */
+  box-shadow: var(--shadow-lg); /* Softer, larger shadow */
   border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
   backdrop-filter: blur(5px); /* Optional blur effect if background is complex */
   background-clip: padding-box; /* Fix potential border issues with blur */
@@ -140,13 +140,13 @@ export default {
 h2 {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
 .subtitle {
     font-size: 0.95rem;
-    color: #667;
+    color: var(--text-secondary);
     margin-bottom: 2rem;
 }
 
@@ -173,7 +173,7 @@ h2 {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #aaa;
+    color: var(--text-muted);
     font-size: 0.9rem;
     pointer-events: none; /* Allow clicking through icon */
 }
@@ -182,22 +182,22 @@ input[type="text"],
 input[type="password"] {
   width: 100%;
   padding: 0.85rem 1rem 0.85rem 2.75rem; /* Padding for icon */
-  border: 1px solid #d1d5db; /* Softer border */
+  border: 1px solid var(--input-border); /* Softer border */
   border-radius: 8px; /* Rounded */
   font-size: 1rem;
-  color: #333;
-  background-color: #fdfdff;
+  color: var(--text-primary);
+  background-color: var(--input-bg);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 input[type="text"]::placeholder,
 input[type="password"]::placeholder {
-    color: #a0aec0;
+    color: var(--text-muted);
 }
 input[type="text"]:focus,
 input[type="password"]:focus {
   outline: none;
-  border-color: #8c68db;
-  box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.15);
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px var(--shadow-primary);
 }
 
 .forgot-password-link {
@@ -205,12 +205,12 @@ input[type="password"]:focus {
     text-align: right;
     margin-top: 0.5rem;
     font-size: 0.8rem;
-    color: #8c68db;
+    color: var(--primary-color);
     text-decoration: none;
     transition: color 0.2s ease;
 }
 .forgot-password-link:hover {
-    color: #7a5fc7;
+    color: var(--primary-dark);
     text-decoration: underline;
 }
 
@@ -223,24 +223,24 @@ input[type="password"]:focus {
   border: none;
   border-radius: 25px; /* Fully rounded */
   cursor: pointer;
-  background: #ff80b0; /* HeyBoo Pink */
+  background: var(--accent-color); /* HeyBoo Pink */
   color: white;
   transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  box-shadow: 0 3px 8px rgba(255, 128, 176, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 .login-button:hover:not(:disabled) {
-  background-color: #ff66a3;
-  box-shadow: 0 5px 12px rgba(255, 128, 176, 0.4);
+  background-color: var(--accent-color-hover);
+  box-shadow: var(--shadow-primary-hover);
   transform: translateY(-1px);
 }
 .login-button:disabled {
-    background-color: #cccccc;
-    color: #888;
+    background-color: var(--text-muted);
+    color: var(--text-secondary);
     box-shadow: none;
     cursor: not-allowed;
 }
@@ -251,16 +251,16 @@ input[type="password"]:focus {
 /* Sign Up Prompt/Link */
 .signup-prompt {
   font-size: 0.9rem;
-  color: #556;
+  color: var(--text-secondary);
 }
 .signup-link {
-  color: #8c68db; /* Theme purple */
+  color: var(--primary-color); /* Theme purple */
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 .signup-link:hover {
-  color: #7a5fc7;
+  color: var(--primary-dark);
   text-decoration: underline;
 }
 

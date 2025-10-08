@@ -82,8 +82,8 @@
   
   .sidebar {
     width: 250px;
-    background-color: #fff;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-white);
+    box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -91,25 +91,25 @@
   
   .sidebar-header {
     padding: 1.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .sidebar-header h2 {
     margin: 0;
-    color: #8c68db;
+    color: var(--primary-color);
     font-size: 1.5rem;
   }
   
   .session-indicator {
     margin-top: 0.5rem;
     padding: 0.25rem 0.5rem;
-    background-color: #e8f4fd;
+    background-color: var(--bg-secondary);
     border-radius: 4px;
-    border-left: 3px solid #2196f3;
+    border-left: 3px solid var(--info-color);
   }
   
   .session-indicator small {
-    color: #1976d2;
+    color: var(--info-dark);
     font-weight: 500;
     font-size: 0.75rem;
   }
@@ -125,7 +125,7 @@
     padding: 0;
     margin: 0;
   }
-  
+
   .nav-list li {
     margin-bottom: 0.5rem;
   }
@@ -134,26 +134,26 @@
     display: flex;
     align-items: center;
     padding: 0.75rem 1.5rem;
-    color: #333;
+    color: var(--text-primary);
     text-decoration: none;
     transition: all 0.2s ease;
     gap: 0.75rem;
   }
   
   .nav-list a:hover {
-    background-color: #f5f0ff;
-    color: #8c68db;
+    background-color: var(--bg-primary-light);
+    color: var(--primary-color);
   }
   
   .nav-list a.router-link-active {
-    background-color: #f5f0ff;
-    color: #8c68db;
-    border-left: 3px solid #8c68db;
+    background-color: var(--bg-primary-light);
+    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
   }
   
   .sidebar-footer {
     padding: 1rem 1.5rem;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
   }
   
   .logout-button {
@@ -163,23 +163,23 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem;
-    background-color: #f0f0f0;
+    background-color: var(--bg-muted);
     border: none;
     border-radius: 4px;
-    color: #666;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
   }
   
   .logout-button:hover {
-    background-color: #ff80b0;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--text-white);
   }
   
   .main-content {
     flex: 1;
     overflow-y: auto;
-    background-color: #f9f9f9;
+    background-color: var(--bg-primary);
   }
   
   @media (max-width: 768px) {

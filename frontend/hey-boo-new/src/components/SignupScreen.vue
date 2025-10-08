@@ -166,13 +166,13 @@
 }
 
 .signup-box {
-  background-color: #ffffff;
+  background-color: var(--bg-white);
   padding: 2rem;
   border-radius: 8px;
   max-width: 480px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 /* Logo styling */
@@ -185,7 +185,7 @@
 .signup-box h1 {
   margin-bottom: 1.5rem;
   font-family: "Helvetica Neue", sans-serif;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .signup-box form {
@@ -203,7 +203,7 @@
 .form-row input {
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
 }
 
@@ -225,13 +225,13 @@
   padding: 0.75rem;
   border: none;
   border-radius: 4px;
-  background-color: #ff80b0;
-  color: #fff;
+  background-color: var(--accent-color);
+  color: var(--text-white);
   font-weight: bold;
   cursor: pointer;
 }
 
 .signup-box button:hover {
-  background-color: #ff66a3;
+  background-color: var(--accent-color-hover);
 }
 </style>

@@ -117,19 +117,20 @@ export default {
   display: flex;
   height: 100vh; /* Full viewport height */
   overflow: hidden; /* Prevent BODY scrollbars */
-  background-color: #f9f9f9;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
   font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Sidebar Styles */
 .sidebar {
   width: 240px; /* Fixed width */
-  background: linear-gradient(135deg, #8c68db, #a66fd5);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   color: #fff;
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   overflow-y: auto; /* Allow sidebar scrolling if needed */
   flex-shrink: 0; /* Prevent sidebar from shrinking */
 }
@@ -150,15 +151,16 @@ export default {
   display: flex;
   flex-direction: column;
   /* REMOVED overflow: hidden; Let the wrapper handle overflow */
-  background-color: #f9f9f9;
+  background-color: var(--bg-secondary) !important;
    min-width: 0; /* Important fix for flexbox content shrinking issues */
 }
 
 /* Top Bar */
 .topbar {
-  background-color: #fff;
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
   padding: 1rem 2rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm) !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -168,7 +170,7 @@ export default {
 .topbar h1 { margin: 0; font-size: 1.2rem; font-weight: 600; color: #333; }
 /* ... other topbar styles (.user-actions, etc.) ... */
 .user-actions { display: flex; align-items: center; gap: 1rem; }
-.refresh-button { background: none; border: none; color: #8c68db; cursor: pointer; font-size: 1.1rem; padding: 5px; line-height: 1; } /* Adjusted size/padding */
+.refresh-button { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 1.1rem; padding: 5px; line-height: 1; } /* Adjusted size/padding */
 .refresh-button i.rotating { animation: rotate 1s linear infinite; }
 @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .user-avatar img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
@@ -184,10 +186,6 @@ export default {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .sidebar {
-    /* Example: Maybe hide sidebar or make it overlay */
-    /* position: fixed; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; */
-  }
   .topbar { padding: 1rem; }
   .router-view-wrapper { padding: 1rem; } /* Adjust padding on smaller screens */
 }

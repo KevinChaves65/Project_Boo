@@ -294,6 +294,7 @@
 
 <script>
 import { fetchUserProfile, updateUserProfile, changeUserPassword } from "../services/apiService";
+import themeService from "../services/themeService.js";
 
 export default {
   name: "SettingsPage",
@@ -324,7 +325,7 @@ export default {
       },
 
       // Theme
-      selectedTheme: "light",
+      selectedTheme: themeService.getTheme(),
 
       // Notifications
       notifications: {
@@ -519,10 +520,10 @@ export default {
       performProfileUpdate();
     },
     applyTheme() {
-      // In a real app, this would apply the theme to the entire application
-      // For demo purposes, just show success message
-      document.body.className = this.selectedTheme;
-
+      // Apply the selected theme using the theme service
+      themeService.setTheme(this.selectedTheme);
+      
+      // Show success message
       this.showSuccessMessage = true;
       setTimeout(() => {
         this.showSuccessMessage = false;
@@ -567,9 +568,20 @@ export default {
       // Redirect to the login page
       this.$router.push("/login");
     },
+    handleThemeChange(event) {
+      this.selectedTheme = event.detail.theme;
+    },
   },
   created() {
     this.fetchUserProfile();
+  },
+  mounted() {
+    // Listen for theme changes from other parts of the app
+    window.addEventListener('themeChanged', this.handleThemeChange);
+  },
+  beforeUnmount() {
+    // Clean up event listener
+    window.removeEventListener('themeChanged', this.handleThemeChange);
   },
 };
 </script>
@@ -582,31 +594,34 @@ export default {
   display: flex;
   flex-direction: column;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background-color: #f9f9f9;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Header styling */
 .settings-header {
-  background-color: #fff;
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm) !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .settings-header h1 {
   margin: 0;
   font-size: 1.25rem;
-  color: #333;
+  color: var(--text-primary) !important;
 }
 
 .back-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #8c68db;
-  color: #fff;
+  background-color: var(--accent-secondary) !important;
+  color: var(--text-inverse) !important;
   padding: 0.5rem 1rem;
   text-decoration: none;
   border-radius: 4px;
@@ -614,7 +629,7 @@ export default {
 }
 
 .back-button:hover {
-  background-color: #7a5fc7;
+  background-color: var(--accent-hover) !important;
 }
 
 /* Settings body */
@@ -622,12 +637,13 @@ export default {
   flex: 1;
   padding: 1.5rem;
   overflow-y: auto;
+  background-color: var(--bg-secondary) !important;
 }
 
 /* Success message */
 .success-message {
-  background-color: #4caf50;
-  color: white;
+  background-color: var(--success-color) !important;
+  color: var(--text-inverse) !important;
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -651,11 +667,11 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #333;
+  color: var(--text-primary) !important;
   font-size: 1.2rem;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .section-content {
@@ -667,23 +683,29 @@ export default {
 
 /* Cards styling */
 .settings-card {
-  background-color: #fff;
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md) !important;
   padding: 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .settings-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg) !important;
+  background-color: var(--bg-hover) !important;
 }
 
 .settings-card h3 {
   margin-top: 0;
   margin-bottom: 1.25rem;
-  color: #8c68db;
-  font-size: 1.1rem;
+  color: var(--text-primary) !important;
+}
+
+.settings-card p {
+  color: var(--text-secondary) !important;
 }
 
 /* Personal Information specific styling */
@@ -691,11 +713,11 @@ export default {
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
-  color: #333;
-  background-color: #f8f9fa;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
   padding: 0.75rem 1rem;
   border-radius: 6px;
-  border-left: 3px solid #8c68db;
+  border-left: 3px solid var(--accent-secondary) !important;
   min-height: 1.2rem;
   word-wrap: break-word;
 }
@@ -709,30 +731,32 @@ export default {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #555;
+  color: var(--text-primary) !important;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--input-border) !important;
   border-radius: 4px;
   font-size: 0.95rem;
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-group input:focus {
-  border-color: #8c68db;
+  border-color: var(--input-focus) !important;
   box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.1);
   outline: none;
 }
 
 .input-error {
-  border-color: #ff6b6b !important;
+  border-color: var(--error-color) !important;
 }
 
 .error-text {
-  color: #ff6b6b;
+  color: var(--error-color) !important;
   font-size: 0.8rem;
   margin-top: 0.25rem;
   display: block;
@@ -745,7 +769,7 @@ export default {
 
 .strength-meter {
   height: 4px;
-  background-color: #eee;
+  background-color: var(--bg-tertiary) !important;
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 0.25rem;
@@ -756,20 +780,20 @@ export default {
   transition: width 0.3s ease;
 }
 
-.strength-value.weak { background-color: #ff6b6b; }
-.strength-value.medium { background-color: #ffb347; }
-.strength-value.good { background-color: #4caf50; }
-.strength-value.strong { background-color: #2e7d32; }
+.strength-value.weak { background-color: var(--error-color) !important; }
+.strength-value.medium { background-color: var(--warning-color) !important; }
+.strength-value.good { background-color: var(--success-color) !important; }
+.strength-value.strong { background-color: var(--success-color) !important; }
 
 .strength-text {
   font-size: 0.8rem;
-  color: #777;
+  color: var(--text-muted) !important;
 }
 
 /* Button styling */
 .primary-button {
-  background-color: #8c68db;
-  color: white;
+  background-color: var(--accent-primary) !important;
+  color: var(--text-inverse) !important;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
@@ -783,16 +807,17 @@ export default {
 }
 
 .primary-button:hover {
-  background-color: #7a5fc7;
+  background-color: var(--accent-hover) !important;
 }
 
 .primary-button:disabled {
-  background-color: #ccc;
+  background-color: var(--text-muted) !important;
   cursor: not-allowed;
 }
 
 .danger-button {
-  background-color: #ff6b6b;
+  background-color: var(--error-color) !important;
+  color: var(--text-inverse) !important;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -803,7 +828,8 @@ export default {
 }
 
 .danger-button:hover {
-  background-color: #e74c3c;
+  background-color: var(--error-color) !important;
+  opacity: 0.8;
 }
 
 /* Toggle options */
@@ -813,12 +839,12 @@ export default {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 .toggle-option span {
   font-weight: 500;
-  color: #555;
+  color: var(--text-primary) !important;
 }
 
 /* Toggle switch */
@@ -842,7 +868,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--bg-muted);
   transition: .4s;
   border-radius: 24px;
 }
@@ -854,13 +880,13 @@ export default {
   width: 16px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: var(--bg-white);
   transition: .4s;
   border-radius: 50%;
 }
 
 input:checked + .toggle-slider {
-  background-color: #8c68db;
+  background-color: var(--primary-color);
 }
 
 input:checked + .toggle-slider:before {
@@ -874,8 +900,9 @@ input:checked + .toggle-slider:before {
 }
 
 .theme-button {
-  background-color: #f0f0f0;
-  border: none;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
@@ -886,35 +913,40 @@ input:checked + .toggle-slider:before {
 }
 
 .theme-button.active {
-  background-color: #8c68db;
-  color: white;
+  background-color: var(--accent-primary) !important;
+  color: var(--text-inverse) !important;
+  border-color: var(--accent-primary) !important;
 }
 
 /* Theme preview */
 .theme-preview {
-  background-color: white;
+  background-color: var(--bg-white) !important;
+  color: var(--text-primary) !important;
   border-radius: 8px;
   overflow: hidden;
   margin: 1rem 0;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color) !important;
   transition: all 0.3s ease;
 }
 
 .theme-preview.dark {
-  background-color: #333;
-  color: white;
+  background-color: var(--bg-primary-dark) !important;
+  color: var(--text-white) !important;
+  border-color: var(--border-dark) !important;
 }
 
 .preview-header {
   padding: 0.75rem;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #eee;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
   font-weight: 500;
+  color: var(--text-primary);
 }
 
 .theme-preview.dark .preview-header {
-  background-color: #444;
-  border-color: #555;
+  background-color: var(--bg-hover) !important;
+  border-color: var(--border-hover) !important;
+  color: var(--text-white) !important;
 }
 
 .preview-content {
@@ -927,36 +959,37 @@ input:checked + .toggle-slider:before {
 .preview-item {
   height: 16px;
   border-radius: 4px;
-  background-color: #eee;
+  background-color: var(--bg-muted);
 }
 
 .theme-preview.dark .preview-item {
-  background-color: #555;
+  background-color: var(--border-hover) !important;
 }
 
 /* Danger zone */
 .danger-section h2 {
-  color: #ff6b6b;
+  color: var(--error-color);
 }
 
 .danger-card {
-  border: 1px solid #ffcdd2;
+  border: 1px solid var(--error-color);
+  opacity: 0.7;
 }
 
 .danger-card h3 {
-  color: #ff6b6b;
+  color: var(--error-color);
 }
 
 .danger-card p {
   margin-bottom: 1rem;
-  color: #777;
+  color: var(--text-secondary);
 }
 
 /* Loading spinner */
 .loading-spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #fff;
+  border: 2px solid var(--text-white);
   border-bottom-color: transparent;
   border-radius: 50%;
   display: inline-block;

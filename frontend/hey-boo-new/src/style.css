@@ -4,24 +4,27 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: #242424;
+  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  background-color: var(--bg-primary, #ffffff);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 input::placeholder {
-  color: gray; 
+  color: var(--text-muted, gray); 
 }
+
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--accent-primary, #646cff);
   text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
+  color: var(--accent-hover, #535bf2);
 }
 
 body {
@@ -30,6 +33,9 @@ body {
   max-width: 1024px;
   max-height: 800px;
   overflow: auto;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dashboard-container {
@@ -49,21 +55,26 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color, transparent);
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-secondary, #1a1a1a);
+  color: var(--text-primary, #ffffff);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, background-color 0.25s, color 0.25s;
 }
+
 button:hover {
-  border-color: #646cff;
+  border-color: var(--accent-primary, #646cff);
+  background-color: var(--bg-hover, #404040);
 }
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-primary, #646cff);
+  outline-offset: 2px;
 }
 
 .card {
@@ -99,15 +110,4 @@ button:focus-visible {
   }
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* Remove the old media query as we're using CSS custom properties now */

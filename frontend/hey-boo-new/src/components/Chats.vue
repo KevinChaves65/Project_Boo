@@ -409,7 +409,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%; /* Fill parent (.router-view-wrapper) */
-  background-color: #f0f4f8; /* Lighter background for chat */
+  background-color: var(--bg-primary); /* Theme background for chat */
   /* No overflow here - parent handles scroll */
 }
 
@@ -428,12 +428,12 @@ export default {
   text-align: center;
   margin: 1.5rem 0 1rem 0; /* More spacing */
   position: relative;
-  color: #8899a6; /* Softer color */
+  color: var(--text-muted); /* Softer color */
   font-size: 0.8rem;
   font-weight: 500;
 }
 .date-divider span {
-  background-color: #e1e8ed; /* Background matches divider line */
+  background-color: var(--bg-secondary); /* Background matches divider line */
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
 }
@@ -445,7 +445,7 @@ export default {
   top: 50%;
   width: calc(50% - 60px); /* Adjust width based on span */
   height: 1px;
-  background-color: #e1e8ed;
+  background-color: var(--border-color);
 }
 .date-divider::before { left: 0; }
 .date-divider::after { right: 0; }
@@ -464,9 +464,9 @@ export default {
 .message-bubble {
   padding: 0.65rem 1rem; /* Padding inside bubble */
   border-radius: 18px; /* Rounded bubble shape */
-  background-color: #ffffff; /* Partner messages */
-  color: #14171a; /* Dark text */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-white); /* Partner messages */
+  color: var(--text-primary); /* Dark text */
+  box-shadow: var(--shadow-sm);
   line-height: 1.45;
   word-wrap: break-word;
   display: flex; /* Use flex for text + time */
@@ -475,8 +475,8 @@ export default {
   max-width: 100%;
 }
 .message-container.own-message .message-bubble {
-  background: linear-gradient(135deg, #8c68db, #a66fd5); /* Theme gradient for own messages */
-  color: #ffffff; /* White text */
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); /* Theme gradient for own messages */
+  color: var(--text-white); /* White text */
 }
 
 .message-text {
@@ -485,16 +485,16 @@ export default {
 }
 .message-time {
   font-size: 0.7rem; /* Smaller time */
-  color: #aab8c2; /* Lighter time color */
+  color: var(--text-muted); /* Lighter time color */
   align-self: flex-end; /* Time to bottom right */
   margin-top: 0.1rem;
 }
 .message-container.own-message .message-time {
-  color: rgba(255, 255, 255, 0.7); /* Lighter white for time */
+  color: var(--text-white-muted); /* Lighter white for time */
 }
 .sender-name { /* Optional sender name display */
     font-size: 0.75rem;
-    color: #657786;
+    color: var(--text-secondary);
     margin-bottom: 2px;
     padding-left: 10px; /* Align roughly with bubble */
 }
@@ -516,7 +516,7 @@ export default {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #b0b0b0; /* Grey dots */
+  background-color: var(--text-muted); /* Grey dots */
   animation: typing-pulse 1.4s infinite ease-in-out;
 }
 .typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
@@ -532,8 +532,8 @@ export default {
 /* Input Area - Stays at bottom */
 .chat-input-area {
   padding: 0.75rem 1.5rem;
-  background-color: #ffffff;
-  border-top: 1px solid #e6ecf0;
+  background-color: var(--bg-white);
+  border-top: 1px solid var(--border-color);
   flex-shrink: 0; /* Prevent shrinking */
   position: relative; /* For emoji picker positioning */
 }
@@ -541,10 +541,10 @@ export default {
   display: flex;
   align-items: flex-end; /* Align items to bottom */
   gap: 0.75rem;
-  background-color: #f5f8fa; /* Input background */
+  background-color: var(--bg-secondary); /* Input background */
   border-radius: 22px; /* Rounded container */
   padding: 0.5rem 0.5rem 0.5rem 0.75rem; /* Padding around input elements */
-  border: 1px solid #e6ecf0;
+  border: 1px solid var(--border-color);
 }
 
 .chat-input textarea {
@@ -560,18 +560,18 @@ export default {
   max-height: 100px; /* Limit height to ~4-5 lines */
   align-self: center; /* Vertically center text cursor initially */
   scrollbar-width: thin;
-  scrollbar-color: #ccc #f5f8fa;
-  color: black; /* Ensure font color is black */
+  scrollbar-color: var(--border-color) var(--bg-secondary);
+  color: var(--text-primary); /* Ensure font color uses theme */
 }
 .chat-input textarea::placeholder {
-  color: #aab8c2;
+  color: var(--text-muted);
 }
 
 /* Input action buttons (Emoji, Send) */
 .input-action-button {
   background: transparent;
   border: none;
-  color: #657786; /* Default icon color */
+  color: var(--text-muted); /* Default icon color */
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
@@ -585,23 +585,23 @@ export default {
   flex-shrink: 0;
 }
 .input-action-button:hover {
-  color: #8c68db;
-  background-color: #e8e4f5;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
 }
 .input-action-button.active { /* Style for active emoji button */
-    color: #8c68db;
-    background-color: #e8e4f5;
+    color: var(--primary-color);
+    background-color: var(--primary-light);
 }
 
 .send-button {
-  color: #ff80b0; /* Send button uses pink */
+  color: var(--accent-color); /* Send button uses accent color */
 }
 .send-button:hover {
-  color: #fff; /* White icon on hover */
-  background-color: #ff80b0; /* Pink background */
+  color: var(--text-white); /* White icon on hover */
+  background-color: var(--accent-color); /* Accent background */
 }
 .send-button:disabled {
-  color: #bdc5cd !important;
+  color: var(--text-muted) !important;
   background-color: transparent !important;
   cursor: not-allowed;
 }
@@ -611,13 +611,13 @@ export default {
   position: absolute;
   bottom: calc(100% + 10px); /* Position above input area */
   left: 1.5rem; /* Align with input area padding */
-  background-color: #fff;
+  background-color: var(--bg-white);
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow);
   padding: 0.75rem;
   width: 280px; /* Adjust width */
   z-index: 100;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color);
 }
 .emoji-grid {
     display: grid;
@@ -626,7 +626,7 @@ export default {
     max-height: 200px; /* Limit height */
     overflow-y: auto;
      scrollbar-width: thin;
-     scrollbar-color: #ccc #f5f8fa;
+     scrollbar-color: var(--border-color) var(--bg-secondary);
 }
 .emoji-button {
   background: none;
@@ -643,7 +643,7 @@ export default {
   border-radius: 6px;
 }
 .emoji-button:hover {
-  background-color: #f0f4f8;
+  background-color: var(--bg-secondary);
 }
 
 /* Emoji picker transition */
@@ -661,9 +661,9 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #fff;
+  background-color: var(--bg-white);
   border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow);
   padding: 1rem;
   z-index: 200;
   width: 90%;
@@ -672,7 +672,7 @@ export default {
 .text-enhancer-modal .close-button {
   background: transparent;
   border: none;
-  color: #657786;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
@@ -689,8 +689,8 @@ export default {
   right: 10px;
 }
 .text-enhancer-modal .close-button:hover {
-  color: #8c68db;
-  background-color: #e8e4f5;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
 }
 
 /* Responsive adjustments */

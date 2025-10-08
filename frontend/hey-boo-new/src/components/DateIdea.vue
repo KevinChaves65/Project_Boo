@@ -802,11 +802,11 @@ export default {
 
 /* AI Generator Section */
 .ai-generator-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   border-radius: 15px;
   padding: 1.5rem;
-  color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  color: var(--text-white);
+  box-shadow: 0 4px 15px var(--shadow-primary);
 }
 
 .ai-section-title {
@@ -819,7 +819,7 @@ export default {
 }
 
 .ai-section-title i {
-  color: #ffd700;
+  color: var(--accent-gold);
 }
 
 .ai-form {
@@ -858,20 +858,20 @@ export default {
   border: none;
   border-radius: 8px;
   font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.95);
-  color: #333;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .input-group input::placeholder {
-  color: #666;
+  color: var(--text-muted);
   opacity: 0.8;
 }
 
 .input-group input:focus,
 .input-group select:focus {
   outline: none;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 3px var(--shadow-focus);
 }
 
 .generate-button-group {
@@ -880,8 +880,8 @@ export default {
 }
 
 .ai-generate-button {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #333;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+  color: var(--text-primary);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 25px;
@@ -892,13 +892,13 @@ export default {
   align-items: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 2px 10px var(--shadow-gold);
 }
 
 .ai-generate-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ffed4e, #ffd700);
+  background: linear-gradient(135deg, var(--accent-gold-light), var(--accent-gold));
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 15px var(--shadow-gold);
 }
 
 .ai-generate-button:disabled {
@@ -919,14 +919,14 @@ export default {
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: #fff;
+  background-color: var(--bg-white);
   border-radius: 25px;
   padding: 0.5rem 0.75rem 0.5rem 1rem; /* Adjusted padding */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 .search-icon {
-  color: #a0aec0;
+  color: var(--text-muted);
   margin-right: 0.75rem;
 }
 .search-bar input {
@@ -936,13 +936,14 @@ export default {
   font-size: 1rem;
   padding: 0.25rem 0;
   background: transparent;
+  color: var(--text-primary);
 }
 .search-bar input::placeholder {
-  color: #a0aec0;
+  color: var(--text-muted);
 }
 .search-button {
-  background: linear-gradient(135deg, #8c68db, #a66fd5); /* Match sidebar */
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); /* Match sidebar */
+  color: var(--text-white);
   border: none;
   border-radius: 20px;
   padding: 0.6rem 1.25rem;
@@ -953,11 +954,11 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 2px 5px rgba(140, 104, 219, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 .search-button:hover {
-  background: linear-gradient(135deg, #7a5fc7, #9d63c7);
-  box-shadow: 0 4px 8px rgba(140, 104, 219, 0.4);
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+  box-shadow: var(--shadow-primary-hover);
   transform: translateY(-1px);
 }
 .search-button i { font-size: 0.9em; }
@@ -975,11 +976,11 @@ export default {
 /* Common Column Styles */
 .suggestion-list-column,
 .suggestion-detail-column {
-  background-color: #fff;
+  background-color: var(--bg-white);
   border-radius: 12px; /* More rounding */
   padding: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f0f0f0;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
    /* REMOVED overflow: auto/hidden */
@@ -987,18 +988,18 @@ export default {
 
 .column-title {
   font-size: 1.2rem;
-  color: #333;
+  color: var(--text-primary);
   margin: 0 0 1.25rem 0; /* Adjusted margin */
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light);
   padding-bottom: 0.75rem;
   flex-shrink: 0;
 }
 .column-title i {
-  color: #8c68db;
+  color: var(--primary-color);
 }
 
 /* Suggestion List Column */
@@ -1015,21 +1016,21 @@ export default {
   margin-bottom: 0.85rem;
   padding: 0.75rem;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.25s ease;
-  background-color: #fff;
+  background-color: var(--bg-white);
   position: relative; /* For arrow positioning */
 }
 .suggestion-card:hover {
-  border-color: #c8bce8;
-  box-shadow: 0 3px 8px rgba(140, 104, 219, 0.1);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-primary-light);
   transform: translateX(3px);
 }
 .suggestion-card.active {
-  background-color: #f3eefc;
-  border-color: #8c68db;
-  box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.3);
+  background-color: var(--bg-primary-light);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--shadow-primary-light);
   transform: translateX(0); /* Reset transform */
 }
 .suggestion-card.active .card-arrow {
@@ -1047,7 +1048,7 @@ export default {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  background-color: #eee; /* Placeholder */
+  background-color: var(--bg-muted); /* Placeholder */
 }
 .preview-overlay {
     position: absolute;
@@ -1069,7 +1070,7 @@ export default {
   margin: 0 0 0.3rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1081,10 +1082,10 @@ export default {
   gap: 3px;
 }
 .rating i { transition: color 0.2s ease; }
-.rating i.fa-star { color: #ffc107; }
-.rating i.fa-star-o { color: #e0e0e0; }
+.rating i.fa-star { color: var(--accent-gold); }
+.rating i.fa-star-o { color: var(--border-light); }
 .suggestion-card.active .rating i {
-    color: #ffc107; /* Ensure stars are filled on active */
+    color: var(--accent-gold); /* Ensure stars are filled on active */
 }
 
 .card-arrow {
@@ -1092,7 +1093,7 @@ export default {
     right: 0.75rem;
     top: 50%;
     transform: translateY(-50%) translateX(-5px);
-    color: #aaa;
+    color: var(--text-muted);
     opacity: 0;
     transition: all 0.2s ease;
     font-size: 0.8rem;
@@ -1100,12 +1101,12 @@ export default {
 .suggestion-card:hover .card-arrow {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
-    color: #8c68db;
+    color: var(--primary-color);
 }
 
 .no-suggestions {
   text-align: center;
-  color: #888;
+  color: var(--text-muted);
   padding: 2rem 1rem;
   font-style: italic;
   display: flex;
@@ -1115,7 +1116,7 @@ export default {
 }
 .no-suggestions i {
     font-size: 1.5rem;
-    color: #ccc;
+    color: var(--border-light);
 }
 
 /* Detailed View Column */
@@ -1129,11 +1130,11 @@ export default {
 .navigation-section {
   width: 100%;
   border-radius: 10px;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, var(--success-color) 0%, var(--success-light) 100%);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  color: white;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  color: var(--text-white);
+  box-shadow: var(--shadow-success);
 }
 
 .location-info {
@@ -1178,25 +1179,25 @@ export default {
 }
 
 .navigate-button {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: var(--bg-white-translucent);
+  color: var(--text-white);
+  border: 1px solid var(--border-white-translucent);
 }
 
 .navigate-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--bg-white-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
 .copy-location-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-white-light);
+  color: var(--text-white);
+  border: 1px solid var(--border-white-light);
 }
 
 .copy-location-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-white-translucent);
   transform: translateY(-1px);
 }
 
@@ -1204,32 +1205,32 @@ export default {
 .business-info .navigation-actions {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light);
   flex-direction: row;
   gap: 0.5rem;
 }
 
 .business-info .navigate-button,
 .business-info .copy-location-button {
-  background-color: #4CAF50;
-  color: white;
+  background-color: var(--success-color);
+  color: var(--text-white);
   border: none;
   font-size: 0.85rem;
   padding: 0.5rem 0.75rem;
 }
 
 .business-info .navigate-button:hover {
-  background-color: #45a049;
+  background-color: var(--success-dark);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: var(--shadow-success);
 }
 
 .business-info .copy-location-button {
-  background-color: #2196F3;
+  background-color: var(--info-color);
 }
 
 .business-info .copy-location-button:hover {
-  background-color: #1976D2;
+  background-color: var(--info-dark);
   transform: translateY(-1px);
 }
 
@@ -1253,7 +1254,7 @@ export default {
 .suggestion-header h2 {
   margin: 0 1rem 0 0; /* Space to the right */
   font-size: 1.6rem; /* Larger title */
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
 }
 .rating-large {
@@ -1261,11 +1262,11 @@ export default {
   align-items: center;
   gap: 4px;
   font-size: 1.1rem;
-  color: #ffc107;
+  color: var(--accent-gold);
 }
 .rating-text {
     font-size: 0.9rem;
-    color: #777;
+    color: var(--text-secondary);
     margin-left: 0.5rem;
     font-weight: 500;
 }
@@ -1273,7 +1274,7 @@ export default {
 /* Tabs */
 .suggestion-tabs {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
   flex-shrink: 0;
 }
@@ -1283,7 +1284,7 @@ export default {
   padding: 0.85rem 1.25rem; /* More padding */
   cursor: pointer;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-secondary);
   border-bottom: 3px solid transparent;
   margin-bottom: -1px;
   transition: all 0.25s ease;
@@ -1300,13 +1301,13 @@ export default {
     left: 0;
     right: 0;
     height: 3px;
-    background-color: #8c68db;
+    background-color: var(--primary-color);
     transform: scaleX(0);
     transition: transform 0.3s ease;
 }
-.tab-button:hover { color: #333; }
+.tab-button:hover { color: var(--text-primary); }
 .tab-button.active {
-  color: #8c68db;
+  color: var(--primary-color);
   font-weight: 600;
 }
 .tab-button.active::after {
@@ -1316,7 +1317,7 @@ export default {
 
 .tab-content {
   line-height: 1.65; /* Improve readability */
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin-bottom: 1.5rem;
   flex-grow: 1; /* Takes available space */
@@ -1332,7 +1333,7 @@ export default {
 
 /* Review Formatting */
 .review-item {
-  border-bottom: 1px dashed #eee;
+  border-bottom: 1px dashed var(--border-light);
   padding: 1rem 0;
   margin-bottom: 1rem;
 }
@@ -1340,20 +1341,20 @@ export default {
 .review-item blockquote {
   margin: 0 0 0.5rem 0;
   font-style: italic;
-  color: #555;
+  color: var(--text-secondary);
   padding-left: 1rem;
-  border-left: 3px solid #eee;
+  border-left: 3px solid var(--border-light);
 }
 .review-item cite {
   font-size: 0.9rem;
-  color: #777;
+  color: var(--text-secondary);
   display: block;
   text-align: right;
   font-style: normal;
 }
 .no-reviews-message {
     text-align: center;
-    color: #999;
+    color: var(--text-muted);
     padding: 1.5rem;
     font-style: italic;
     display: flex;
@@ -1361,7 +1362,7 @@ export default {
     align-items: center;
     gap: 0.5rem;
 }
-.no-reviews-message i { font-size: 1.3rem; color: #ccc; }
+.no-reviews-message i { font-size: 1.3rem; color: var(--border-light); }
 
 /* Action Buttons */
 .action-buttons {
@@ -1370,7 +1371,7 @@ export default {
   gap: 1rem;
   margin-top: auto; /* Pushes buttons to bottom */
   padding-top: 1.5rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light);
   flex-shrink: 0;
 }
 .primary-action-button, .secondary-action-button, .save-action-button {
@@ -1389,48 +1390,48 @@ export default {
   text-align: center;
 }
 .primary-action-button {
-  background: #ff80b0; /* HeyBoo Pink */
-  color: white;
-  box-shadow: 0 2px 5px rgba(255, 128, 176, 0.3);
-  border-color: #ff80b0;
+  background: var(--primary-color); /* Updated to match theme */
+  color: var(--text-white);
+  box-shadow: var(--shadow-primary);
+  border-color: var(--primary-color);
 }
 .primary-action-button:hover {
-  background-color: #ff66a3;
-  box-shadow: 0 4px 8px rgba(255, 128, 176, 0.4);
+  background-color: var(--primary-dark);
+  box-shadow: var(--shadow-primary-hover);
   transform: translateY(-1px);
 }
 .secondary-action-button {
-  background-color: #fff;
-  color: #555;
-  border-color: #d1d5db;
+  background-color: var(--bg-white);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
 }
 .secondary-action-button:hover {
-  background-color: #f9f9f9;
-  border-color: #aaa;
-  color: #333;
+  background-color: var(--bg-secondary);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 /* Save button styles */
 .save-action-button {
-  background-color: #f8f9fa;
-  color: #666;
-  border-color: #dee2e6;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  border-color: var(--border-light);
 }
 
 .save-action-button.saved {
-  background-color: #e91e63;
-  color: white;
-  border-color: #e91e63;
+  background-color: var(--danger-color);
+  color: var(--text-white);
+  border-color: var(--danger-color);
 }
 
 .save-action-button:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
+  background-color: var(--bg-muted);
+  border-color: var(--text-muted);
 }
 
 .save-action-button.saved:hover {
-  background-color: #c2185b;
-  border-color: #c2185b;
+  background-color: var(--danger-dark);
+  border-color: var(--danger-dark);
 }
 
 /* Tab header styles */
@@ -1438,7 +1439,7 @@ export default {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border-radius: 12px;
   padding: 0.25rem;
 }
@@ -1449,7 +1450,7 @@ export default {
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: #666;
+  color: var(--text-muted);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1460,20 +1461,20 @@ export default {
 }
 
 .tab-header-button:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  color: #333;
+  background-color: var(--bg-white-hover);
+  color: var(--text-primary);
 }
 
 .tab-header-button.active {
-  background-color: white;
-  color: #8c68db;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-white);
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Suggestion meta info */
 .suggestion-meta {
   margin-top: 0.25rem;
-  color: #888;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 
@@ -1488,7 +1489,7 @@ export default {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #aaa;
+  color: var(--text-muted);
   font-size: 1.1rem;
   flex-grow: 1; /* Takes space */
   min-height: 300px;
@@ -1496,7 +1497,7 @@ export default {
 .suggestion-detailed-placeholder i {
     font-size: 3.5rem;
     margin-bottom: 1.5rem;
-    color: #e0e0e0;
+    color: var(--border-light);
 }
 
 /* Responsive */
@@ -1558,7 +1559,7 @@ export default {
   margin: 0;
   font-size: 1rem;
   line-height: 1.6;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .ai-enhanced-info {
@@ -1568,16 +1569,16 @@ export default {
 }
 
 .info-section {
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border-radius: 10px;
   padding: 1rem;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--primary-color);
 }
 
 .info-section h4 {
   margin: 0 0 0.75rem 0;
   font-size: 1rem;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1585,7 +1586,7 @@ export default {
 }
 
 .info-section h4 i {
-  color: #667eea;
+  color: var(--primary-color);
   width: 16px;
   text-align: center;
 }
@@ -1593,13 +1594,13 @@ export default {
 .business-info .business-name {
   font-weight: 600;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .business-info .address {
   margin: 0;
-  color: #666;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1620,13 +1621,13 @@ export default {
 .cost-info, .timing-info {
   margin: 0;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .special-note {
   margin: 0;
   font-style: italic;
-  color: #555;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -1637,8 +1638,8 @@ export default {
 }
 
 .amenity-tag {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: var(--text-white);
   padding: 0.25rem 0.75rem;
   border-radius: 15px;
   font-size: 0.85rem;
@@ -1647,8 +1648,8 @@ export default {
 }
 
 .ai-badge {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #333;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+  color: var(--text-primary);
   padding: 0.75rem 1rem;
   border-radius: 25px;
   display: flex;
@@ -1658,7 +1659,7 @@ export default {
   font-weight: 600;
   font-size: 0.9rem;
   margin-top: 1rem;
-  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+  box-shadow: var(--shadow-gold);
 }
 
 .ai-badge i {

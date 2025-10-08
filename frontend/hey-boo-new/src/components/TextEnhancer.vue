@@ -204,13 +204,13 @@ export default {
 
 /* Main Enhancer Card */
 .enhancer-card {
-  background-color: #ffffff;
+  background-color: var(--bg-white);
   border-radius: 16px; /* More rounded */
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
   padding: 2rem 2.5rem; /* Generous padding */
   width: 100%;
   max-width: 750px; /* Max width for readability */
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: 1.5rem; /* Space between sections */
@@ -226,14 +226,14 @@ export default {
 .input-label, .output-label {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #555;
+    color: var(--text-secondary);
     margin-bottom: -0.25rem; /* Pull closer to textarea */
 }
 
 .text-area {
   width: 100%;
   padding: 1rem;
-  border: 1px solid #d1d5db; /* Softer border */
+  border: 1px solid var(--input-border); /* Softer border */
   border-radius: 8px;
   font-size: 1rem;
   resize: vertical;
@@ -241,16 +241,16 @@ export default {
   font-family: inherit;
   min-height: 120px; /* Minimum height */
   line-height: 1.5;
-  background-color: #fdfdff; /* Slightly off-white */
+  background-color: var(--input-bg); /* Slightly off-white */
 }
 .text-area:focus {
   outline: none;
-  border-color: #8c68db;
-  box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.15);
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px var(--shadow-primary);
 }
 .output-text-area {
-    background-color: #f9fafb; /* Slightly different bg for output */
-    color: #333;
+    background-color: var(--bg-secondary); /* Slightly different bg for output */
+    color: var(--text-primary);
     cursor: default;
 }
 .result-output-wrapper {
@@ -266,9 +266,9 @@ export default {
   gap: 1rem; /* Space between mode and button */
   margin-top: 0.5rem; /* Space above this row */
   padding: 0.5rem;
-  background-color: #f9fafb;
+  background-color: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px dashed #eee;
+  border: 1px dashed var(--border-light);
 }
 
 .mode-selector-wrapper {
@@ -280,7 +280,7 @@ export default {
 .mode-label {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
@@ -292,9 +292,9 @@ export default {
 .mode-select {
   padding: 0.6rem 2.5rem 0.6rem 1rem; /* Space for text and arrow */
   border-radius: 6px;
-  border: 1px solid #d1d5db;
-  background-color: #fff;
-  color: #333;
+  border: 1px solid var(--input-border);
+  background-color: var(--bg-white);
+  color: var(--text-primary);
   font-size: 0.95rem;
   appearance: none; /* Remove default arrow */
   -webkit-appearance: none;
@@ -303,21 +303,21 @@ export default {
   transition: border-color 0.2s ease;
   flex-grow: 1;
 }
-.mode-select:hover { border-color: #aaa; }
-.mode-select:focus { outline: none; border-color: #8c68db; box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.1); }
+.mode-select:hover { border-color: var(--text-muted); }
+.mode-select:focus { outline: none; border-color: var(--input-focus); box-shadow: 0 0 0 2px var(--shadow-primary-light); }
 
 .select-arrow {
     position: absolute;
     right: 0.8rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #888;
+    color: var(--text-muted);
     pointer-events: none; /* Allow clicking the select */
     font-size: 0.8rem;
 }
 
 .enhance-button {
-  background: linear-gradient(135deg, #8c68db, #a66fd5); /* Theme gradient */
+  background: var(--primary-gradient); /* Theme gradient */
   color: white;
   border: none;
   padding: 0.75rem 1.75rem;
@@ -334,14 +334,14 @@ export default {
   min-width: 150px; /* Ensure button has min width */
 }
 .enhance-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7a5fc7, #9d63c7);
-  box-shadow: 0 5px 12px rgba(140, 104, 219, 0.4);
+  background: var(--primary-gradient-hover);
+  box-shadow: var(--shadow-primary-hover);
   transform: translateY(-1px);
 }
 .enhance-button:disabled {
-  background: #cccccc;
+  background: var(--text-muted);
   box-shadow: none;
-  color: #888;
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 .enhance-button i { transition: transform 0.5s ease; }
@@ -351,7 +351,7 @@ export default {
 /* Section Divider */
 .section-divider {
     border: none;
-    border-top: 1px dashed #e0e0e0;
+    border-top: 1px dashed var(--border-light);
     margin: 0; /* Reset margin */
 }
 

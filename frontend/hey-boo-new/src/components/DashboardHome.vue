@@ -163,6 +163,8 @@ export default {
 .dashboard-home-content {
   /* This container fills the space provided by the router-view wrapper */
   /* No explicit height needed here if parent handles it */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .cards-container {
@@ -175,11 +177,11 @@ export default {
 
 /* Card Styles - Adjusted for a "bigger" feel */
 .card {
-  background-color: #fff;
+  background-color: var(--bg-white);
   border-radius: 10px; /* Slightly more rounded */
   padding: 1.75rem; /* Increased padding inside the card */
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08); /* Slightly deeper shadow */
-  border: 1px solid #eef0f2;
+  box-shadow: var(--shadow-md); /* Slightly deeper shadow */
+  border: 1px solid var(--border-color);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column; /* Content flows top-to-bottom */
@@ -187,14 +189,14 @@ export default {
 
 .card:hover {
   transform: translateY(-4px); /* Slightly more lift on hover */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .card h2 {
   margin-top: 0;
   margin-bottom: 1.25rem; /* Space below heading */
   font-size: 1.2rem;   /* Larger heading font size */
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -202,14 +204,14 @@ export default {
 }
 
 .card h2 i {
-  color: #8c68db;    /* Theme color icon */
+  color: var(--primary-color);    /* Theme color icon */
   font-size: 1.15rem; /* Larger icon */
   width: 20px;       /* Explicit width for alignment */
   text-align: center;
 }
 
 .card p {
-  color: #555;
+  color: var(--text-secondary);
   line-height: 1.6;  /* Increased line spacing for readability */
   font-size: 0.95rem;/* Larger paragraph font size */
   margin-bottom: 0.85rem; /* Space below paragraphs */
@@ -231,7 +233,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 0; /* Increased vertical padding */
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
   font-size: 0.9rem; /* Event text size */
 }
 
@@ -241,13 +243,13 @@ export default {
 
 .event-date {
   font-weight: bold;
-  color: #8c68db;
+  color: var(--primary-color);
   margin-right: 1rem;
   flex-shrink: 0;
 }
 
 .event-name {
-  color: #444;
+  color: var(--text-secondary);
   text-align: right;
   overflow: hidden; /* Prevent long names breaking layout */
   text-overflow: ellipsis;
@@ -255,7 +257,7 @@ export default {
 }
 
 .no-events {
-  color: #999;
+  color: var(--text-muted);
   text-align: center;
   padding: 1rem 0;
   font-style: italic;
@@ -285,29 +287,25 @@ export default {
   width: 42px;   /* Larger icon circle */
   height: 42px;  /* Larger icon circle */
   border-radius: 50%;
-  background-color: #f3f4f6; /* Lighter gray background */
+  background-color: var(--bg-muted); /* Lighter gray background */
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0.6rem; /* Space below icon */
-  color: #a0aec0;
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .milestone-icon.completed {
-  background-color: #8c68db; /* Theme color */
-  color: white;
-  box-shadow: 0 0 10px rgba(140, 104, 219, 0.5); /* Adjusted glow */
-}
-.milestone-icon.completed i {
-   /* Optional: Add subtle animation */
-   /* animation: popIn 0.5s ease-out; */
+  background-color: var(--primary-color); /* Theme color */
+  color: var(--text-white);
+  box-shadow: var(--shadow-primary); /* Adjusted glow */
 }
 
 .milestone-text {
   font-size: 0.85rem; /* Milestone text size */
-  color: #555;
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
@@ -315,7 +313,7 @@ export default {
 .card-action {
   margin-top: auto; /* Pushes link to the bottom */
   padding-top: 1.25rem; /* More space above link */
-  color: #8c68db;
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;  /* Action link text size */
@@ -323,12 +321,12 @@ export default {
   align-items: center;
   justify-content: flex-end; /* Align to the right */
   gap: 0.4rem;
-  border-top: 1px solid #f0f0f0; /* Separator line */
+  border-top: 1px solid var(--border-light); /* Separator line */
   transition: color 0.2s ease;
 }
 
 .card-action:hover {
-  color: #7a5fc7; /* Darker purple on hover */
+  color: var(--primary-dark); /* Darker purple on hover */
   text-decoration: underline;
 }
 .card-action i {

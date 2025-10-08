@@ -1,5 +1,262 @@
 /* global.css */
 
+/* CSS Custom Properties for Theme System */
+:root {
+  /* Light Theme Variables */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-card: #ffffff;
+  --bg-hover: #f1f3f4;
+  --bg-white: #ffffff;
+  --bg-muted: #eeeeee;
+  --bg-primary-light: #f3eefc;
+  --bg-white-translucent: rgba(255, 255, 255, 0.2);
+  --bg-white-hover: rgba(255, 255, 255, 0.3);
+  --bg-white-light: rgba(255, 255, 255, 0.1);
+  
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #868e96;
+  --text-inverse: #ffffff;
+  --text-white: #ffffff;
+  --text-white-muted: rgba(255, 255, 255, 0.7);
+  
+  --border-color: #dee2e6;
+  --border-hover: #adb5bd;
+  --border-light: #e0e0e0;
+  --border-dark: #404040;
+  --border-white-translucent: rgba(255, 255, 255, 0.3);
+  --border-white-light: rgba(255, 255, 255, 0.2);
+  
+  /* Primary Colors (Purple Theme) */
+  --primary-color: #8c68db;
+  --primary-light: #a866dd;
+  --primary-dark: #7a5fc7;
+  --primary-light-bg: #f8f5ff;
+  --primary-border: #e9dffc;
+  --primary-gradient: linear-gradient(135deg, #8c68db, #a66fd5);
+  --primary-gradient-hover: linear-gradient(135deg, #7a5fc7, #9d63c7);
+  
+  --accent-primary: #8c68db;
+  --accent-secondary: #a866dd;
+  --accent-hover: #7a5fc7;
+  --accent-color: #ff80b0;
+  --accent-color-hover: #ff66a3;
+  --accent-gold: #ffd700;
+  --accent-gold-light: #ffed4e;
+  
+  /* Status Colors */
+  --success-color: #28a745;
+  --success-light: #20c997;
+  --success-dark: #45a049;
+  --error-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --info-dark: #1976D2;
+  --danger-color: #e91e63;
+  --danger-dark: #c2185b;
+  --danger-light: #ff6b6b;
+  --danger-bg: #fff1f1;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  --shadow-primary: 0 2px 5px rgba(140, 104, 219, 0.3);
+  --shadow-primary-hover: 0 4px 8px rgba(140, 104, 219, 0.4);
+  --shadow-primary-light: 0 3px 8px rgba(140, 104, 219, 0.1);
+  --shadow-gold: 0 2px 10px rgba(255, 215, 0, 0.3);
+  --shadow-success: 0 4px 15px rgba(40, 167, 69, 0.3);
+  --shadow-focus: rgba(255, 255, 255, 0.3);
+  
+  --input-bg: rgba(255, 255, 255, 0.95);
+  --input-border: #ced4da;
+  --input-focus: #8c68db;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"],
+html[data-theme="dark"],
+body.dark,
+body[data-theme="dark"],
+.dark,
+html.dark,
+html.dark body {
+  --bg-primary: #1a1a1a !important;
+  --bg-secondary: #2d2d2d !important;
+  --bg-tertiary: #3d3d3d !important;
+  --bg-card: #2d2d2d !important;
+  --bg-hover: #404040 !important;
+  --bg-white: #2d2d2d !important;
+  --bg-muted: #404040 !important;
+  --bg-primary-light: #404040 !important;
+  --bg-primary-dark: #2d2d2d !important;
+  --bg-white-translucent: rgba(255, 255, 255, 0.1) !important;
+  --bg-white-hover: rgba(255, 255, 255, 0.15) !important;
+  --bg-white-light: rgba(255, 255, 255, 0.05) !important;
+  
+  --text-primary: #ffffff !important;
+  --text-secondary: #b3b3b3 !important;
+  --text-muted: #888888 !important;
+  --text-inverse: #212529 !important;
+  --text-white: #ffffff !important;
+  
+  --border-color: #404040 !important;
+  --border-hover: #565656 !important;
+  --border-light: #565656 !important;
+  --border-dark: #404040 !important;
+  --border-white-translucent: rgba(255, 255, 255, 0.2) !important;
+  --border-white-light: rgba(255, 255, 255, 0.1) !important;
+  
+  /* Primary Colors (Purple Theme) */
+  --primary-color: #b884e7 !important;
+  --primary-light: #d4a5f0 !important;
+  --primary-dark: #a66fd5 !important;
+  
+  --accent-primary: #b884e7 !important;
+  --accent-secondary: #a866dd !important;
+  --accent-hover: #8c68db !important;
+  --accent-gold: #ffd700 !important;
+  --accent-gold-light: #ffed4e !important;
+  
+  /* Status Colors */
+  --success-color: #32d74b !important;
+  --success-light: #20c997 !important;
+  --success-dark: #28a745 !important;
+  --error-color: #ff453a !important;
+  --warning-color: #ff9500 !important;
+  --info-color: #64d2ff !important;
+  --info-dark: #17a2b8 !important;
+  --danger-color: #ff6b9d !important;
+  --danger-dark: #e91e63 !important;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
+  --shadow-primary: 0 2px 5px rgba(184, 132, 231, 0.3) !important;
+  --shadow-primary-hover: 0 4px 8px rgba(184, 132, 231, 0.4) !important;
+  --shadow-primary-light: 0 3px 8px rgba(184, 132, 231, 0.2) !important;
+  --shadow-gold: 0 2px 10px rgba(255, 215, 0, 0.4) !important;
+  --shadow-success: 0 4px 15px rgba(50, 215, 75, 0.3) !important;
+  --shadow-focus: rgba(255, 255, 255, 0.2) !important;
+  
+  --input-bg: #3d3d3d !important;
+  --input-border: #565656 !important;
+  --input-focus: #b884e7 !important;
+}
+
+/* Force theme application to all elements */
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* Force body and html to use theme variables */
+html {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  color-scheme: light dark;
+}
+
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* App wrapper */
+#app {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Dashboard container */
+.dashboard-container {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Legacy class-based themes for backward compatibility */
+body.light {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force theme application to common elements */
+.settings-container,
+.section-content,
+.settings-card,
+.profile-section,
+.change-password-section,
+.appearance-section,
+.notification-section,
+.dashboard-home-content,
+.cards-container,
+.card,
+.sidebar,
+.main-content {
+  background-color: var(--bg-white) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Force sidebar to maintain gradient */
+.sidebar {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+  color: var(--text-white) !important;
+}
+
+/* Force main content area */
+.main-content {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Ensure input elements follow theme */
+input,
+textarea,
+select,
+button {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--input-focus) !important;
+  box-shadow: 0 0 0 2px rgba(140, 104, 219, 0.2) !important;
+}
+
+/* Dark mode specific overrides */
+[data-theme="dark"] .card,
+[data-theme="dark"] .settings-card,
+body.dark .card,
+body.dark .settings-card,
+.dark .card,
+.dark .settings-card {
+  background-color: var(--bg-white) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
 /* Reset */
 * {
     margin: 0;
@@ -14,9 +271,106 @@
   min-height: 500px;
   overflow-y: auto; /* Allow scrolling for content that's too tall */
   padding: 1rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
+
 .dashboard-container, .calendar-container, .date-ideas-container, .chats-container, .settings-container {
   width:1024px;
   min-height: 600px;
   overflow: auto;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Global component styles using theme variables */
+.card, .settings-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.card:hover, .settings-card:hover {
+  background-color: var(--bg-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+/* Force styling for all common elements */
+div, section, main, article, nav, header, footer {
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Sidebar specific styling */
+.sidebar {
+  background-color: var(--accent-secondary) !important;
+  color: var(--text-inverse) !important;
+}
+
+.sidebar h2, .sidebar h3, .sidebar p, .sidebar a, .sidebar span {
+  color: var(--text-inverse) !important;
+}
+
+/* Chat and message styling */
+.chat-message, .message-bubble {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Dashboard cards */
+.dashboard-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Form elements */
+input, textarea, select {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--input-focus) !important;
+  box-shadow: 0 0 0 0.2rem rgba(128, 189, 255, 0.25) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Button styling */
+.btn-primary, .primary-button, button {
+  background-color: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--text-inverse) !important;
+}
+
+.btn-primary:hover, .primary-button:hover, button:hover {
+  background-color: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+/* Text styling */
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.border {
+  border-color: var(--border-color) !important;
+}
+
+/* Theme toggle buttons */
+.theme-button {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.theme-button.active {
+  background-color: var(--accent-primary) !important;
+  color: var(--text-inverse) !important;
 }
