@@ -12,15 +12,19 @@
         <div class="section-content">
           <div class="settings-card">
             <h3>Full Name</h3>
-            <p>{{ fullName }}</p>
+            <p>{{ fullName || 'Not set' }}</p>
+          </div>
+          <div class="settings-card">
+            <h3>Username</h3>
+            <p>{{ username || 'Not set' }}</p>
           </div>
           <div class="settings-card">
             <h3>Email</h3>
-            <p>{{ email }}</p>
+            <p>{{ email || 'Not set' }}</p>
           </div>
           <div class="settings-card">
             <h3>Phone Number</h3>
-            <p>{{ phoneNumber }}</p>
+            <p>{{ phoneNumber || 'Not set' }}</p>
           </div>
           <div class="settings-card">
             <h3>Birthday</h3>
@@ -28,11 +32,7 @@
           </div>
           <div class="settings-card">
             <h3>Gender</h3>
-            <p>{{ gender }}</p>
-          </div>
-          <div class="settings-card">
-            <h3>User ID</h3>
-            <p>{{ userId }}</p>
+            <p>{{ gender || 'Not set' }}</p>
           </div>
         </div>
       </section>
@@ -293,7 +293,7 @@
 </template>
 
 <script>
-import { fetchUserProfile } from "../services/apiService";
+import { fetchUserProfile, updateUserProfile, changeUserPassword } from "../services/apiService";
 
 export default {
   name: "SettingsPage",
@@ -301,11 +301,11 @@ export default {
     return {
       // Personal Information
       fullName: "",
+      username: "",
       email: "",
       phoneNumber: "",
       birthday: "",
       gender: "",
-      userId: "",
 
       // Password change
       oldPassword: "",
@@ -319,8 +319,8 @@ export default {
 
       // Profile
       profile: {
-        name: "Jane Doe",
-        email: "jane@example.com",
+        name: "",
+        email: "",
       },
 
       // Theme
@@ -387,13 +387,19 @@ export default {
     async fetchUserProfile() {
       try {
         const user = await fetchUserProfile();
+        console.log("User data received:", user); // Debug log
+        
         // Populate user profile data
-        this.fullName = user.full_name;
-        this.email = user.email;
-        this.phoneNumber = user.phone_number;
-        this.birthday = user.birthday;
-        this.gender = user.gender;
-        this.userId = user.id;
+        this.fullName = user.full_name || 'Not set';
+        this.username = user.username || 'Not set';
+        this.email = user.email || 'Not set';
+        this.phoneNumber = user.phone_number || 'Not set';
+        this.birthday = user.birthday || '';
+        this.gender = user.gender || 'Not set';
+        
+        // Populate profile form fields with current user data
+        this.profile.name = user.full_name || '';
+        this.profile.email = user.email || '';
       } catch (error) {
         console.error("Failed to fetch user profile:", error.response?.data || error.message);
         alert("Failed to load profile information. Please log in again.");
@@ -435,31 +441,82 @@ export default {
 
       if (!isValid) return;
 
-      // Simulate API call
+      // Call API to change password
       this.isLoading = true;
-      setTimeout(() => {
-        this.isLoading = false;
-        this.showSuccessMessage = true;
-        this.oldPassword = "";
-        this.newPassword = "";
-        this.confirmPassword = "";
-
-        // Hide success message after 3 seconds
-        setTimeout(() => {
-          this.showSuccessMessage = false;
-        }, 3000);
-      }, 1500);
+      
+      const performPasswordChange = async () => {
+        try {
+          await changeUserPassword(this.oldPassword, this.newPassword);
+          
+          // Reset form fields
+          this.oldPassword = "";
+          this.newPassword = "";
+          this.confirmPassword = "";
+          
+          // Show success message
+          this.showSuccessMessage = true;
+          setTimeout(() => {
+            this.showSuccessMessage = false;
+          }, 3000);
+        } catch (error) {
+          // Handle specific error cases
+          if (error.response?.data?.error) {
+            if (error.response.data.error.includes("current password")) {
+              this.passwordErrors.old = "Current password is incorrect";
+            } else if (error.response.data.error.includes("password must")) {
+              this.passwordErrors.new = error.response.data.error;
+            } else {
+              alert("Failed to change password: " + error.response.data.error);
+            }
+          } else {
+            alert("Failed to change password. Please try again.");
+          }
+        } finally {
+          this.isLoading = false;
+        }
+      };
+      
+      performPasswordChange();
     },
     saveProfile() {
-      this.isLoading = true;
-      setTimeout(() => {
-        this.isLoading = false;
-        this.showSuccessMessage = true;
+      // Validate profile data
+      if (!this.profile.name.trim()) {
+        alert("Display name is required");
+        return;
+      }
+      
+      if (!this.profile.email.trim()) {
+        alert("Email address is required");
+        return;
+      }
 
-        setTimeout(() => {
-          this.showSuccessMessage = false;
-        }, 3000);
-      }, 1000);
+      this.isLoading = true;
+      
+      const performProfileUpdate = async () => {
+        try {
+          await updateUserProfile(this.profile.name, this.profile.email);
+          
+          // Update the display data with new values
+          this.fullName = this.profile.name;
+          this.email = this.profile.email;
+          
+          // Show success message
+          this.showSuccessMessage = true;
+          setTimeout(() => {
+            this.showSuccessMessage = false;
+          }, 3000);
+        } catch (error) {
+          if (error.response?.data?.error) {
+            alert("Failed to update profile: " + error.response.data.error);
+          } else {
+            alert("Failed to update profile. Please try again.");
+          }
+        } finally {
+          this.isLoading = false;
+        }
+      };
+      
+      performProfileUpdate();
     },
     applyTheme() {
       // In a real app, this would apply the theme to the entire application
@@ -603,8 +660,9 @@ export default {
 
 .section-content {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+  max-width: 600px;
 }
 
 /* Cards styling */
@@ -626,6 +684,20 @@ export default {
   margin-bottom: 1.25rem;
   color: #8c68db;
   font-size: 1.1rem;
+}
+
+/* Personal Information specific styling */
+.settings-card p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  background-color: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #8c68db;
+  min-height: 1.2rem;
+  word-wrap: break-word;
 }
 
 /* Form styling */

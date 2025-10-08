@@ -44,9 +44,14 @@ func main() {
 	r.POST("/login", controllers.Login)
 	r.GET("/user/public", controllers.GetPublicUserInfo)
 
+	// WebSocket route for real-time chat
+	r.GET("/ws", gin.WrapF(controllers.ChatHandler))
+
 	auth := r.Group("/auth")
 	auth.Use(middlewares.JWTAuthMiddleware())
 	auth.GET("/profile", controllers.Profile)
+	auth.PUT("/profile", controllers.UpdateProfile)
+	auth.PUT("/password", controllers.ChangePassword)
 
 	// Chat routes
 	auth.POST("/chat/send", controllers.SendMessage)

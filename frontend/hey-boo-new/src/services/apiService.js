@@ -285,3 +285,47 @@ export async function generateDateIdeas(location, preferences = "", budget = "")
     throw error;
   }
 }
+
+// Update user profile
+export async function updateUserProfile(fullName, email) {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/profile`,
+      {
+        full_name: fullName,
+        email: email,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update profile:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Change user password
+export async function changeUserPassword(oldPassword, newPassword) {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/password`,
+      {
+        old_password: oldPassword,
+        new_password: newPassword,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to change password:", error.response?.data || error.message);
+    throw error;
+  }
+}

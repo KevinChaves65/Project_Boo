@@ -105,3 +105,52 @@ func GetUserByUsername(username string) (User, error) {
 
 	return user, nil
 }
+
+// UpdateUserProfile updates user's full name and email
+func UpdateUserProfile(username, fullName, email string) error {
+	collection := config.GetDB().Collection("users")
+
+	update := bson.M{
+		"$set": bson.M{
+			"full_name":  fullName,
+			"email":      email,
+			"updated_at": time.Now(),
+		},
+	}
+
+	_, err := collection.UpdateOne(context.TODO(), bson.M{"username": username}, update)
+	return err
+}
+
+// ChangeUserPassword changes user's password after verifying old password
+func ChangeUserPassword(username, oldPassword, newPassword string) error {
+	collection := config.GetDB().Collection("users")
+
+	// First get the user to verify old password
+	user, err := GetUser(username)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	// Verify old password
+	if !CheckPasswordHash(oldPassword, user.Password) {
+		return errors.New("invalid current password")
+	}
+
+	// Hash new password
+	hashedPassword, err := HashPassword(newPassword)
+	if err != nil {
+		return errors.New("failed to hash new password")
+	}
+
+	// Update password
+	update := bson.M{
+		"$set": bson.M{
+			"password":   hashedPassword,
+			"updated_at": time.Now(),
+		},
+	}
+
+	_, err = collection.UpdateOne(context.TODO(), bson.M{"username": username}, update)
+	return err
+}
