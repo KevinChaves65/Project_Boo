@@ -18,9 +18,8 @@ import (
 
 func main() {
 	// Load .env file from the root directory
-	err := godotenv.Load("../.env") // Adjust the path if the .env file is in the root directory
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No local .env file found, relying on Docker/host environment variables.")
 	}
 	router := mux.NewRouter()
 	routes.InitializeRoutes(router)
@@ -97,7 +96,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // Default port if not specified
+		port = "8080" // default port
 	}
 
 	r.Run(":" + port)

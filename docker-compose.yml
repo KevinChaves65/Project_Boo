@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: heyboo-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env 
+    environment:
+      - PORT=8080
+
+  frontend:
+    build:
+      context: ./frontend/hey-boo-new
+      dockerfile: Dockerfile
+    container_name: heyboo-frontend
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    depends_on:
+      - backend
