@@ -1,0 +1,3056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#8c68db" />
+    <title>Hey Boo - Dashboard</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* ==================== RESET & BASE ==================== */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+          font-size: 16px;
+          -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          background: linear-gradient(135deg, rgba(255, 128, 176, 0.12), rgba(168, 102, 221, 0.12));
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100%;
+        }
+
+        /* ==================== MAIN CONTAINER ==================== */
+        .dashboard-container {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          height: 100dvh; /* Dynamic viewport height for mobile browsers */
+          overflow: hidden;
+        }
+
+        /* ==================== TOP HEADER ==================== */
+        .top-header {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: #fff;
+          padding: max(env(safe-area-inset-top), 1rem) 1rem 1.25rem;
+          box-shadow: 0 2px 12px rgba(140, 104, 219, 0.25);
+          flex-shrink: 0;
+          z-index: 100;
+        }
+
+        .logo-section {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .heyboo-logo {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          object-fit: cover;
+        }
+
+        .app-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+        }
+
+        .user-greeting {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.9rem;
+          opacity: 0.95;
+        }
+
+        .user-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(10px);
+        }
+
+        /* ==================== CONTENT AREA ==================== */
+        .content-area {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          -webkit-overflow-scrolling: touch;
+          padding: 1rem;
+          padding-bottom: calc(70px + env(safe-area-inset-bottom)); /* Account for bottom nav */
+        }
+
+        .content-area::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* ==================== VIEW MANAGEMENT ==================== */
+        .view-content {
+          display: none;
+          animation: fadeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .view-content.active {
+          display: block;
+        }
+
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* ==================== HOME VIEW ==================== */
+        .welcome-card {
+          background: linear-gradient(135deg, #8c68db 0%, #a66fd5 100%);
+          color: #fff;
+          padding: 1.5rem;
+          border-radius: 20px;
+          margin-bottom: 1.25rem;
+          box-shadow: 0 4px 16px rgba(140, 104, 219, 0.3);
+        }
+
+        .welcome-card h2 {
+          font-size: 1.35rem;
+          margin-bottom: 0.4rem;
+          font-weight: 700;
+        }
+
+        .welcome-card p {
+          font-size: 0.9rem;
+          opacity: 0.95;
+          line-height: 1.4;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+        }
+
+        .stat-card {
+          background: #fff;
+          padding: 1.5rem 1.25rem;
+          border-radius: 18px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+          text-align: center;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .stat-card:active {
+          transform: scale(0.96);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card i {
+          font-size: 2.25rem;
+          margin-bottom: 0.75rem;
+          display: block;
+        }
+
+        .stat-card:nth-child(1) i { color: #ff80b0; }
+        .stat-card:nth-child(2) i { color: #8c68db; }
+        .stat-card:nth-child(3) i { color: #ffabc9; }
+        .stat-card:nth-child(4) i { color: #a66fd5; }
+
+        .stat-card h3 {
+          font-size: 2rem;
+          color: #1a1a1a;
+          margin: 0.25rem 0;
+          font-weight: 800;
+          line-height: 1;
+        }
+
+        .stat-card p {
+          color: #666;
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
+          font-weight: 500;
+        }
+
+        /* ==================== BOTTOM NAVIGATION ==================== */
+        .bottom-nav {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: #fff;
+          display: flex;
+          justify-content: space-around;
+          padding: 0.5rem 0.25rem;
+          padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+          box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.08);
+          border-top: 1px solid #f0f0f0;
+          z-index: 1000;
+        }
+
+        .nav-item {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0.6rem 0.25rem;
+          cursor: pointer;
+          border: none;
+          background: none;
+          color: #999;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 12px;
+          margin: 0 0.15rem;
+          position: relative;
+          user-select: none;
+        }
+
+        .nav-item i {
+          font-size: 1.4rem;
+          margin-bottom: 0.3rem;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item span {
+          font-size: 0.7rem;
+          font-weight: 600;
+        }
+
+        .nav-item.active {
+          color: #8c68db;
+          background: rgba(140, 104, 219, 0.08);
+        }
+
+        .nav-item.active i {
+          transform: scale(1.1);
+        }
+
+        .nav-item:active {
+          transform: scale(0.92);
+        }
+
+        /* ==================== CALENDAR VIEW ==================== */
+        .calendar-view-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .calendar-navigation {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem 1.25rem;
+          background: #fff;
+          border-radius: 20px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .calendar-navigation h2 {
+          margin: 0;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #1a1a1a;
+          flex-grow: 1;
+          text-align: center;
+        }
+
+        .nav-button {
+          background: rgba(140, 104, 219, 0.1);
+          border: none;
+          padding: 0.6rem;
+          cursor: pointer;
+          color: #8c68db;
+          font-size: 1.1rem;
+          border-radius: 12px;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .nav-button:active {
+          background: rgba(140, 104, 219, 0.2);
+          transform: scale(0.92);
+        }
+
+        .calendar-grid-wrapper {
+          background: #fff;
+          border-radius: 18px;
+          padding: 1rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .calendar-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 6px;
+        }
+
+        .weekday {
+          text-align: center;
+          padding: 0.6rem 0.2rem;
+          font-weight: 700;
+          color: #999;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .calendar-day {
+          position: relative;
+          background: #fafafa;
+          border-radius: 12px;
+          border: 1.5px solid transparent;
+          aspect-ratio: 1;
+          cursor: pointer;
+          padding: 0.4rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .calendar-day:active:not(:disabled) {
+          transform: scale(0.92);
+        }
+
+        .day-number {
+          font-weight: 600;
+          color: #333;
+        }
+
+        .outside-month {
+          color: #ddd;
+          background: transparent;
+          cursor: default;
+          pointer-events: none;
+        }
+
+        .today {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: #fff;
+          border-color: #8c68db;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        .today .day-number {
+          color: #fff;
+          font-weight: 800;
+        }
+
+        .selected {
+          background: #fff !important;
+          border-color: #8c68db !important;
+          box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.2) !important;
+        }
+
+        .event-indicators {
+          position: absolute;
+          bottom: 4px;
+          display: flex;
+          gap: 2px;
+        }
+
+        .event-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #ff80b0;
+        }
+
+        .today .event-dot {
+          background: #fff;
+        }
+
+        .event-panel {
+          background: #fff;
+          border-radius: 18px;
+          padding: 1.25rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .panel-header h3 {
+          margin: 0;
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #1a1a1a;
+        }
+
+        .add-event-button {
+          background: rgba(140, 104, 219, 0.1);
+          color: #8c68db;
+          border: none;
+          border-radius: 20px;
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          transition: all 0.2s;
+        }
+
+        .add-event-button:active {
+          background: rgba(140, 104, 219, 0.2);
+          transform: scale(0.95);
+        }
+
+        .add-event-button.active {
+          background: rgba(255, 128, 176, 0.15);
+          color: #ff80b0;
+        }
+
+        .event-form {
+          display: none;
+          flex-direction: column;
+          gap: 1rem;
+          margin-bottom: 1.25rem;
+          padding: 1.25rem;
+          background: #f8f9fa;
+          border-radius: 16px;
+        }
+
+        .event-form.active {
+          display: flex;
+        }
+
+        .event-form h4 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #1a1a1a;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .form-group label {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #555;
+          margin-bottom: 0.4rem;
+        }
+
+        .event-form input {
+          padding: 0.85rem;
+          border: 1.5px solid #e0e0e0;
+          border-radius: 12px;
+          font-size: 0.95rem;
+          background: #fff;
+          transition: all 0.2s;
+          font-family: inherit;
+        }
+
+        .event-form input:focus {
+          outline: none;
+          border-color: #8c68db;
+          box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.1);
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .button-cancel,
+        .button-save {
+          flex: 1;
+          padding: 0.85rem;
+          border-radius: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 0.9rem;
+          border: none;
+        }
+
+        .button-cancel {
+          background: #f0f0f0;
+          color: #666;
+        }
+
+        .button-cancel:active {
+          background: #e0e0e0;
+          transform: scale(0.97);
+        }
+
+        .button-save {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: white;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        .button-save:active {
+          transform: scale(0.97);
+        }
+
+        .event-item {
+          padding: 1rem;
+          background: linear-gradient(135deg, rgba(140, 104, 219, 0.05), rgba(166, 111, 213, 0.05));
+          border-left: 4px solid #8c68db;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .event-dot.accent-dot {
+          width: 8px;
+          height: 8px;
+          background: #8c68db;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        .event-details {
+          flex-grow: 1;
+        }
+
+        .event-name {
+          font-weight: 600;
+          color: #1a1a1a;
+          font-size: 0.95rem;
+          display: block;
+          margin-bottom: 0.25rem;
+        }
+
+        .event-time {
+          color: #999;
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+
+        .remove-event-button {
+          background: rgba(255, 107, 107, 0.1);
+          border: none;
+          color: #ff6b6b;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 10px;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .remove-event-button:active {
+          background: rgba(255, 107, 107, 0.2);
+          transform: scale(0.9);
+        }
+
+        .no-events,
+        .no-date-selected {
+          text-align: center;
+          color: #aaa;
+          padding: 2.5rem 1rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .no-events i,
+        .no-date-selected i {
+          font-size: 3rem;
+          color: #e0e0e0;
+          opacity: 0.5;
+        }
+
+        .no-events p,
+        .no-date-selected p {
+          font-size: 0.9rem;
+          line-height: 1.5;
+        }
+
+        /* ==================== CHAT VIEW ==================== */
+        .chat-view-content {
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - 220px);
+          height: calc(100dvh - 220px);
+          background: #f5f7fa;
+          border-radius: 18px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .chat-window {
+          flex: 1;
+          padding: 1rem;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .chat-window::-webkit-scrollbar {
+          display: none;
+        }
+
+        .date-divider {
+          text-align: center;
+          margin: 1rem 0 0.75rem;
+          position: relative;
+        }
+
+        .date-divider span {
+          background: #e0e4e8;
+          padding: 0.3rem 0.9rem;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #777;
+          display: inline-block;
+        }
+
+        .message-container {
+          display: flex;
+          max-width: 80%;
+          align-self: flex-start;
+          margin-bottom: 0.25rem;
+        }
+
+        .message-container.own-message {
+          align-self: flex-end;
+        }
+
+        .message-bubble {
+          padding: 0.75rem 1rem;
+          border-radius: 18px 18px 18px 4px;
+          background: #fff;
+          color: #1a1a1a;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+          line-height: 1.5;
+          word-wrap: break-word;
+          display: flex;
+          flex-direction: column;
+          max-width: 100%;
+        }
+
+        .message-container.own-message .message-bubble {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: #fff;
+          border-radius: 18px 18px 4px 18px;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.25);
+        }
+
+        .message-text {
+          font-size: 0.95rem;
+          margin-bottom: 0.35rem;
+        }
+
+        .message-time {
+          font-size: 0.7rem;
+          opacity: 0.6;
+          align-self: flex-end;
+          font-weight: 500;
+        }
+
+        .typing-indicator-container {
+          align-self: flex-start;
+        }
+
+        .typing-indicator {
+          display: flex;
+          gap: 5px;
+          padding: 0.75rem 1rem;
+          background: #fff;
+          border-radius: 18px 18px 18px 4px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .typing-indicator .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #bbb;
+          animation: typing-bounce 1.4s infinite;
+        }
+
+        .typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing-bounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+          30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        .chat-input-area {
+          padding: 1rem;
+          background: #fff;
+          border-top: 1px solid #e0e4e8;
+          position: relative;
+        }
+
+        .chat-input {
+          display: flex;
+          align-items: flex-end;
+          gap: 0.6rem;
+          background: #f5f7fa;
+          border-radius: 24px;
+          padding: 0.5rem 0.6rem;
+          border: 1.5px solid #e0e4e8;
+        }
+
+        .chat-input textarea {
+          flex: 1;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 0.95rem;
+          resize: none;
+          padding: 0.5rem 0.25rem;
+          line-height: 1.4;
+          max-height: 100px;
+          font-family: inherit;
+        }
+
+        .input-action-button {
+          background: transparent;
+          border: none;
+          color: #999;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+          font-size: 1.2rem;
+          flex-shrink: 0;
+        }
+
+        .input-action-button:active {
+          background: rgba(140, 104, 219, 0.1);
+          color: #8c68db;
+          transform: scale(0.9);
+        }
+
+        .input-action-button.active {
+          color: #8c68db;
+          background: rgba(140, 104, 219, 0.1);
+        }
+
+        .send-button {
+          color: #ff80b0;
+        }
+
+        .send-button:active:not(:disabled) {
+          background: rgba(255, 128, 176, 0.15);
+          transform: scale(0.9);
+        }
+
+        .send-button:disabled {
+          color: #ccc;
+          cursor: not-allowed;
+        }
+
+        .emoji-picker-popover {
+          position: absolute;
+          bottom: calc(100% + 10px);
+          left: 1rem;
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          padding: 1rem;
+          width: 280px;
+          z-index: 100;
+          display: none;
+        }
+
+        .emoji-picker-popover.active {
+          display: block;
+          animation: fadeSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .emoji-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 8px;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .emoji-button {
+          background: none;
+          border: none;
+          padding: 0.5rem;
+          cursor: pointer;
+          font-size: 1.6rem;
+          transition: transform 0.15s;
+          border-radius: 8px;
+        }
+
+        .emoji-button:active {
+          transform: scale(1.2);
+          background: #f0f0f0;
+        }
+
+        /* ==================== DATE IDEAS VIEW ==================== */
+        .date-ideas-view-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .search-bar {
+          display: flex;
+          align-items: center;
+          background: #fff;
+          border-radius: 20px;
+          padding: 0.6rem 1rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+          gap: 0.75rem;
+        }
+
+        .search-icon {
+          color: #aaa;
+          font-size: 1.1rem;
+        }
+
+        .search-bar input {
+          flex: 1;
+          border: none;
+          outline: none;
+          font-size: 0.95rem;
+          background: transparent;
+          font-family: inherit;
+        }
+
+        .search-button {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: white;
+          border: none;
+          border-radius: 16px;
+          padding: 0.65rem 1.25rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        .search-button:active {
+          transform: scale(0.95);
+        }
+
+        .suggestion-list-column {
+          background: #fff;
+          border-radius: 18px;
+          padding: 1.25rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .column-title {
+          font-size: 1.15rem;
+          color: #1a1a1a;
+          margin: 0 0 1rem 0;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .column-title i {
+          color: #8c68db;
+        }
+
+        .suggestion-card {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0.75rem;
+          padding: 0.85rem;
+          border-radius: 14px;
+          border: 1.5px solid #f0f0f0;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          background: #fff;
+        }
+
+        .suggestion-card:active {
+          transform: scale(0.98);
+        }
+
+        .suggestion-card.active {
+          background: linear-gradient(135deg, rgba(140, 104, 219, 0.08), rgba(166, 111, 213, 0.08));
+          border-color: #8c68db;
+          box-shadow: 0 2px 10px rgba(140, 104, 219, 0.15);
+        }
+
+        .suggestion-preview {
+          width: 65px;
+          height: 65px;
+          border-radius: 12px;
+          background-size: cover;
+          background-position: center;
+          margin-right: 1rem;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-info {
+          flex: 1;
+        }
+
+        .suggestion-info h4 {
+          margin: 0 0 0.4rem 0;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #1a1a1a;
+          line-height: 1.3;
+        }
+
+        .rating {
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+
+        .rating i.fa-star {
+          color: #ffc107;
+        }
+
+        .rating i.far.fa-star {
+          color: #e0e0e0;
+        }
+
+        .suggestion-detail-column {
+          background: #fff;
+          border-radius: 18px;
+          padding: 1.25rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .suggestion-image {
+          width: 100%;
+          height: 220px;
+          border-radius: 14px;
+          overflow: hidden;
+          margin-bottom: 1.25rem;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .suggestion-header {
+          margin-bottom: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .suggestion-header h2 {
+          margin: 0 0 0.6rem 0;
+          font-size: 1.4rem;
+          color: #1a1a1a;
+          font-weight: 800;
+        }
+
+        .suggestion-tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.25rem;
+          border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab-button {
+          background: none;
+          border: none;
+          padding: 0.75rem 1rem;
+          cursor: pointer;
+          font-weight: 600;
+          color: #999;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          border-bottom: 3px solid transparent;
+          margin-bottom: -2px;
+          border-radius: 8px 8px 0 0;
+        }
+
+        .tab-button.active {
+          color: #8c68db;
+          border-bottom-color: #8c68db;
+          background: rgba(140, 104, 219, 0.05);
+        }
+
+        .tab-content {
+          line-height: 1.7;
+          color: #555;
+          font-size: 0.95rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .review-item {
+          border-bottom: 1px dashed #e0e0e0;
+          padding: 1rem 0;
+          margin-bottom: 0.75rem;
+        }
+
+        .review-item:last-child {
+          border-bottom: none;
+        }
+
+        .review-item blockquote {
+          margin: 0 0 0.5rem 0;
+          font-style: italic;
+          color: #555;
+          padding-left: 1rem;
+          border-left: 3px solid #8c68db;
+          line-height: 1.6;
+        }
+
+        .review-item cite {
+          font-size: 0.85rem;
+          color: #999;
+          display: block;
+          text-align: right;
+          font-weight: 600;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 0.75rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid #f0f0f0;
+        }
+
+        .primary-action-button,
+        .secondary-action-button {
+          flex: 1;
+          padding: 0.9rem;
+          border-radius: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          transition: all 0.2s;
+          font-size: 0.9rem;
+          border: none;
+        }
+
+        .primary-action-button {
+          background: linear-gradient(135deg, #ff80b0, #ffabc9);
+          color: white;
+          box-shadow: 0 2px 8px rgba(255, 128, 176, 0.3);
+        }
+
+        .primary-action-button:active {
+          transform: scale(0.97);
+        }
+
+        .secondary-action-button {
+          background: #f5f5f5;
+          color: #666;
+          border: 1.5px solid #e0e0e0;
+        }
+
+        .secondary-action-button:active {
+          background: #e8e8e8;
+          transform: scale(0.97);
+        }
+
+        /* ==================== SETTINGS VIEW ==================== */
+        .settings-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .success-message {
+          background: linear-gradient(135deg, #4caf50, #66bb6a);
+          color: white;
+          padding: 1rem 1.25rem;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+          font-weight: 600;
+        }
+
+        .settings-section {
+          margin-bottom: 0.5rem;
+        }
+
+        .settings-section h2 {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          color: #1a1a1a;
+          font-size: 1.15rem;
+          margin-bottom: 1rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid #f0f0f0;
+          font-weight: 700;
+        }
+
+        .settings-card {
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+          padding: 1.25rem;
+          margin-bottom: 1rem;
+        }
+
+        .settings-card h3 {
+          margin: 0 0 1rem 0;
+          color: #8c68db;
+          font-size: 1.05rem;
+          font-weight: 700;
+        }
+
+        .toggle-option {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #f5f5f5;
+        }
+
+        .toggle-option:last-of-type {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        .toggle-option span {
+          font-weight: 600;
+          color: #333;
+          font-size: 0.9rem;
+        }
+
+        .toggle {
+          position: relative;
+          display: inline-block;
+          width: 52px;
+          height: 28px;
+        }
+
+        .toggle input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: #ccc;
+          transition: 0.3s;
+          border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 20px;
+          width: 20px;
+          left: 4px;
+          bottom: 4px;
+          background: white;
+          transition: 0.3s;
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .toggle-slider {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+        }
+
+        input:checked + .toggle-slider:before {
+          transform: translateX(24px);
+        }
+
+        .primary-button {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: white;
+          border: none;
+          padding: 0.9rem 1.5rem;
+          border-radius: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+          font-size: 0.95rem;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        .primary-button:active {
+          transform: scale(0.98);
+        }
+
+        .primary-button:disabled {
+          background: #ccc;
+          box-shadow: none;
+          cursor: not-allowed;
+        }
+
+        .danger-button {
+          background: linear-gradient(135deg, #ff6b6b, #ff8787);
+          color: white;
+          border: none;
+          padding: 0.9rem 1.5rem;
+          border-radius: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          width: 100%;
+          box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+          transition: all 0.2s;
+        }
+
+        .danger-button:active {
+          transform: scale(0.98);
+        }
+
+        .input-error {
+          border-color: #ff6b6b !important;
+        }
+
+        .error-text {
+          color: #ff6b6b;
+          font-size: 0.8rem;
+          margin-top: 0.4rem;
+          font-weight: 500;
+        }
+
+        .password-strength {
+          margin-top: 0.6rem;
+        }
+
+        .strength-meter {
+          height: 5px;
+          background: #f0f0f0;
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 0.4rem;
+        }
+
+        .strength-value {
+          height: 100%;
+          transition: width 0.3s, background 0.3s;
+          border-radius: 10px;
+        }
+
+        .strength-value.weak { background: linear-gradient(90deg, #ff6b6b, #ff8787); }
+        .strength-value.medium { background: linear-gradient(90deg, #ffa726, #ffb74d); }
+        .strength-value.good { background: linear-gradient(90deg, #66bb6a, #81c784); }
+        .strength-value.strong { background: linear-gradient(90deg, #2e7d32, #4caf50); }
+
+        .strength-text {
+          font-size: 0.8rem;
+          color: #777;
+          font-weight: 600;
+        }
+
+        .theme-selector {
+          display: flex;
+          gap: 0.6rem;
+        }
+
+        .theme-button {
+          flex: 1;
+          background: #f5f5f5;
+          border: 1.5px solid #e0e0e0;
+          padding: 0.65rem 1rem;
+          border-radius: 14px;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          font-weight: 600;
+          color: #666;
+        }
+
+        .theme-button.active {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: white;
+          border-color: #8c68db;
+          box-shadow: 0 2px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        .theme-button:active {
+          transform: scale(0.96);
+        }
+    /* ==================== PASSWORD CARD REDESIGN ==================== */
+
+/* Card Header */
+.password-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.password-card .card-header i {
+  font-size: 1.25rem;
+  color: #8c68db;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(140, 104, 219, 0.1);
+  border-radius: 8px;
+}
+
+.password-card .card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Password Form */
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Input Wrapper */
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Input Label */
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.2px;
+}
+
+.input-label i {
+  font-size: 0.875rem;
+  color: #8c68db;
+  width: 16px;
+}
+
+/* Input Container with Toggle */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Styled Input */
+.styled-input {
+  width: 100%;
+  padding: 0.875rem 3rem 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background-color: #fafafa;
+  transition: all 0.25s ease;
+  color: #333;
+}
+
+.styled-input:focus {
+  outline: none;
+  border-color: #8c68db;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(140, 104, 219, 0.1);
+}
+
+.styled-input::placeholder {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+/* Toggle Password Button */
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.toggle-password:active {
+  background-color: rgba(140, 104, 219, 0.1);
+  color: #8c68db;
+  transform: scale(0.9);
+}
+
+.toggle-password i {
+  font-size: 1rem;
+}
+
+/* Error Message */
+.error-message {
+  display: none;
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  padding: 0.375rem 0.75rem;
+  background-color: #fff1f1;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 6px;
+  animation: slideDown 0.2s ease-out;
+}
+
+.error-message:not(:empty) {
+  display: block;
+}
+
+/* Password Strength Indicator */
+.strength-indicator {
+  display: none;
+  margin-top: 0.5rem;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, rgba(140, 104, 219, 0.05), rgba(255, 128, 176, 0.05));
+  border-radius: 10px;
+  border: 1px solid rgba(140, 104, 219, 0.15);
+}
+
+.strength-indicator.active {
+  display: block;
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Strength Bar Container */
+.strength-bar-container {
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.625rem;
+}
+
+/* Strength Bar */
+.strength-bar {
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-bar.weak {
+  width: 25%;
+  background: linear-gradient(90deg, #ff6b6b, #ff8787);
+}
+
+.strength-bar.medium {
+  width: 50%;
+  background: linear-gradient(90deg, #ffb347, #ffc266);
+}
+
+.strength-bar.good {
+  width: 75%;
+  background: linear-gradient(90deg, #51cf66, #69db7c);
+}
+
+.strength-bar.strong {
+  width: 100%;
+  background: linear-gradient(90deg, #2e7d32, #4caf50);
+}
+
+/* Strength Info */
+.strength-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Strength Label */
+.strength-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.strength-label.weak {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+}
+
+.strength-label.medium {
+  color: #ffb347;
+  background-color: rgba(255, 179, 71, 0.1);
+}
+
+.strength-label.good {
+  color: #51cf66;
+  background-color: rgba(81, 207, 102, 0.1);
+}
+
+.strength-label.strong {
+  color: #2e7d32;
+  background-color: rgba(46, 125, 50, 0.1);
+}
+
+/* Strength Requirements */
+.strength-requirements {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.strength-requirements i {
+  color: #8c68db;
+  font-size: 0.75rem;
+}
+
+/* Update Password Button */
+.update-password-btn {
+  background: linear-gradient(135deg, #8c68db, #a66fd5);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  box-shadow: 0 4px 12px rgba(140, 104, 219, 0.25);
+  margin-top: 0.5rem;
+}
+
+.update-password-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(140, 104, 219, 0.3);
+}
+
+.update-password-btn:disabled {
+  background: linear-gradient(135deg, #ccc, #ddd);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.update-password-btn i {
+  font-size: 1rem;
+}
+
+/* Input Error State */
+.styled-input.error {
+  border-color: #ff6b6b;
+  background-color: #fff5f5;
+}
+
+/* Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 360px) {
+  .styled-input {
+    padding: 0.75rem 2.75rem 0.75rem 0.875rem;
+    font-size: 0.85rem;
+  }
+
+  .strength-requirements {
+    font-size: 0.7rem;
+  }
+
+  .update-password-btn {
+    padding: 0.875rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Focus visible for accessibility */
+.toggle-password:focus-visible,
+.styled-input:focus-visible,
+.update-password-btn:focus-visible {
+  outline: 2px solid #8c68db;
+  outline-offset: 2px;
+}
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 380px) {
+          .stats-grid {
+            gap: 0.75rem;
+          }
+
+          .stat-card {
+            padding: 1.25rem 1rem;
+          }
+
+          .stat-card i {
+            font-size: 2rem;
+          }
+
+          .stat-card h3 {
+            font-size: 1.75rem;
+          }
+
+          .calendar-day {
+            font-size: 0.85rem;
+          }
+
+          .weekday {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (min-width: 768px) {
+          .content-area {
+            padding: 1.5rem;
+            padding-bottom: calc(70px + env(safe-area-inset-bottom) + 1.5rem);
+          }
+
+          .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+          }
+
+          .chat-view-content {
+            height: calc(100vh - 240px);
+            height: calc(100dvh - 240px);
+          }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-container">
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="logo-section">
+            <img src="logo.jpeg" alt="Hey Boo Logo" class="heyboo-logo" onerror="this.style.display='none'" />
+            <h1 class="app-title">Hey Boo</h1>
+        </div>
+        <div class="user-greeting">
+            <span id="userGreeting">Welcome!</span>
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+        <!-- HOME VIEW -->
+        <div id="home-view" class="view-content active">
+            <div class="welcome-card">
+                <h2>Dashboard Overview</h2>
+                <p>Track your dates, ideas, and moments together</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3 id="upcomingDatesCount">0</h3>
+                    <p>Upcoming Dates</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-heart"></i>
+                    <h3>4</h3>
+                    <p>Date Ideas</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-comments"></i>
+                    <h3 id="messageCount">4</h3>
+                    <p>Messages</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-magic"></i>
+                    <h3>28</h3>
+                    <p>Word Bank</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR VIEW -->
+        <div id="calendar-view" class="view-content">
+            <div class="calendar-view-content">
+                <div class="calendar-navigation">
+                    <button onclick="calPrevMonth()" class="nav-button">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="calMonthYear"></h2>
+                    <button onclick="calNextMonth()" class="nav-button">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="calendar-grid-wrapper">
+                    <div id="calendarGrid" class="calendar-grid"></div>
+                </div>
+
+                <div class="event-panel">
+                    <div class="panel-header">
+                        <h3 id="selectedDateTitle">Select a Date</h3>
+                        <button id="addEventBtn" class="add-event-button" onclick="toggleEventForm()" style="display: none;">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Event</span>
+                        </button>
+                    </div>
+
+                    <form id="eventForm" class="event-form" onsubmit="addEvent(event)">
+                        <h4>New Event</h4>
+                        <div class="form-group">
+                            <label for="eventName">Event Name</label>
+                            <input id="eventName" type="text" placeholder="e.g., Dinner with Partner" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="eventTime">Time</label>
+                            <input id="eventTime" type="time" required />
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" onclick="toggleEventForm()" class="button-cancel">Cancel</button>
+                            <button type="submit" class="button-save">Save Event</button>
+                        </div>
+                    </form>
+
+                    <div id="eventsListContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHATS VIEW -->
+        <div id="chats-view" class="view-content">
+            <div class="chat-view-content">
+                <div class="chat-window" id="chatWindow"></div>
+
+                <div class="chat-input-area">
+                    <div id="emojiPicker" class="emoji-picker-popover">
+                        <div class="emoji-grid" id="emojiGrid"></div>
+                    </div>
+
+                    <div class="chat-input">
+                        <button class="input-action-button emoji-toggle-button" onclick="toggleEmojiPicker()">
+                            <i class="far fa-smile"></i>
+                        </button>
+
+                        <textarea
+                                id="messageInput"
+                                placeholder="Type a message..."
+                                rows="1"
+                                oninput="handleChatInput()"
+                                onkeydown="handleChatKeyDown(event)"
+                        ></textarea>
+
+                        <button
+                                onclick="sendMessage()"
+                                class="input-action-button send-button"
+                                id="sendButton"
+                                disabled
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATE IDEAS VIEW -->
+        <div id="dateideas-view" class="view-content">
+            <div class="date-ideas-view-content">
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input
+                            id="ideaSearchInput"
+                            type="text"
+                            placeholder="Search date ideas..."
+                            onkeyup="if(event.key==='Enter') performSearch()"
+                    />
+                    <button onclick="performSearch()" class="search-button">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </button>
+                </div>
+
+                <div class="suggestion-list-column">
+                    <h2 class="column-title">
+                        <i class="fas fa-lightbulb"></i> Suggestions
+                    </h2>
+                    <div id="suggestionsList"></div>
+                </div>
+
+                <div class="suggestion-detail-column">
+                    <div id="suggestionDetail"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+                <section class="settings-section">
+                    <div id="settings-view" class="view-content">
+                        <div class="settings-container">
+                            <div id="successMessage" class="success-message" style="display: none;">
+                                <i class="fas fa-check-circle"></i> Settings saved successfully!
+                            </div>
+
+                            <div class="settings-card password-card">
+                                <div class="card-header">
+                                    <i class="fas fa-lock"></i>
+                                    <h3>Change Password</h3>
+                                </div>
+
+                                <form onsubmit="updatePassword(event)" class="password-form">
+                                    <!-- Current Password -->
+                                    <div class="input-wrapper">
+                                        <label for="oldPassword" class="input-label">
+                                            <i class="fas fa-key"></i>
+                                            Current Password
+                                        </label>
+                                        <div class="input-container">
+                                            <input
+                                                    id="oldPassword"
+                                                    type="password"
+                                                    placeholder="Enter current password"
+                                                    class="styled-input"
+                                            />
+                                            <button
+                                                    type="button"
+                                                    class="toggle-password"
+                                                    onclick="togglePasswordVisibility('oldPassword')"
+                                                    aria-label="Toggle password visibility"
+                                            >
+                                                <i class="far fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span id="oldPasswordError" class="error-message"></span>
+                                    </div>
+
+                                    <!-- New Password -->
+                                    <div class="input-wrapper">
+                                        <label for="newPassword" class="input-label">
+                                            <i class="fas fa-shield-alt"></i>
+                                            New Password
+                                        </label>
+                                        <div class="input-container">
+                                            <input
+                                                    id="newPassword"
+                                                    type="password"
+                                                    placeholder="Enter new password"
+                                                    class="styled-input"
+                                                    oninput="checkPasswordStrength()"
+                                            />
+                                            <button
+                                                    type="button"
+                                                    class="toggle-password"
+                                                    onclick="togglePasswordVisibility('newPassword')"
+                                                    aria-label="Toggle password visibility"
+                                            >
+                                                <i class="far fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span id="newPasswordError" class="error-message"></span>
+
+                                        <!-- Password Strength Indicator -->
+                                        <div id="passwordStrength" class="strength-indicator">
+                                            <div class="strength-bar-container">
+                                                <div id="strengthBar" class="strength-bar"></div>
+                                            </div>
+                                            <div class="strength-info">
+                                                <span id="strengthText" class="strength-label">Weak</span>
+                                                <span class="strength-requirements">
+            <i class="fas fa-info-circle"></i>
+            Min 8 characters, 1 uppercase, 1 number
+          </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Confirm Password -->
+                                    <div class="input-wrapper">
+                                        <label for="confirmPassword" class="input-label">
+                                            <i class="fas fa-check-circle"></i>
+                                            Confirm Password
+                                        </label>
+                                        <div class="input-container">
+                                            <input
+                                                    id="confirmPassword"
+                                                    type="password"
+                                                    placeholder="Re-enter new password"
+                                                    class="styled-input"
+                                            />
+                                            <button
+                                                    type="button"
+                                                    class="toggle-password"
+                                                    onclick="togglePasswordVisibility('confirmPassword')"
+                                                    aria-label="Toggle password visibility"
+                                            >
+                                                <i class="far fa-eye"></i>
+                                            </button>
+                                        </div>
+                                        <span id="confirmPasswordError" class="error-message"></span>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <button type="submit" class="update-password-btn">
+                                        <i class="fas fa-sync-alt"></i>
+                                        <span>Update Password</span>
+                                    </button>
+                                </form>
+                            </div>
+                    <h2><i class="fas fa-palette"></i> Appearance</h2>
+                    <div class="settings-card">
+                        <h3>Theme</h3>
+                        <div class="toggle-option">
+                            <span>Theme Mode</span>
+                            <div class="theme-selector">
+                                <button onclick="selectTheme('light')" class="theme-button active" id="lightThemeBtn">
+                                    <i class="fas fa-sun"></i> Light
+                                </button>
+                                <button onclick="selectTheme('dark')" class="theme-button" id="darkThemeBtn">
+                                    <i class="fas fa-moon"></i> Dark
+                                </button>
+                            </div>
+                        </div>
+                        <button onclick="applyTheme()" class="primary-button">Apply Theme</button>
+                    </div>
+
+                    <h2><i class="fas fa-bell"></i> Notifications</h2>
+                    <div class="settings-card">
+                        <h3>Preferences</h3>
+                        <div class="toggle-option">
+                            <span>Message Notifications</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifMessages" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <span>Calendar Reminders</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifCalendar" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <span>Special Occasions</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="notifOccasions" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <button onclick="saveNotifications()" class="primary-button">Save Preferences</button>
+                    </div>
+
+                    <h2><i class="fas fa-lock"></i> Privacy</h2>
+                    <div class="settings-card">
+                        <h3>Privacy Controls</h3>
+                        <div class="toggle-option">
+                            <span>Share Calendar</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="privacyCalendar" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <span>Share Location</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="privacyLocation" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <span>Show Online Status</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="privacyOnline" checked />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <button onclick="savePrivacy()" class="primary-button">Save Privacy</button>
+                    </div>
+                    <h2 style="color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h2>
+                    <div class="settings-card">
+                        <h3 style="color: #ff6b6b;">Delete Account</h3>
+                        <p style="margin-bottom: 1rem; color: #666;">This action cannot be undone.</p>
+                        <button onclick="confirmDeleteAccount()" class="danger-button">Delete Account</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-view="home" onclick="switchView('home')">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" data-view="dateideas" onclick="switchView('dateideas')">
+            <i class="fas fa-lightbulb"></i>
+            <span>Ideas</span>
+        </button>
+        <button class="nav-item" data-view="calendar" onclick="switchView('calendar')">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Calendar</span>
+        </button>
+        <button class="nav-item" data-view="chats" onclick="switchView('chats')">
+            <i class="fas fa-comments"></i>
+            <span>Chats</span>
+        </button>
+        <button class="nav-item" data-view="settings" onclick="switchView('settings')">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+</div>
+
+<script>
+    // ==================== GLOBAL STATE ====================
+    let currentView = 'home';
+    let currentUser = null;
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      const user = localStorage.getItem('user');
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      currentUser = JSON.parse(user);
+      const username = currentUser.email.split('@')[0];
+      document.getElementById('userGreeting').textContent = `Welcome, ${username}!`;
+
+      initCalendar();
+      initChat();
+      initDateIdeas();
+      loadCalendarEvents();
+    });
+
+    // ==================== VIEW SWITCHING ====================
+    function switchView(viewName) {
+      document.querySelectorAll('.view-content').forEach(view => {
+        view.classList.remove('active');
+      });
+
+      document.getElementById(viewName + '-view').classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+
+      currentView = viewName;
+
+      if (viewName === 'calendar') {
+        renderCalendar();
+      } else if (viewName === 'chats') {
+        renderMessages();
+        scrollChatToBottom(true);
+      } else if (viewName === 'dateideas') {
+        renderSuggestions();
+      }
+    }
+
+    // ==================== CALENDAR FUNCTIONS ====================
+    let calCurrentDate = new Date();
+    let calSelectedDate = null;
+    let calEvents = [];
+    let showEventForm = false;
+    const calWeekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    function initCalendar() {
+      loadCalendarEvents();
+    }
+
+    function loadCalendarEvents() {
+      try {
+        const saved = localStorage.getItem('heyBooEvents');
+        if (saved) {
+          calEvents = JSON.parse(saved);
+          updateUpcomingDatesCount();
+        }
+      } catch (e) {
+        console.error('Failed to load events:', e);
+      }
+    }
+
+    function saveCalendarEvents() {
+      try {
+        localStorage.setItem('heyBooEvents', JSON.stringify(calEvents));
+        updateUpcomingDatesCount();
+      } catch (e) {
+        console.error('Failed to save events:', e);
+      }
+    }
+
+    function updateUpcomingDatesCount() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const count = calEvents.filter(e => new Date(e.date) >= today).length;
+      const el = document.getElementById('upcomingDatesCount');
+      if (el) el.textContent = count;
+    }
+
+    function calPrevMonth() {
+      calCurrentDate = new Date(calCurrentDate.getFullYear(), calCurrentDate.getMonth() - 1, 1);
+      calSelectedDate = null;
+      showEventForm = false;
+      renderCalendar();
+    }
+
+    function calNextMonth() {
+      calCurrentDate = new Date(calCurrentDate.getFullYear(), calCurrentDate.getMonth() + 1, 1);
+      calSelectedDate = null;
+      showEventForm = false;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = calCurrentDate.getFullYear();
+      const month = calCurrentDate.getMonth();
+
+      document.getElementById('calMonthYear').textContent =
+        calCurrentDate.toLocaleString('default', { month: 'long' }) + ' ' + year;
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const firstDayOfWeek = firstDay.getDay();
+      const lastDayOfPrevMonth = new Date(year, month, 0).getDate();
+
+      const days = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        days.push({
+          number: lastDayOfPrevMonth - i,
+          currentMonth: false,
+          date: new Date(year, month - 1, lastDayOfPrevMonth - i)
+        });
+      }
+
+      for (let i = 1; i <= lastDay.getDate(); i++) {
+        const date = new Date(year, month, i);
+        days.push({
+          number: i,
+          currentMonth: true,
+          isToday: date.getTime() === today.getTime(),
+          date: date
+        });
+      }
+
+      const remaining = 35 - days.length;
+      for (let i = 1; i <= remaining; i++) {
+        days.push({
+          number: i,
+          currentMonth: false,
+          date: new Date(year, month + 1, i)
+        });
+      }
+
+      const grid = document.getElementById('calendarGrid');
+      let html = '';
+
+      calWeekdays.forEach(day => {
+        html += `<div class="weekday">${day}</div>`;
+      });
+
+      days.forEach(day => {
+        const dateStr = formatCalDateString(day.date);
+        const hasEvents = calEvents.some(e => e.date === dateStr);
+        const isSelected = calSelectedDate === dateStr;
+        const classes = [
+          'calendar-day',
+          !day.currentMonth ? 'outside-month' : '',
+          day.isToday ? 'today' : '',
+          isSelected ? 'selected' : '',
+          hasEvents ? 'has-events' : ''
+        ].filter(Boolean).join(' ');
+
+        html += `
+          <button class="${classes}"
+                  ${!day.currentMonth ? 'disabled' : ''}
+                  onclick="selectCalendarDay('${dateStr}')">
+            <span class="day-number">${day.number}</span>
+            ${hasEvents && day.currentMonth ? '<div class="event-indicators"><span class="event-dot"></span></div>' : ''}
+          </button>
+        `;
+      });
+
+      grid.innerHTML = html;
+      renderEventsList();
+    }
+
+    function selectCalendarDay(dateStr) {
+      calSelectedDate = dateStr;
+      showEventForm = false;
+      renderCalendar();
+      updateEventPanel();
+    }
+
+    function updateEventPanel() {
+      const titleEl = document.getElementById('selectedDateTitle');
+      const btnEl = document.getElementById('addEventBtn');
+
+      if (calSelectedDate) {
+        titleEl.textContent = formatCalDate(calSelectedDate);
+        btnEl.style.display = 'inline-flex';
+      } else {
+        titleEl.textContent = 'Select a Date';
+        btnEl.style.display = 'none';
+      }
+
+      renderEventsList();
+    }
+
+    function toggleEventForm() {
+      showEventForm = !showEventForm;
+      const form = document.getElementById('eventForm');
+      const btn = document.getElementById('addEventBtn');
+
+      if (showEventForm) {
+        form.classList.add('active');
+        btn.classList.add('active');
+        btn.querySelector('i').className = 'fas fa-times';
+        btn.querySelector('span').textContent = 'Close';
+      } else {
+        form.classList.remove('active');
+        btn.classList.remove('active');
+        btn.querySelector('i').className = 'fas fa-plus';
+        btn.querySelector('span').textContent = 'Add Event';
+      }
+    }
+
+    function addEvent(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('eventName').value.trim();
+      const time = document.getElementById('eventTime').value;
+
+      if (name && time && calSelectedDate) {
+        calEvents.push({
+          date: calSelectedDate,
+          time: time,
+          name: name
+        });
+
+        saveCalendarEvents();
+
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventTime').value = '';
+        showEventForm = false;
+        toggleEventForm();
+
+        renderCalendar();
+      }
+    }
+
+    function removeEvent(event) {
+      calEvents = calEvents.filter(e =>
+        !(e.date === event.date && e.time === event.time && e.name === event.name)
+      );
+      saveCalendarEvents();
+      renderCalendar();
+    }
+
+    function renderEventsList() {
+      const container = document.getElementById('eventsListContainer');
+
+      if (!calSelectedDate) {
+        container.innerHTML = `
+          <div class="no-date-selected">
+            <i class="fas fa-hand-pointer"></i>
+            <p>Select a day to view events</p>
+          </div>
+        `;
+        return;
+      }
+
+      const eventsForDay = calEvents
+        .filter(e => e.date === calSelectedDate)
+        .sort((a, b) => a.time.localeCompare(b.time));
+
+      if (eventsForDay.length === 0) {
+        container.innerHTML = `
+          <div class="no-events">
+            <i class="fas fa-calendar-check"></i>
+            <p>No events scheduled</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      eventsForDay.forEach(evt => {
+        html += `
+          <div class="event-item">
+            <span class="event-dot accent-dot"></span>
+            <div class="event-details">
+              <span class="event-name">${escapeHtml(evt.name)}</span>
+              <span class="event-time">${formatCalTime(evt.time)}</span>
+            </div>
+            <button onclick='removeEvent(${JSON.stringify(evt)})' class="remove-event-button">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function formatCalDateString(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatCalDate(dateString) {
+      const parts = dateString.split('-');
+      const date = new Date(parts[0], parts[1] - 1, parts[2]);
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function formatCalTime(timeString) {
+      const [hours, minutes] = timeString.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+
+    // ==================== CHAT FUNCTIONS ====================
+    let messages = [
+      { sender: "You", text: "Hey Boo! How was your day? 😊", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) },
+      { sender: "Partner", text: "It was pretty good! Long meeting but productive. How about yours? ❤️", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2.9) },
+      { sender: "You", text: "Mine was okay, just glad it's almost over! Thinking about dinner?", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
+      { sender: "Partner", text: "Yes! Craving that pizza place 🍕", timestamp: new Date(Date.now() - 1000 * 60 * 28) },
+    ];
+    let isPartnerTyping = false;
+    let showEmojiPicker = false;
+    const commonEmojis = ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"];
+
+    function initChat() {
+      renderEmojis();
+      updateMessageCount();
+    }
+
+    function renderEmojis() {
+      const grid = document.getElementById('emojiGrid');
+      grid.innerHTML = commonEmojis.map(emoji =>
+        `<button class="emoji-button" onclick="addEmoji('${emoji}')">${emoji}</button>`
+      ).join('');
+    }
+
+    function renderMessages() {
+      const chatWindow = document.getElementById('chatWindow');
+      let html = '';
+      let lastDate = null;
+
+      messages.forEach((msg, index) => {
+        const msgDate = formatChatDate(msg.timestamp);
+
+        if (msgDate !== lastDate) {
+          html += `
+            <div class="date-divider">
+              <span>${msgDate}</span>
+            </div>
+          `;
+          lastDate = msgDate;
+        }
+
+        const isOwn = msg.sender === "You";
+        html += `
+          <div class="message-container ${isOwn ? 'own-message' : ''}">
+            <div class="message-bubble">
+              <span class="message-text">${escapeHtml(msg.text)}</span>
+              <span class="message-time">${formatChatTime(msg.timestamp)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      if (isPartnerTyping) {
+        html += `
+          <div class="message-container typing-indicator-container">
+            <div class="message-bubble">
+              <div class="typing-indicator">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      chatWindow.innerHTML = html;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      messages.push({
+        sender: "You",
+        text: text,
+        timestamp: new Date()
+      });
+
+      input.value = '';
+      adjustTextareaHeight();
+      updateSendButton();
+      updateMessageCount();
+
+      if (showEmojiPicker) {
+        toggleEmojiPicker();
+      }
+
+      renderMessages();
+      scrollChatToBottom();
+      simulatePartnerResponse();
+    }
+
+    function simulatePartnerResponse() {
+      if (isPartnerTyping) return;
+
+      const responses = ["Okay!", "Sounds good 😊", "Miss you too!", "Can't wait!", "❤️", "Got it.", "Let's do it!", "Perfect!", "🤔 Hmm, maybe?"];
+
+      isPartnerTyping = true;
+      renderMessages();
+      scrollChatToBottom();
+
+      setTimeout(() => {
+        isPartnerTyping = false;
+
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        messages.push({
+          sender: "Partner",
+          text: randomResponse,
+          timestamp: new Date()
+        });
+
+        updateMessageCount();
+        renderMessages();
+        scrollChatToBottom();
+      }, Math.random() * 1500 + 1000);
+    }
+
+    function updateMessageCount() {
+      const partnerMessages = messages.filter(m => m.sender === "Partner");
+      const el = document.getElementById('messageCount');
+      if (el) el.textContent = partnerMessages.length;
+    }
+
+    function handleChatInput() {
+      adjustTextareaHeight();
+      updateSendButton();
+    }
+
+    function handleChatKeyDown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function adjustTextareaHeight() {
+      const textarea = document.getElementById('messageInput');
+      textarea.style.height = 'auto';
+      const maxHeight = 100;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+    }
+
+    function updateSendButton() {
+      const input = document.getElementById('messageInput');
+      const button = document.getElementById('sendButton');
+      button.disabled = !input.value.trim();
+    }
+
+    function toggleEmojiPicker() {
+      showEmojiPicker = !showEmojiPicker;
+      const picker = document.getElementById('emojiPicker');
+      const toggleBtn = document.querySelector('.emoji-toggle-button');
+
+      if (showEmojiPicker) {
+        picker.classList.add('active');
+        toggleBtn.classList.add('active');
+      } else {
+        picker.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      }
+    }
+
+    function addEmoji(emoji) {
+      const input = document.getElementById('messageInput');
+      input.value += emoji;
+      input.focus();
+      adjustTextareaHeight();
+      updateSendButton();
+    }
+
+    function scrollChatToBottom(instant = false) {
+      const chatWindow = document.getElementById('chatWindow');
+      if (chatWindow) {
+        chatWindow.scrollTo({
+          top: chatWindow.scrollHeight,
+          behavior: instant ? 'instant' : 'smooth'
+        });
+      }
+    }
+
+    function formatChatTime(timestamp) {
+      return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function formatChatDate(timestamp) {
+      const date = new Date(timestamp);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) return "Today";
+      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // ==================== DATE IDEAS FUNCTIONS ====================
+    let suggestions = [
+      {
+        title: "Romantic Dinner",
+        rating: 5,
+        image: "images/romantic-dinner.jpg",
+        info: "A romantic dinner provides a classic setting to connect. Look for a cozy restaurant with ambient lighting and soft music, or try a new cuisine you both want to explore.",
+        reviews: "\"Magical anniversary dinner! The ambiance was perfect.\" - Sarah\n\n\"Sparked great conversation, we talked for hours!\" - Jamie"
+      },
+      {
+        title: "Outdoor Picnic",
+        rating: 4,
+        image: "images/outdoor-picnic.jpg",
+        info: "Enjoy nature and quality time together. Pack your favorite foods, bring a cozy blanket, and find a scenic spot in the park or by the lake.",
+        reviews: "\"Absolutely loved our picnic date! So refreshing and fun.\" - Chloe\n\n\"A great break from the usual routine. Enjoyed it a lot.\" - John"
+      },
+      {
+        title: "Movie Night",
+        rating: 3,
+        image: "images/movie-night.jpg",
+        info: "Cozy up and watch your favorite films. Create a cinema experience at home with popcorn, dim lights, and a movie marathon of your choice.",
+        reviews: "\"Perfect date night! Loved the cozy vibes.\" - Alex\n\n\"Fun evening with great movies and snacks.\" - Sam"
+      },
+      {
+        title: "Hiking Adventure",
+        rating: 4,
+        image: "images/hiking-adventure.jpg",
+        info: "Get active and explore the outdoors. Choose a scenic hiking trail, enjoy breathtaking views, and bond over the adventure together.",
+        reviews: "\"Amazing views and great workout! Highly recommend.\" - Emma\n\n\"Such a memorable experience. We'll definitely do it again!\" - Chris"
+      }
+    ];
+    let allSuggestions = [...suggestions];
+    let selectedSuggestion = suggestions[0];
+    let activeTab = 'info';
+
+    function initDateIdeas() {
+      renderSuggestions();
+    }
+
+    function renderSuggestions() {
+      const container = document.getElementById('suggestionsList');
+
+      if (suggestions.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; padding: 2rem;">No suggestions found</p>';
+        return;
+      }
+
+      let html = '';
+      suggestions.forEach((sug, idx) => {
+        const isActive = selectedSuggestion && sug.title === selectedSuggestion.title;
+        html += `
+          <div class="suggestion-card ${isActive ? 'active' : ''}" onclick="selectSuggestion(${idx})">
+            <div class="suggestion-preview" style="background-image: url('${sug.image}'); background-size: cover; background-position: center;"></div>
+            <div class="suggestion-info">
+              <h4>${sug.title}</h4>
+              <div class="rating">
+                ${Array(sug.rating).fill('<i class="fas fa-star"></i>').join('')}
+                ${Array(5 - sug.rating).fill('<i class="far fa-star"></i>').join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      renderSuggestionDetail();
+    }
+
+    function selectSuggestion(idx) {
+      selectedSuggestion = suggestions[idx];
+      activeTab = 'info';
+      renderSuggestions();
+    }
+
+    function renderSuggestionDetail() {
+      const container = document.getElementById('suggestionDetail');
+
+      if (!selectedSuggestion) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: #888;">
+            <i class="fas fa-hand-pointer" style="font-size: 3rem; color: #e0e0e0; margin-bottom: 1rem;"></i>
+            <p>Select a suggestion to see details</p>
+          </div>
+        `;
+        return;
+      }
+
+      const reviews = parseReviews(selectedSuggestion.reviews);
+
+      container.innerHTML = `
+        <div class="suggestion-detailed-card">
+          <div class="suggestion-image">
+            <img src="${selectedSuggestion.image}" alt="${selectedSuggestion.title}" onerror="this.style.background='linear-gradient(135deg, #8c68db, #a66fd5)'; this.src=''" />
+          </div>
+
+          <div class="suggestion-header">
+            <h2>${selectedSuggestion.title}</h2>
+            <div class="rating">
+              ${Array(selectedSuggestion.rating).fill('<i class="fas fa-star"></i>').join('')}
+              ${Array(5 - selectedSuggestion.rating).fill('<i class="far fa-star"></i>').join('')}
+            </div>
+          </div>
+
+          <div class="suggestion-tabs">
+            <button class="tab-button ${activeTab === 'info' ? 'active' : ''}" onclick="switchTab('info')">
+              <i class="fas fa-info-circle"></i> Info
+            </button>
+            <button class="tab-button ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchTab('reviews')">
+              <i class="fas fa-comments"></i> Reviews (${reviews.length})
+            </button>
+          </div>
+
+          <div class="tab-content">
+            ${activeTab === 'info' ? `<p>${selectedSuggestion.info}</p>` : renderReviews(reviews)}
+          </div>
+
+          <div class="action-buttons">
+            <button onclick="addToCalendar()" class="primary-action-button">
+              <i class="fas fa-calendar-plus"></i> Add to Calendar
+            </button>
+            <button onclick="generateMore()" class="secondary-action-button">
+              <i class="fas fa-sync-alt"></i> More Ideas
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      renderSuggestionDetail();
+    }
+
+    function parseReviews(reviewsText) {
+      if (!reviewsText) return [];
+      return reviewsText.split('\n\n')
+        .map(r => {
+          const parts = r.split(' - ');
+          return {
+            text: parts[0].replace(/^"|"$/g, ''),
+            author: parts[1] || 'Anonymous'
+          };
+        });
+    }
+
+    function renderReviews(reviews) {
+      if (reviews.length === 0) {
+        return '<p style="text-align: center; color: #888; padding: 2rem;">No reviews yet</p>';
+      }
+
+      return reviews.map(r => `
+        <div class="review-item">
+          <blockquote>"${r.text}"</blockquote>
+          <cite>- ${r.author}</cite>
+        </div>
+      `).join('');
+    }
+
+    function performSearch() {
+      const query = document.getElementById('ideaSearchInput').value.trim().toLowerCase();
+
+      if (!query) {
+        suggestions = [...allSuggestions];
+      } else {
+        suggestions = allSuggestions.filter(s =>
+          s.title.toLowerCase().includes(query) ||
+          s.info.toLowerCase().includes(query)
+        );
+      }
+
+      selectedSuggestion = suggestions.length > 0 ? suggestions[0] : null;
+      renderSuggestions();
+    }
+
+    function addToCalendar() {
+      alert(`Adding "${selectedSuggestion.title}" to calendar!`);
+    }
+
+    function generateMore() {
+      alert('Generating more ideas...');
+    }
+
+    // ==================== SETTINGS FUNCTIONS ====================
+    let selectedTheme = 'light';
+
+    function updatePassword(e) {
+      e.preventDefault();
+
+      const oldPass = document.getElementById('oldPassword').value;
+      const newPass = document.getElementById('newPassword').value;
+      const confirmPass = document.getElementById('confirmPassword').value;
+
+      let isValid = true;
+
+      if (!oldPass) {
+        showError('oldPasswordError', 'Current password required');
+        isValid = false;
+      }
+
+      if (!newPass || newPass.length < 8) {
+        showError('newPasswordError', 'Password must be at least 8 characters');
+        isValid = false;
+      }
+
+      if (newPass !== confirmPass) {
+        showError('confirmPasswordError', 'Passwords do not match');
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      showSuccess();
+      document.getElementById('oldPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+
+    function checkPasswordStrength() {
+      const password = document.getElementById('newPassword').value;
+      const strengthDiv = document.getElementById('passwordStrength');
+
+      if (!password) {
+        strengthDiv.style.display = 'none';
+        return;
+      }
+
+      strengthDiv.style.display = 'block';
+
+      let strength = 0;
+      if (password.length >= 8) strength += 25;
+      if (/[A-Z]/.test(password)) strength += 25;
+      if (/[0-9]/.test(password)) strength += 25;
+      if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+
+      const strengthValue = document.getElementById('strengthValue');
+      const strengthText = document.getElementById('strengthText');
+
+      strengthValue.style.width = strength + '%';
+
+      if (strength <= 25) {
+        strengthValue.className = 'strength-value weak';
+        strengthText.textContent = 'Weak';
+      } else if (strength <= 50) {
+        strengthValue.className = 'strength-value medium';
+        strengthText.textContent = 'Medium';
+      } else if (strength <= 75) {
+        strengthValue.className = 'strength-value good';
+        strengthText.textContent = 'Good';
+      } else {
+        strengthValue.className = 'strength-value strong';
+        strengthText.textContent = 'Strong';
+      }
+    }
+
+    function saveProfile() {
+      showSuccess();
+    }
+
+    function selectTheme(theme) {
+      selectedTheme = theme;
+      document.getElementById('lightThemeBtn').classList.toggle('active', theme === 'light');
+      document.getElementById('darkThemeBtn').classList.toggle('active', theme === 'dark');
+    }
+
+    function applyTheme() {
+      document.body.className = selectedTheme;
+      showSuccess();
+    }
+
+    function saveNotifications() {
+      showSuccess();
+    }
+
+    function savePrivacy() {
+      showSuccess();
+    }
+
+    function confirmDeleteAccount() {
+      if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
+        alert('Account deletion initiated');
+      }
+    }
+
+    function showSuccess() {
+      const msg = document.getElementById('successMessage');
+      msg.style.display = 'flex';
+      setTimeout(() => {
+        msg.style.display = 'none';
+      }, 3000);
+    }
+
+    function showError(elemId, message) {
+      const elem = document.getElementById(elemId);
+      elem.textContent = message;
+      elem.style.display = 'block';
+      setTimeout(() => {
+        elem.style.display = 'none';
+      }, 3000);
+    }
+    // Toggle Password Visibility
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  const button = input.parentElement.querySelector('.toggle-password');
+  const icon = button.querySelector('i');
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+// Enhanced Password Strength Check
+function checkPasswordStrength() {
+  const password = document.getElementById('newPassword').value;
+  const strengthIndicator = document.getElementById('passwordStrength');
+  const strengthBar = document.getElementById('strengthBar');
+  const strengthText = document.getElementById('strengthText');
+
+  if (!password) {
+    strengthIndicator.classList.remove('active');
+    return;
+  }
+
+  strengthIndicator.classList.add('active');
+
+  let strength = 0;
+  let strengthClass = 'weak';
+  let strengthLabel = 'Weak';
+
+  // Length check
+  if (password.length >= 8) strength += 25;
+  if (password.length >= 12) strength += 10;
+
+  // Character variety checks
+  if (/[A-Z]/.test(password)) strength += 20;
+  if (/[a-z]/.test(password)) strength += 10;
+  if (/[0-9]/.test(password)) strength += 20;
+  if (/[^A-Za-z0-9]/.test(password)) strength += 15;
+
+  // Determine strength class
+  if (strength <= 35) {
+    strengthClass = 'weak';
+    strengthLabel = 'Weak';
+  } else if (strength <= 60) {
+    strengthClass = 'medium';
+    strengthLabel = 'Medium';
+  } else if (strength <= 85) {
+    strengthClass = 'good';
+    strengthLabel = 'Good';
+  } else {
+    strengthClass = 'strong';
+    strengthLabel = 'Strong';
+  }
+
+  // Update UI
+  strengthBar.className = `strength-bar ${strengthClass}`;
+  strengthText.className = `strength-label ${strengthClass}`;
+  strengthText.textContent = strengthLabel;
+}
+
+// Enhanced Update Password Function
+function updatePassword(e) {
+  e.preventDefault();
+
+  const oldPass = document.getElementById('oldPassword');
+  const newPass = document.getElementById('newPassword');
+  const confirmPass = document.getElementById('confirmPassword');
+
+  const oldPassError = document.getElementById('oldPasswordError');
+  const newPassError = document.getElementById('newPasswordError');
+  const confirmPassError = document.getElementById('confirmPasswordError');
+
+  // Clear previous errors
+  oldPassError.textContent = '';
+  newPassError.textContent = '';
+  confirmPassError.textContent = '';
+  oldPass.classList.remove('error');
+  newPass.classList.remove('error');
+  confirmPass.classList.remove('error');
+
+  let isValid = true;
+
+  // Validation
+  if (!oldPass.value.trim()) {
+    oldPassError.textContent = '⚠️ Current password is required';
+    oldPass.classList.add('error');
+    isValid = false;
+  }
+
+  if (!newPass.value) {
+    newPassError.textContent = '⚠️ New password is required';
+    newPass.classList.add('error');
+    isValid = false;
+  } else if (newPass.value.length < 8) {
+    newPassError.textContent = '⚠️ Password must be at least 8 characters';
+    newPass.classList.add('error');
+    isValid = false;
+  }
+
+  if (!confirmPass.value) {
+    confirmPassError.textContent = '⚠️ Please confirm your password';
+    confirmPass.classList.add('error');
+    isValid = false;
+  } else if (confirmPass.value !== newPass.value) {
+    confirmPassError.textContent = '⚠️ Passwords do not match';
+    confirmPass.classList.add('error');
+    isValid = false;
+  }
+
+  if (!isValid) return;
+
+  // Success
+  showSuccess();
+  oldPass.value = '';
+  newPass.value = '';
+  confirmPass.value = '';
+  document.getElementById('passwordStrength').classList.remove('active');
+}
+    // ==================== UTILITY FUNCTIONS ====================
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    document.addEventListener('click', function(e) {
+      const picker = document.getElementById('emojiPicker');
+      const toggleBtn = document.querySelector('.emoji-toggle-button');
+
+      if (showEmojiPicker &&
+          picker && !picker.contains(e.target) &&
+          toggleBtn && !toggleBtn.contains(e.target)) {
+        toggleEmojiPicker();
+      }
+    });
+</script>
+</body>
+</html>
