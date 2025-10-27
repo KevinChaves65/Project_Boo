@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>Hey Boo - Link Partner</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* Reset and base styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container styling with gradient background */
+        .heyboo-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: linear-gradient(135deg, rgba(255, 128, 176, 0.9), rgba(168, 102, 221, 0.9));
+          padding: 1rem;
+        }
+
+        .link-partner-card {
+          background: #ffffff;
+          padding: 2.5rem 2rem;
+          border-radius: 16px;
+          text-align: center;
+          max-width: 400px;
+          width: 100%;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+          border: 1px solid #f0f0f0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .card-icon {
+          font-size: 2.5rem;
+          color: #fff;
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1rem;
+          box-shadow: 0 4px 8px rgba(140, 104, 219, 0.3);
+        }
+
+        h2 {
+          margin-top: 0;
+          margin-bottom: 0.5rem;
+          font-family: "Helvetica Neue", sans-serif;
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .subtitle {
+          font-size: 0.95rem;
+          color: #667;
+          margin-bottom: 2rem;
+          max-width: 300px;
+          line-height: 1.5;
+        }
+
+        .link-form {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1.25rem;
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          text-align: left;
+        }
+
+        label {
+          font-weight: 500;
+          font-size: 0.9rem;
+          color: #555;
+          margin-bottom: 0.4rem;
+        }
+
+        input[type="text"] {
+          padding: 0.85rem 1rem;
+          width: 100%;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 1rem;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+          outline: none;
+          border-color: #8c68db;
+          box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.15);
+        }
+
+        input[type="text"]::placeholder {
+          color: #a0aec0;
+        }
+
+        .link-button {
+          background: #ff80b0;
+          color: #fff;
+          border: none;
+          padding: 0.85rem 1.5rem;
+          border-radius: 25px;
+          font-weight: 600;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          box-shadow: 0 3px 8px rgba(255, 128, 176, 0.3);
+        }
+
+        .link-button:hover:not(:disabled) {
+          background-color: #ff66a3;
+          box-shadow: 0 5px 12px rgba(255, 128, 176, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .link-button:disabled {
+          background-color: #cccccc;
+          color: #888;
+          box-shadow: none;
+          cursor: not-allowed;
+        }
+
+        .link-button i {
+          transition: transform 0.3s ease;
+        }
+
+        .link-button:hover:not(:disabled) i:not(.fa-spinner) {
+          transform: scale(1.1);
+        }
+
+        .footer-links {
+          margin-top: 2rem;
+          font-size: 0.85rem;
+        }
+
+        .skip-link {
+          color: #778;
+          text-decoration: none;
+          transition: color 0.2s ease;
+          cursor: pointer;
+        }
+
+        .skip-link:hover {
+          color: #333;
+          text-decoration: underline;
+        }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .fa-spin {
+          animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="heyboo-container">
+    <div class="link-partner-card">
+        <!-- Card Icon -->
+        <div class="card-icon">
+            <i class="fas fa-link"></i>
+        </div>
+
+        <h2>Link with Your Partner</h2>
+        <p class="subtitle">Enter your partner's unique Hey Boo ID to connect your accounts.</p>
+
+        <form id="linkForm" class="link-form">
+            <div class="form-group">
+                <label for="partnerId">Partner's Hey Boo ID</label>
+                <input
+                        id="partnerId"
+                        type="text"
+                        placeholder="Enter ID here..."
+                        required
+                        aria-required="true"
+                />
+            </div>
+
+            <!-- Link Button with Loading State -->
+            <button type="submit" class="link-button" id="linkButton">
+                <i class="fas fa-link"></i> Link Accounts
+            </button>
+        </form>
+
+        <!-- Footer Links -->
+        <div class="footer-links">
+            <a href="#" class="skip-link" onclick="skipLinking(event)">Skip for now</a>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    // Get form elements
+    const form = document.getElementById('linkForm');
+    const partnerIdInput = document.getElementById('partnerId');
+    const linkButton = document.getElementById('linkButton');
+
+    let isLoading = false;
+
+    // Handle form submission
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      // Get partner ID value
+      const partnerId = partnerIdInput.value.trim();
+
+      // Basic validation
+      if (!partnerId || isLoading) {
+        return;
+      }
+
+      isLoading = true;
+      console.log('Attempting to link with partner ID:', partnerId);
+
+      // Update button to loading state
+      linkButton.disabled = true;
+      linkButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Linking...';
+
+      // Simulate API call (replace with your actual linking logic)
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+
+        // Simulate success/failure (80% success rate)
+        const success = Math.random() > 0.2;
+
+        if (success) {
+          console.log('Successfully linked with partner');
+
+          // Save partner link to localStorage (example)
+          localStorage.setItem('partnerId', partnerId);
+          localStorage.setItem('hasPartner', 'true');
+
+          // Show success feedback
+          alert('Successfully linked with your partner!');
+
+          // Navigate to dashboard
+          window.location.href = 'dashboard.html';
+        } else {
+          console.log('Failed to link accounts');
+          alert('Failed to link accounts. Please check the Partner ID and try again.');
+
+          // Clear input on failure
+          partnerIdInput.value = '';
+
+          // Reset button state
+          isLoading = false;
+          linkButton.disabled = false;
+          linkButton.innerHTML = '<i class="fas fa-link"></i> Link Accounts';
+        }
+      } catch (error) {
+        console.error('Linking error:', error);
+        alert('An error occurred. Please try again.');
+
+        // Reset button state
+        isLoading = false;
+        linkButton.disabled = false;
+        linkButton.innerHTML = '<i class="fas fa-link"></i> Link Accounts';
+      }
+    });
+
+
+         const days = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        days.push({
+        number: lastDayOfPrevMonth - i,
+        currentMonth: false,
+        date: new Date(year, month - 1, lastDayOfPrevMonth - i)
+        });
+        }
+
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+        const date = new Date(year, month, i);
+        days.push({
+        number: i,
+        currentMonth: true,
+        isToday: date.getTime() === today.getTime(),
+        date: date
+        });
+        }
+
+    // Handle skip for now
+    function skipLinking(event) {
+      event.preventDefault();
+
+      // Optionally save that user skipped linking
+      localStorage.setItem('skippedLinking', 'true');
+
+      // Navigate to dashboard
+      window.location.href = 'dashboard.html';
+    }
+
+    // Enable/disable button based on input
+    function checkFormValidity() {
+      const partnerId = partnerIdInput.value.trim();
+      linkButton.disabled = !partnerId || isLoading;
+    }
+
+    partnerIdInput.addEventListener('input', checkFormValidity);
+
+    // Initial check
+    checkFormValidity();
+</script>
+</body>
+</html>

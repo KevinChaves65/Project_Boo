@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>Hey Boo - Chats</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          background: #f0f4f8;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        /* Base container for chat view */
+        .chat-view-content {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          background-color: #f0f4f8;
+        }
+
+        /* Chat message area */
+        .chat-window {
+          flex-grow: 1;
+          padding: 1rem 1.5rem;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        /* Date Divider */
+        .date-divider {
+          text-align: center;
+          margin: 1.5rem 0 1rem 0;
+          position: relative;
+          color: #8899a6;
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+
+        .date-divider span {
+          background-color: #e1e8ed;
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .date-divider::before,
+        .date-divider::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          width: calc(50% - 60px);
+          height: 1px;
+          background-color: #e1e8ed;
+        }
+
+        .date-divider::before {
+          left: 0;
+        }
+
+        .date-divider::after {
+          right: 0;
+        }
+
+        /* Message Container */
+        .message-container {
+          display: flex;
+          max-width: 75%;
+          align-self: flex-start;
+          margin-bottom: 0.25rem;
+        }
+
+        .message-container.own-message {
+          align-self: flex-end;
+        }
+
+        /* Message Bubble */
+        .message-bubble {
+          padding: 0.65rem 1rem;
+          border-radius: 18px;
+          background-color: #ffffff;
+          color: #14171a;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          line-height: 1.45;
+          word-wrap: break-word;
+          display: flex;
+          flex-direction: column;
+          max-width: 100%;
+        }
+
+        .message-container.own-message .message-bubble {
+          background: linear-gradient(135deg, #8c68db, #a66fd5);
+          color: #ffffff;
+        }
+
+        .message-text {
+          font-size: 0.95rem;
+          margin-bottom: 0.25rem;
+        }
+
+        .message-time {
+          font-size: 0.7rem;
+          color: #aab8c2;
+          align-self: flex-end;
+          margin-top: 0.1rem;
+        }
+
+        .message-container.own-message .message-time {
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator-container {
+          align-self: flex-start;
+          margin-top: 0.25rem;
+        }
+
+        .typing-indicator {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px 12px;
+          gap: 4px;
+        }
+
+        .typing-indicator .dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background-color: #b0b0b0;
+          animation: typing-pulse 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator .dot:nth-child(1) {
+          animation-delay: 0s;
+        }
+
+        .typing-indicator .dot:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .typing-indicator .dot:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @keyframes typing-pulse {
+          0%, 40%, 100% {
+            transform: scale(0.8);
+            opacity: 0.6;
+          }
+          20% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        /* Input Area */
+        .chat-input-area {
+          padding: 0.75rem 1.5rem;
+          background-color: #ffffff;
+          border-top: 1px solid #e6ecf0;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .chat-input {
+          display: flex;
+          align-items: flex-end;
+          gap: 0.75rem;
+          background-color: #f5f8fa;
+          border-radius: 22px;
+          padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+          border: 1px solid #e6ecf0;
+        }
+
+        .chat-input textarea {
+          flex-grow: 1;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 0.95rem;
+          resize: none;
+          overflow-y: auto;
+          padding: 0.4rem 0.25rem;
+          line-height: 1.4;
+          max-height: 100px;
+          font-family: inherit;
+        }
+
+        .chat-input textarea::placeholder {
+          color: #aab8c2;
+        }
+
+        /* Input action buttons */
+        .input-action-button {
+          background: transparent;
+          border: none;
+          color: #657786;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease, background-color 0.2s ease;
+          font-size: 1.1rem;
+          flex-shrink: 0;
+        }
+
+        .input-action-button:hover {
+          color: #8c68db;
+          background-color: #e8e4f5;
+        }
+
+        .input-action-button.active {
+          color: #8c68db;
+          background-color: #e8e4f5;
+        }
+
+        .send-button {
+          color: #ff80b0;
+        }
+
+        .send-button:hover {
+          color: #fff;
+          background-color: #ff80b0;
+        }
+
+        .send-button:disabled {
+          color: #bdc5cd !important;
+          background-color: transparent !important;
+          cursor: not-allowed;
+        }
+
+        /* Emoji Picker Popover */
+        .emoji-picker-popover {
+          position: absolute;
+          bottom: calc(100% + 10px);
+          left: 1.5rem;
+          background-color: #fff;
+          border-radius: 10px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+          padding: 0.75rem;
+          width: 280px;
+          z-index: 100;
+          border: 1px solid #eee;
+          display: none;
+          animation: fadeIn 0.2s ease;
+        }
+
+        .emoji-picker-popover.active {
+          display: block;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .emoji-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+          gap: 5px;
+          max-height: 200px;
+          overflow-y: auto;
+        }
+
+        .emoji-button {
+          background: none;
+          border: none;
+          padding: 0;
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 1.4rem;
+          transition: background-color 0.15s ease;
+          border-radius: 6px;
+        }
+
+        .emoji-button:hover {
+          background-color: #f0f4f8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .chat-window {
+            padding: 0.75rem 1rem;
+          }
+
+          .chat-input-area {
+            padding: 0.5rem 1rem;
+          }
+
+          .message-container {
+            max-width: 85%;
+          }
+        }
+    </style>
+</head>
+<body>
+<div class="chat-view-content">
+    <!-- Chat Window -->
+    <div class="chat-window" id="chatWindow">
+        <!-- Messages will be rendered here -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+        <!-- Emoji Picker -->
+        <div id="emojiPicker" class="emoji-picker-popover">
+            <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+
+        <div class="chat-input">
+            <button class="input-action-button emoji-toggle-button" onclick="toggleEmojiPicker()" title="Add emoji">
+                <i class="far fa-smile"></i>
+            </button>
+
+            <textarea
+                    id="messageInput"
+                    placeholder="Type a message..."
+                    rows="1"
+                    oninput="handleInput()"
+                    onkeydown="handleKeyDown(event)"
+            ></textarea>
+
+            <button
+                    onclick="sendMessage()"
+                    class="input-action-button send-button"
+                    id="sendButton"
+                    disabled
+                    title="Send message"
+            >
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global state
+    let messages = [
+      { sender: "You", text: "Hey Boo! How was your day? 😊", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) },
+      { sender: "Partner", text: "It was pretty good! Long meeting but productive. How about yours? ❤️", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2.9) },
+      { sender: "You", text: "Mine was okay, just glad it's almost over! Thinking about dinner?", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
+      { sender: "Partner", text: "Yes! Craving that pizza place 🍕", timestamp: new Date(Date.now() - 1000 * 60 * 28) },
+    ];
+
+    let isPartnerTyping = false;
+    let showEmojiPicker = false;
+    const commonEmojis = ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      renderEmojis();
+      renderMessages();
+      scrollToBottom(true);
+
+      // Close emoji picker on outside click
+      document.addEventListener('click', function(e) {
+        const picker = document.getElementById('emojiPicker');
+        const toggleBtn = document.querySelector('.emoji-toggle-button');
+
+        if (showEmojiPicker &&
+            !picker.contains(e.target) &&
+            !toggleBtn.contains(e.target)) {
+          toggleEmojiPicker();
+        }
+      });
+    });
+
+    // Render emoji grid
+    function renderEmojis() {
+      const grid = document.getElementById('emojiGrid');
+      grid.innerHTML = commonEmojis.map(emoji =>
+        `<button class="emoji-button" onclick="addEmoji('${emoji}')" title="Add ${emoji}">${emoji}</button>`
+      ).join('');
+    }
+
+    // Render messages
+    function renderMessages() {
+      const chatWindow = document.getElementById('chatWindow');
+      let html = '';
+      let lastDate = null;
+
+      messages.forEach((msg, index) => {
+        const msgDate = formatDate(msg.timestamp);
+
+        // Add date divider
+        if (msgDate !== lastDate) {
+          html += `
+            <div class="date-divider">
+              <span>${msgDate}</span>
+            </div>
+          `;
+          lastDate = msgDate;
+        }
+
+        // Add message
+        const isOwn = msg.sender === "You";
+        html += `
+          <div class="message-container ${isOwn ? 'own-message' : ''}">
+            <div class="message-bubble">
+              <span class="message-text">${escapeHtml(msg.text)}</span>
+              <span class="message-time">${formatTime(msg.timestamp)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      // Add typing indicator if partner is typing
+      if (isPartnerTyping) {
+        html += `
+          <div class="message-container typing-indicator-container">
+            <div class="message-bubble">
+              <div class="typing-indicator">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      chatWindow.innerHTML = html;
+    }
+
+    // Send message
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      messages.push({
+        sender: "You",
+        text: text,
+        timestamp: new Date()
+      });
+
+      input.value = '';
+      adjustTextareaHeight();
+      updateSendButton();
+
+      if (showEmojiPicker) {
+        toggleEmojiPicker();
+      }
+
+      renderMessages();
+      scrollToBottom();
+
+      // Simulate partner response
+      simulatePartnerResponse();
+    }
+
+    // Simulate partner typing and response
+    function simulatePartnerResponse() {
+      if (isPartnerTyping) return;
+
+      const responses = ["Okay!", "Sounds good 😊", "Miss you too!", "Can't wait!", "❤️", "Got it.", "Let's do it!", "Perfect!", "🤔 Hmm, maybe?"];
+
+      isPartnerTyping = true;
+      renderMessages();
+      scrollToBottom();
+
+      setTimeout(() => {
+        isPartnerTyping = false;
+
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        messages.push({
+          sender: "Partner",
+          text: randomResponse,
+          timestamp: new Date()
+        });
+
+        renderMessages();
+        scrollToBottom();
+      }, Math.random() * 1500 + 1000);
+    }
+
+    // Handle textarea input
+    function handleInput() {
+      adjustTextareaHeight();
+      updateSendButton();
+    }
+
+    // Handle Enter key
+    function handleKeyDown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // Adjust textarea height
+    function adjustTextareaHeight() {
+      const textarea = document.getElementById('messageInput');
+      textarea.style.height = 'auto';
+      const maxHeight = 100;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+    }
+
+    // Update send button state
+    function updateSendButton() {
+      const input = document.getElementById('messageInput');
+      const button = document.getElementById('sendButton');
+      button.disabled = !input.value.trim();
+    }
+
+    // Toggle emoji picker
+    function toggleEmojiPicker() {
+      showEmojiPicker = !showEmojiPicker;
+      const picker = document.getElementById('emojiPicker');
+      const toggleBtn = document.querySelector('.emoji-toggle-button');
+
+      if (showEmojiPicker) {
+        picker.classList.add('active');
+        toggleBtn.classList.add('active');
+      } else {
+        picker.classList.remove('active');
+        toggleBtn.classList.remove('active');
+      }
+    }
+
+    // Add emoji
+    function addEmoji(emoji) {
+      const input = document.getElementById('messageInput');
+      input.value += emoji;
+      input.focus();
+      adjustTextareaHeight();
+      updateSendButton();
+    }
+
+    // Scroll to bottom
+    function scrollToBottom(instant = false) {
+      const chatWindow = document.getElementById('chatWindow');
+      if (chatWindow) {
+        chatWindow.scrollTo({
+          top: chatWindow.scrollHeight,
+          behavior: instant ? 'instant' : 'smooth'
+        });
+      }
+    }
+
+    // Format time
+    function formatTime(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    // Format date
+    function formatDate(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) return "Today";
+      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+</script>
+</body>
+</html>
