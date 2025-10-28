@@ -229,3 +229,89 @@ func ChangePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
 }
+
+// ChangeCredentials lets the authenticated user change their username and/or email.
+func ChangeCredentials(c *gin.Context) {
+	// Username was set by JWT middleware: c.Set("user", claims.Username)
+	u, ok := c.Get("user")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	currentUsername := u.(string)
+
+	// Payload (both fields optional, but at least one must be provided)
+	var req struct {
+		NewUsername string `json:"new_username"`
+		NewEmail    string `json:"new_email"`
+		Password    string `json:"password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
+
+	if req.NewUsername == "" && req.NewEmail == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "provide new_username and/or new_email"})
+		return
+	}
+
+	// Fetch current user & verify current password
+	user, err := models.GetUser(currentUsername)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+	if !models.CheckPasswordHash(req.Password, user.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid current password"})
+		return
+	}
+
+	// Validate username (if provided)
+	if req.NewUsername != "" {
+		if len(req.NewUsername) < 3 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "username must be at least 3 characters"})
+			return
+		}
+		// allow letters, digits, underscore, dot, hyphen
+		if !regexp.MustCompile(`^[A-Za-z0-9_.-]+$`).MatchString(req.NewUsername) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "username contains invalid characters"})
+			return
+		}
+		taken, err := models.IsUsernameTaken(req.NewUsername, currentUsername)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check username"})
+			return
+		}
+		if taken {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "username already taken"})
+			return
+		}
+	}
+
+	// Validate email (if provided)
+	if req.NewEmail != "" {
+		if !regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`).MatchString(req.NewEmail) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid email address"})
+			return
+		}
+		taken, err := models.IsEmailTaken(req.NewEmail, currentUsername)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check email"})
+			return
+		}
+		if taken {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "email already in use"})
+			return
+		}
+	}
+
+	// Perform the update
+	if err := models.UpdateUserCredentials(currentUsername, req.NewUsername, req.NewEmail); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update credentials"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "credentials updated successfully"})
+}
+
