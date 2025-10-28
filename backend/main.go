@@ -80,6 +80,10 @@ func main() {
 	auth.DELETE("/saved-suggestions/:id", controllers.DeleteSavedSuggestion)
 	auth.GET("/saved-suggestions/check", controllers.CheckIfSaved)
 
+	//Save credentials
+	auth.PUT("/credentials", controllers.ChangeCredentials)
+
+
 	// Word Bank routes
 	auth.POST("/wordbank", func(c *gin.Context) {
 		controllers.AddPhraseHandler(c.Writer, c.Request)
