@@ -7,27 +7,28 @@ import (
 	"github.com/KevinChaves65/Project_Boo/config"
 	"github.com/KevinChaves65/Project_Boo/controllers"
 	"github.com/KevinChaves65/Project_Boo/middlewares"
-	"github.com/KevinChaves65/Project_Boo/routes"
+	"github.com/KevinChaves65/Project_Boo/models"
 	"github.com/KevinChaves65/Project_Boo/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	// Load .env file from the root directory
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		log.Println("No local .env file found, relying on Docker/host environment variables.")
 	}
-	router := mux.NewRouter()
-	routes.InitializeRoutes(router)
 
 	go services.HandleMessages()
 
 	// Connect to the database
 	config.ConnectDB()
+
+	// Initialize default word themes
+	if err := models.InitializeDefaultThemes(); err != nil {
+		log.Printf("Failed to initialize default themes: %v", err)
+	}
 
 	r := gin.Default()
 
@@ -80,19 +81,12 @@ func main() {
 	auth.DELETE("/saved-suggestions/:id", controllers.DeleteSavedSuggestion)
 	auth.GET("/saved-suggestions/check", controllers.CheckIfSaved)
 
-	// Word Bank routes
-	auth.POST("/wordbank", func(c *gin.Context) {
-		controllers.AddPhraseHandler(c.Writer, c.Request)
-	}) // Add a phrase
-	auth.GET("/wordbank", func(c *gin.Context) {
-		controllers.GetPhrasesHandler(c.Writer, c.Request)
-	}) // Get all phrases
-	auth.PUT("/wordbank", func(c *gin.Context) {
-		controllers.EditPhraseHandler(c.Writer, c.Request)
-	}) // Edit a phrase
-	auth.DELETE("/wordbank", func(c *gin.Context) {
-		controllers.DeletePhraseHandler(c.Writer, c.Request)
-	}) // Delete a phrase
+	// New themed word bank routes
+	auth.GET("/word-themes", controllers.GetWordThemesHandler)
+	auth.POST("/word-bank", controllers.AddWordToBankHandler)
+	auth.GET("/word-bank", controllers.GetWordBankHandler)
+	auth.PUT("/word-bank/theme", controllers.UpdateWordThemeHandler)
+	auth.DELETE("/word-bank", controllers.DeleteWordFromBankHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

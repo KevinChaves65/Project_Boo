@@ -1,75 +1,108 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/KevinChaves65/Project_Boo/services"
+	"github.com/KevinChaves65/Project_Boo/models"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
-func AddPhraseHandler(w http.ResponseWriter, r *http.Request) {
+// GetWordThemesHandler returns all available word themes
+func GetWordThemesHandler(c *gin.Context) {
+	themes, err := models.GetAllWordThemes()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve themes"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"themes": themes})
+}
+
+// AddWordToBankHandler adds a word with theme to couple's word bank
+func AddWordToBankHandler(c *gin.Context) {
 	var body struct {
-		UserID string `json:"userId"`
-		Text   string `json:"text"`
+		CoupleID string `json:"couple_id"`
+		WordName string `json:"word_name"`
+		ThemeID  string `json:"theme_id"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil || len(body.Text) == 0 || len(body.Text) > 200 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	phrase := services.AddPhrase(body.UserID, body.Text)
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(phrase)
-}
-
-func GetPhrasesHandler(w http.ResponseWriter, r *http.Request) {
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
-		http.Error(w, "Missing userId", http.StatusBadRequest)
+	if len(body.WordName) == 0 || len(body.WordName) > 100 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Word name must be between 1 and 100 characters"})
 		return
 	}
 
-	phrases := services.GetPhrases(userId)
+	wordBank := models.WordBank{
+		ID:       uuid.New().String(),
+		CoupleID: body.CoupleID,
+		WordName: body.WordName,
+		ThemeID:  body.ThemeID,
+	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(phrases)
-}
-
-func DeletePhraseHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	userId := r.URL.Query().Get("userId")
-
-	if id == "" || userId == "" {
-		http.Error(w, "Missing id or userId", http.StatusBadRequest)
+	if err := models.SaveWordToBank(wordBank); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save word"})
 		return
 	}
 
-	services.DeletePhrase(userId, id)
-	w.WriteHeader(http.StatusNoContent)
+	c.JSON(http.StatusCreated, wordBank)
 }
 
-func EditPhraseHandler(w http.ResponseWriter, r *http.Request) {
+// GetWordBankHandler retrieves all words for a couple
+func GetWordBankHandler(c *gin.Context) {
+	coupleID := c.Query("couple_id")
+	if coupleID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing couple_id"})
+		return
+	}
+
+	wordBank, err := models.GetWordBankByCoupleID(coupleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve word bank"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"word_bank": wordBank})
+}
+
+// UpdateWordThemeHandler updates the theme of a word
+func UpdateWordThemeHandler(c *gin.Context) {
 	var body struct {
-		UserID string `json:"userId"`
-		ID     string `json:"id"`
-		Text   string `json:"text"`
+		CoupleID   string `json:"couple_id"`
+		WordID     string `json:"word_id"`
+		NewThemeID string `json:"new_theme_id"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil || len(body.Text) == 0 || len(body.Text) > 200 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	updated := services.EditPhrase(body.UserID, body.ID, body.Text)
-	if updated == nil {
-		http.Error(w, "Phrase not found", http.StatusNotFound)
+	if err := models.UpdateWordTheme(body.CoupleID, body.WordID, body.NewThemeID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update word theme"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updated)
+	c.JSON(http.StatusOK, gin.H{"message": "Word theme updated successfully"})
+}
+
+// DeleteWordFromBankHandler removes a word from couple's word bank
+func DeleteWordFromBankHandler(c *gin.Context) {
+	coupleID := c.Query("couple_id")
+	wordID := c.Query("word_id")
+
+	if coupleID == "" || wordID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing couple_id or word_id"})
+		return
+	}
+
+	if err := models.DeleteWordFromBank(coupleID, wordID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete word"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Word deleted successfully"})
 }

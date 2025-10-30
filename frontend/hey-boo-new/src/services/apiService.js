@@ -329,3 +329,101 @@ export async function changeUserPassword(oldPassword, newPassword) {
     throw error;
   }
 }
+
+// ===== NEW WORD BANK THEME SYSTEM =====
+
+// Get all available word themes
+export async function getWordThemes() {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/word-themes`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    return response.data.themes;
+  } catch (error) {
+    console.error("Failed to fetch word themes:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Add a word to the couple's word bank with theme
+export async function addWordToBank(coupleId, wordName, themeId) {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/word-bank`,
+      {
+        couple_id: coupleId,
+        word_name: wordName,
+        theme_id: themeId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to add word to bank:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Get couple's word bank
+export async function getWordBank(coupleId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/word-bank`, {
+      params: { couple_id: coupleId },
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    return response.data.word_bank;
+  } catch (error) {
+    console.error("Failed to fetch word bank:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Update word theme
+export async function updateWordTheme(coupleId, wordId, newThemeId) {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/word-bank/theme`,
+      {
+        couple_id: coupleId,
+        word_id: wordId,
+        new_theme_id: newThemeId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update word theme:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Delete word from bank
+export async function deleteWordFromBank(coupleId, wordId) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/word-bank`, {
+      params: { 
+        couple_id: coupleId,
+        word_id: wordId 
+      },
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete word from bank:", error.response?.data || error.message);
+    throw error;
+  }
+}

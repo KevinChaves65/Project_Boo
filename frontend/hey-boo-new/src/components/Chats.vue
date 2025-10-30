@@ -19,7 +19,15 @@
         <!-- Message Bubble -->
         <div class="message-container" :class="{ 'own-message': msg.sender === currentUsername }">
           <div class="message-bubble">
-            <span class="message-text">{{ msg.text }}</span>
+            <span 
+              class="message-text" 
+              v-if="msg.processedText && msg.processedText.hasThemedWords"
+              v-html="msg.processedText.html"
+            ></span>
+            <span 
+              class="message-text" 
+              v-else
+            >{{ msg.text }}</span>
             <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
           </div>
           <!-- Optional: Show sender name for partner messages if needed -->
@@ -109,7 +117,10 @@
       <!-- Text Enhancer Modal -->
       <transition name="fade">
         <div v-if="showTextEnhancer" class="text-enhancer-modal">
-          <TextEnhancer @text-selected="useEnhancedText" />
+          <TextEnhancer 
+            @text-selected="useEnhancedText" 
+            @word-bank-updated="refreshThemedWords" 
+          />
           <button @click="closeTextEnhancer" class="close-button">Close</button>
         </div>
       </transition>
@@ -121,6 +132,7 @@
 import { fetchChats, fetchCoupleInfo, fetchUserProfile, sendChatMessage } from "../services/apiService";
 import chatWebSocket from "../services/chatWebSocket.js";
 import emojiService from "../services/emojiService.js";
+import themedMessageService from "../services/themedMessageService.js";
 import TextEnhancer from "./TextEnhancer.vue";
 
 export default {
@@ -195,6 +207,12 @@ export default {
 
         console.log("Loaded Messages:", this.messages); // Debug loaded messages
 
+        // Initialize themed message service
+        await themedMessageService.initialize(this.coupleId);
+        
+        // Process messages with themes
+        this.messages = themedMessageService.processMessages(this.messages);
+
         // Initialize WebSocket connection
         this.initializeWebSocket();
       } catch (error) {
@@ -223,6 +241,9 @@ export default {
           text: message.content,
           timestamp: message.timestamp * 1000, // Convert to milliseconds
         };
+        
+        // Process the new message with themes
+        newMessage.processedText = themedMessageService.processMessage(newMessage.text);
         
         this.messages.push(newMessage);
         this.$nextTick(() => {
@@ -295,6 +316,9 @@ export default {
           text: messageText,
           timestamp: Date.now(),
         };
+
+        // Process the message with themes
+        message.processedText = themedMessageService.processMessage(messageText);
 
         // Optimistically add the message to the chat window
         this.messages.push(message);
@@ -507,6 +531,19 @@ export default {
       this.closeTextEnhancer();
     },
 
+    // Handle themed word updates from TextEnhancer
+    async refreshThemedWords() {
+      if (this.coupleId) {
+        await themedMessageService.refresh(this.coupleId);
+        // Re-process all existing messages with updated themes
+        this.messages = themedMessageService.processMessages(this.messages.map(msg => ({
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.timestamp
+        })));
+      }
+    },
+
     // Handle input changes for typing indicators
     handleInput() {
       this.onInputChange();
@@ -623,6 +660,26 @@ export default {
   font-size: 0.95rem;
   margin-bottom: 0.25rem; /* Space between text and time */
 }
+
+/* Themed words styling */
+.message-text :deep(.themed-word) {
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.message-container.own-message .message-text :deep(.themed-word) {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.message-text :deep(.themed-word):hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+
 .message-time {
   font-size: 0.7rem; /* Smaller time */
   color: var(--text-muted); /* Lighter time color */
