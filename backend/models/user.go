@@ -154,3 +154,52 @@ func ChangeUserPassword(username, oldPassword, newPassword string) error {
 	_, err = collection.UpdateOne(context.TODO(), bson.M{"username": username}, update)
 	return err
 }
+
+// IsUsernameTaken returns true if another user (not the current one) already uses newUsername.
+func IsUsernameTaken(newUsername, currentUsername string) (bool, error) {
+	collection := config.GetDB().Collection("users")
+
+	filter := bson.M{
+		"$and": []bson.M{
+			{"username": newUsername},
+			{"username": bson.M{"$ne": currentUsername}},
+		},
+	}
+
+	count, err := collection.CountDocuments(context.TODO(), filter)
+	return count > 0, err
+}
+
+
+// IsEmailTaken returns true if another user (not the current one) already uses newEmail.
+func IsEmailTaken(newEmail, currentUsername string) (bool, error) {
+	collection := config.GetDB().Collection("users")
+	filter := bson.M{
+		"$and": []bson.M{
+			{"email": newEmail},
+			{"username": bson.M{"$ne": currentUsername}},
+		},
+	}
+	count, err := collection.CountDocuments(context.TODO(), filter)
+	return count > 0, err
+}
+
+// UpdateUserCredentials updates username and/or email for the specified currentUsername.
+func UpdateUserCredentials(currentUsername, newUsername, newEmail string) error {
+	collection := config.GetDB().Collection("users")
+
+	updateSet := bson.M{"updated_at": time.Now()}
+	if newUsername != "" {
+		updateSet["username"] = newUsername
+	}
+	if newEmail != "" {
+		updateSet["email"] = newEmail
+	}
+
+	_, err := collection.UpdateOne(
+		context.TODO(),
+		bson.M{"username": currentUsername},
+		bson.M{"$set": updateSet},
+	)
+	return err
+}
