@@ -116,12 +116,14 @@
 
       <!-- Text Enhancer Modal -->
       <transition name="fade">
-        <div v-if="showTextEnhancer" class="text-enhancer-modal">
-          <TextEnhancer 
-            @text-selected="useEnhancedText" 
-            @word-bank-updated="refreshThemedWords" 
-          />
-          <button @click="closeTextEnhancer" class="close-button">Close</button>
+        <div v-if="showTextEnhancer" class="modal-overlay" @click="closeTextEnhancer">
+          <div class="text-enhancer-modal" @click.stop>
+            <TextEnhancer 
+              @text-selected="useEnhancedText" 
+              @word-bank-updated="refreshThemedWords" 
+            />
+            <button @click="closeTextEnhancer" class="close-button">✕</button>
+          </div>
         </div>
       </transition>
     </div>
@@ -914,41 +916,66 @@ export default {
 }
 
 /* Text Enhancer Modal */
-.text-enhancer-modal {
+.modal-overlay {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--bg-white);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 1rem;
-  z-index: 200;
-  width: 90%;
-  max-width: 500px;
-}
-.text-enhancer-modal .close-button {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease, background-color 0.2s ease;
-  font-size: 1.1rem;
+  z-index: 199;
+  padding: 20px;
+}
+
+.text-enhancer-modal {
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 0;
+  z-index: 200;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+.text-enhancer-modal .close-button {
+  background: var(--bg-white);
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+  font-weight: bold;
   flex-shrink: 0;
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: -10px;
+  right: -10px;
+  z-index: 201;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .text-enhancer-modal .close-button:hover {
-  color: var(--primary-color);
-  background-color: var(--primary-light);
+  color: var(--bg-white);
+  background-color: var(--primary-color);
+  transform: scale(1.05);
+}
+
+/* Fade transition for modal */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 
 /* Responsive adjustments */
@@ -956,5 +983,18 @@ export default {
   .chat-window { padding: 0.75rem 1rem; }
   .chat-input-area { padding: 0.5rem 1rem; }
   .message-container { max-width: 85%; }
+  
+  .text-enhancer-modal {
+    max-width: 95%;
+    max-height: 85vh;
+  }
+  
+  .text-enhancer-modal .close-button {
+    top: -8px;
+    right: -8px;
+    width: 35px;
+    height: 35px;
+    font-size: 1.1rem;
+  }
 }
 </style>

@@ -401,12 +401,12 @@ export default {
 /* Main Word Bank Card */
 .word-bank-card {
   background-color: var(--bg-white);
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg);
-  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 1.5rem 2rem;
   width: 100%;
-  max-width: 900px;
-  border: 1px solid var(--border-light);
+  max-width: 100%;
+  border: none;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
