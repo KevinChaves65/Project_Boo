@@ -93,6 +93,350 @@
           justify-content: center;
           backdrop-filter: blur(10px);
         }
+        /* ==================== WORD BANK VIEW ==================== */
+.wordbank-view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.wordbank-header-card {
+  background: linear-gradient(135deg, #8c68db 0%, #a66fd5 100%);
+  color: #fff;
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(140, 104, 219, 0.3);
+}
+
+.wordbank-header-card h2 {
+  font-size: 1.35rem;
+  margin: 0 0 0.4rem 0;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.wordbank-header-card p {
+  font-size: 0.9rem;
+  opacity: 0.95;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.wordbank-input-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.input-section {
+  margin-bottom: 1.5rem;
+}
+
+.input-section:last-of-type {
+  margin-bottom: 1.25rem;
+}
+
+.wordbank-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.6rem;
+}
+
+.wordbank-label i {
+  color: #8c68db;
+  font-size: 0.95rem;
+}
+
+.wordbank-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fafafa;
+  transition: all 0.25s ease;
+  color: #333;
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.wordbank-textarea:focus {
+  outline: none;
+  border-color: #8c68db;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(140, 104, 219, 0.1);
+}
+
+.wordbank-textarea::placeholder {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.character-count {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.character-count span {
+  color: #8c68db;
+  font-weight: 600;
+}
+
+.wordbank-select {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fafafa;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238c68db' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.wordbank-select:focus {
+  outline: none;
+  border-color: #8c68db;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(140, 104, 219, 0.1);
+}
+
+.enhance-button {
+  width: 100%;
+  background: linear-gradient(135deg, #8c68db, #a66fd5);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 12px rgba(140, 104, 219, 0.3);
+}
+
+.enhance-button:not(:disabled):active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(140, 104, 219, 0.3);
+}
+
+.enhance-button:disabled {
+  background: linear-gradient(135deg, #ccc, #ddd);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.enhance-button i {
+  font-size: 1.1rem;
+}
+
+.wordbank-result-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  animation: fadeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.result-header h3 i {
+  color: #8c68db;
+}
+
+.copy-button {
+  background: rgba(140, 104, 219, 0.1);
+  color: #8c68db;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.copy-button:active {
+  background: rgba(140, 104, 219, 0.2);
+  transform: scale(0.95);
+}
+
+.copy-button.copied {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.result-content {
+  background: linear-gradient(135deg, rgba(140, 104, 219, 0.05), rgba(166, 111, 213, 0.05));
+  border-left: 4px solid #8c68db;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-content p {
+  margin: 0;
+  line-height: 1.7;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.wordbank-concepts-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.wordbank-concepts-card h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.wordbank-concepts-card h3 i {
+  color: #8c68db;
+}
+
+.concepts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.empty-concepts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  width: 100%;
+  text-align: center;
+  color: #aaa;
+}
+
+.empty-concepts i {
+  font-size: 2.5rem;
+  color: #e0e0e0;
+  opacity: 0.6;
+}
+
+.empty-concepts p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.concept-tag {
+  background: linear-gradient(135deg, rgba(140, 104, 219, 0.1), rgba(166, 111, 213, 0.1));
+  color: #8c68db;
+  padding: 0.5rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1.5px solid rgba(140, 104, 219, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.concept-tag i {
+  font-size: 0.75rem;
+}
+
+.concept-tag:hover {
+  background: linear-gradient(135deg, rgba(140, 104, 219, 0.15), rgba(166, 111, 213, 0.15));
+  border-color: rgba(140, 104, 219, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Mobile optimizations for Word Bank */
+@media (max-width: 380px) {
+  .wordbank-header-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .wordbank-textarea {
+    padding: 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .copy-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .result-actions {
+    flex-direction: column;
+  }
+
+  .result-actions button {
+    width: 100%;
+  }
+}
 
         /* ==================== CONTENT AREA ==================== */
         .content-area {
@@ -1870,6 +2214,99 @@
             </div>
         </div>
 
+        <!-- WORD BANK VIEW -->
+        <div id="wordbank-view" class="view-content">
+            <div class="wordbank-view-content">
+                <!-- Header Card -->
+                <div class="wordbank-header-card">
+                    <h2><i class="fas fa-book"></i> Word Bank</h2>
+                    <p>Make your text sound more professional and polished</p>
+                </div>
+
+                <!-- Main Input Card -->
+                <div class="wordbank-input-card">
+                    <div class="input-section">
+                        <label class="wordbank-label">
+                            <i class="fas fa-edit"></i>
+                            Original Text
+                        </label>
+                        <textarea
+                                id="wordbankOriginalText"
+                                class="wordbank-textarea"
+                                placeholder="Enter text here to make it sound more..."
+                                rows="6"
+                                oninput="handleWordbankInput()"
+                        ></textarea>
+                        <div class="character-count">
+                            <span id="charCount">0</span> / 500 characters
+                        </div>
+                    </div>
+
+                    <div class="input-section">
+                        <label class="wordbank-label">
+                            <i class="fas fa-magic"></i>
+                            Sound More
+                        </label>
+                        <select id="wordbankTone" class="wordbank-select">
+                            <option value="balanced">Balanced</option>
+                            <option value="formal">Formal</option>
+                            <option value="casual">Casual</option>
+                            <option value="professional">Professional</option>
+                            <option value="friendly">Friendly</option>
+                            <option value="confident">Confident</option>
+                        </select>
+                    </div>
+
+                    <button
+                            id="enhanceBtn"
+                            class="enhance-button"
+                            onclick="enhanceText()"
+                            disabled
+                    >
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                        <span>Enhance Text</span>
+                    </button>
+                </div>
+
+                <!-- Results Card -->
+                <div id="wordbankResultCard" class="wordbank-result-card" style="display: none;">
+                    <div class="result-header">
+                        <h3><i class="fas fa-sparkles"></i> Enhanced Text</h3>
+                        <button class="copy-button" onclick="copyEnhancedText()">
+                            <i class="fas fa-copy"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+
+                    <div class="result-content">
+                        <p id="enhancedTextDisplay"></p>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="secondary-action-button" onclick="clearWordbank()">
+                            <i class="fas fa-redo"></i>
+                            Try Again
+                        </button>
+                        <button class="primary-action-button" onclick="saveEnhancedText()">
+                            <i class="fas fa-save"></i>
+                            Save
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Extracted Concepts Card -->
+                <div class="wordbank-concepts-card">
+                    <h3><i class="fas fa-lightbulb"></i> Extracted Concepts</h3>
+                    <div id="conceptsList" class="concepts-list">
+                        <div class="empty-concepts">
+                            <i class="fas fa-brain"></i>
+                            <p>Enter text above to extract key concepts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- SETTINGS VIEW -->
                 <section class="settings-section">
                     <div id="settings-view" class="view-content">
@@ -2064,28 +2501,32 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-view="home" onclick="switchView('home')">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </button>
-        <button class="nav-item" data-view="dateideas" onclick="switchView('dateideas')">
-            <i class="fas fa-lightbulb"></i>
-            <span>Ideas</span>
-        </button>
-        <button class="nav-item" data-view="calendar" onclick="switchView('calendar')">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Calendar</span>
-        </button>
-        <button class="nav-item" data-view="chats" onclick="switchView('chats')">
-            <i class="fas fa-comments"></i>
-            <span>Chats</span>
-        </button>
-        <button class="nav-item" data-view="settings" onclick="switchView('settings')">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-        </button>
-    </nav>
+<nav class="bottom-nav">
+    <button class="nav-item active" data-view="home" onclick="switchView('home')">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </button>
+    <button class="nav-item" data-view="wordbank" onclick="switchView('wordbank')">
+        <i class="fas fa-book"></i>
+        <span>Word Bank</span>
+    </button>
+    <button class="nav-item" data-view="dateideas" onclick="switchView('dateideas')">
+        <i class="fas fa-lightbulb"></i>
+        <span>Ideas</span>
+    </button>
+    <button class="nav-item" data-view="calendar" onclick="switchView('calendar')">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Calendar</span>
+    </button>
+    <button class="nav-item" data-view="chats" onclick="switchView('chats')">
+        <i class="fas fa-comments"></i>
+        <span>Chats</span>
+    </button>
+    <button class="nav-item" data-view="settings" onclick="switchView('settings')">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+    </button>
+</nav>
 </div>
 
 <script>
@@ -3034,6 +3475,176 @@ function updatePassword(e) {
   confirmPass.value = '';
   document.getElementById('passwordStrength').classList.remove('active');
 }
+
+// ==================== WORD BANK FUNCTIONS ====================
+let enhancedText = '';
+
+function handleWordbankInput() {
+  const textarea = document.getElementById('wordbankOriginalText');
+  const charCount = document.getElementById('charCount');
+  const enhanceBtn = document.getElementById('enhanceBtn');
+
+  const text = textarea.value;
+  const length = text.length;
+
+  // Update character count
+  charCount.textContent = length;
+
+  // Limit to 500 characters
+  if (length > 500) {
+    textarea.value = text.substring(0, 500);
+    charCount.textContent = '500';
+  }
+
+  // Enable/disable enhance button
+  enhanceBtn.disabled = length === 0;
+
+  // Update character count color
+  if (length > 450) {
+    charCount.style.color = '#ff6b6b';
+  } else if (length > 350) {
+    charCount.style.color = '#ffa726';
+  } else {
+    charCount.style.color = '#8c68db';
+  }
+}
+
+function enhanceText() {
+  const originalText = document.getElementById('wordbankOriginalText').value.trim();
+  const tone = document.getElementById('wordbankTone').value;
+
+  if (!originalText) return;
+
+  // Show loading state
+  const enhanceBtn = document.getElementById('enhanceBtn');
+  const originalBtnContent = enhanceBtn.innerHTML;
+  enhanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Enhancing...</span>';
+  enhanceBtn.disabled = true;
+
+  // Simulate API call with timeout
+  setTimeout(() => {
+    enhancedText = generateEnhancedText(originalText, tone);
+    displayEnhancedText(enhancedText);
+    extractConcepts(originalText);
+
+    // Restore button
+    enhanceBtn.innerHTML = originalBtnContent;
+    enhanceBtn.disabled = false;
+  }, 1500);
+}
+
+function generateEnhancedText(text, tone) {
+  // This is a simple simulation - in production, this would call an AI API
+  const toneAdjustments = {
+    balanced: text => text.charAt(0).toUpperCase() + text.slice(1) + '.',
+    formal: text => 'It is worth noting that ' + text.toLowerCase() + ', which merits careful consideration.',
+    casual: text => 'Hey, so ' + text.toLowerCase() + ', you know?',
+    professional: text => 'In my professional opinion, ' + text.toLowerCase() + ', and I believe this approach is optimal.',
+    friendly: text => 'Just wanted to say that ' + text.toLowerCase() + '! 😊',
+    confident: text => 'I am certain that ' + text.toLowerCase() + ', and this is the best path forward.'
+  };
+
+  return toneAdjustments[tone] ? toneAdjustments[tone](text) : text;
+}
+
+function displayEnhancedText(text) {
+  const resultCard = document.getElementById('wordbankResultCard');
+  const display = document.getElementById('enhancedTextDisplay');
+
+  display.textContent = text;
+  resultCard.style.display = 'block';
+
+  // Smooth scroll to result
+  setTimeout(() => {
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+function extractConcepts(text) {
+  // Simple keyword extraction simulation
+  const words = text.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(word => word.length > 4);
+
+  const uniqueWords = [...new Set(words)].slice(0, 8);
+
+  const conceptsList = document.getElementById('conceptsList');
+
+  if (uniqueWords.length === 0) {
+    conceptsList.innerHTML = `
+      <div class="empty-concepts">
+        <i class="fas fa-brain"></i>
+        <p>No concepts extracted</p>
+      </div>
+    `;
+    return;
+  }
+
+  conceptsList.innerHTML = uniqueWords.map(word => `
+    <div class="concept-tag">
+      <i class="fas fa-tag"></i>
+      ${escapeHtml(word)}
+    </div>
+  `).join('');
+}
+
+function copyEnhancedText() {
+  const button = document.querySelector('.copy-button');
+
+  if (!enhancedText) return;
+
+  navigator.clipboard.writeText(enhancedText).then(() => {
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+    button.classList.add('copied');
+
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+      button.classList.remove('copied');
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy text:', err);
+    alert('Failed to copy text');
+  });
+}
+
+function clearWordbank() {
+  document.getElementById('wordbankOriginalText').value = '';
+  document.getElementById('wordbankTone').value = 'balanced';
+  document.getElementById('wordbankResultCard').style.display = 'none';
+  document.getElementById('charCount').textContent = '0';
+  document.getElementById('enhanceBtn').disabled = true;
+
+  document.getElementById('conceptsList').innerHTML = `
+    <div class="empty-concepts">
+      <i class="fas fa-brain"></i>
+      <p>Enter text above to extract key concepts</p>
+    </div>
+  `;
+
+  // Scroll back to top
+  document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function saveEnhancedText() {
+  if (!enhancedText) return;
+
+  // You can save to localStorage or send to backend
+  alert('Enhanced text saved successfully!');
+
+  // Optional: Save to localStorage
+  const savedTexts = JSON.parse(localStorage.getItem('heyBooEnhancedTexts') || '[]');
+  savedTexts.push({
+    original: document.getElementById('wordbankOriginalText').value,
+    enhanced: enhancedText,
+    tone: document.getElementById('wordbankTone').value,
+    timestamp: new Date().toISOString()
+  });
+  localStorage.setItem('heyBooEnhancedTexts', JSON.stringify(savedTexts));
+}
+
+
     // ==================== UTILITY FUNCTIONS ====================
     function escapeHtml(text) {
       const div = document.createElement('div');
