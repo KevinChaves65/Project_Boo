@@ -62,6 +62,7 @@
 
 <script>
 import axios from "axios";
+import { loginUser } from "../services/apiService";
 
 export default {
   name: "LoginScreen",
@@ -83,14 +84,10 @@ export default {
     async handleLogin() {
       this.isLoading = true;
       try {
-        // Send login request with username and password
-        const response = await axios.post("http://localhost:8080/login", {
-          username: this.username,
-          password: this.password,
-        });
-
-        // Save token to localStorage with session support
-        localStorage.setItem(`token${this.getSessionId()}`, response.data.token);
+        // Use the API service for proper Chrome extension support
+        const response = await loginUser(this.username, this.password);
+        
+        console.log('Login successful:', response.data);
         this.$router.push("/dashboard");
       } catch (error) {
         console.error("Login failed:", error.response?.data || error.message);

@@ -12,6 +12,36 @@ import Settings from "../components/Settings.vue";
 import TextEnhancer from "../components/TextEnhancer.vue";
 import { fetchUserProfile } from "../services/apiService";
 
+// Helper function to check authentication (Chrome extension compatible)
+async function isUserAuthenticated() {
+  // Detect if running in Chrome Extension environment
+  const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
+  
+  if (isExtension) {
+    // Use Chrome storage for extension
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['token', 'authToken', 'isLoggedIn'], (result) => {
+        const hasToken = !!(result.token || result.authToken);
+        const isLoggedIn = result.isLoggedIn;
+        resolve(hasToken && isLoggedIn);
+      });
+    });
+  } else {
+    // Use localStorage for web app (with session support)
+    const sessionId = getSessionId();
+    const token = localStorage.getItem(`token${sessionId}`);
+    return !!token;
+  }
+}
+
+// Get session identifier (for testing multiple accounts)
+function getSessionId() {
+  // Check URL params for session ID (web version)
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionParam = urlParams.get('session');
+  return sessionParam ? `_session_${sessionParam}` : '';
+}
+
 const routes = [
   { path: "/login", name: "Login", component: LoginScreen },
   { path: "/signup", name: "Signup", component: SignupScreen },
@@ -40,27 +70,36 @@ const router = createRouter({
 
 // Add navigation guard
 router.beforeEach(async (to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem("token"); // Check if token exists
+  console.log(`Router: Navigating from ${from.path} to ${to.path}`);
+  
+  const isAuthenticated = await isUserAuthenticated();
+  console.log(`Router: User authenticated: ${isAuthenticated}`);
+  
   if (!isAuthenticated && to.name !== "Login" && to.name !== "Signup") {
-    next({ name: "Login" }); // Redirect to login if not authenticated
+    console.log("Router: Redirecting to login - user not authenticated");
+    next({ name: "Login" });
     return;
   }
 
   if (isAuthenticated && to.name !== "Login" && to.name !== "Signup") {
     try {
       const userProfile = await fetchUserProfile();
+      console.log("Router: User profile:", userProfile);
+      
       if (!userProfile.couple_id && to.name !== "LinkPartner") {
         // Redirect to LinkPartner if couple_id is null
+        console.log("Router: Redirecting to LinkPartner - no couple_id");
         next({ name: "LinkPartner" });
         return;
       }
     } catch (error) {
-      console.error("Failed to fetch user profile:", error.message);
+      console.error("Router: Failed to fetch user profile:", error.message);
       next({ name: "Login" }); // Redirect to login on error
       return;
     }
   }
 
+  console.log("Router: Navigation allowed");
   next(); // Allow navigation
 });
 

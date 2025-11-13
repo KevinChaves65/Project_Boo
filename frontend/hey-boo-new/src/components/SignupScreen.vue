@@ -100,6 +100,7 @@
   
   <script>
   import axios from "axios";
+import { registerUser } from "../services/apiService";
 
   export default {
     name: "SignupScreen",

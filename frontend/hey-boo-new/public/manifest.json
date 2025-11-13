@@ -1,17 +1,64 @@
 {
   "manifest_version": 3,
-  "name": "Hey Boo",
-  "version": "1.0",
-  "description": "A relationship-enhancing browser extension to help couples stay connected.",
+  "name": "Hey Boo - Couples App",
+  "version": "1.0.0",
+  "description": "A relationship management app for couples with chat, date ideas, calendar, and milestone tracking",
+  
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  
+  "host_permissions": [
+    "http://localhost:8080/*",
+    "https://*/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  
   "action": {
     "default_popup": "index.html",
-    "default_width": 800,
-    "default_height": 600,
+    "default_title": "Hey Boo - Open App",
     "default_icon": {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
   },
-  "permissions": []
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "images/*",
+        "*.css",
+        "*.js",
+        "*.png",
+        "*.jpg",
+        "*.svg"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

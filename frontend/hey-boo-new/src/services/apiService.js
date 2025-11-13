@@ -1,16 +1,66 @@
 import axios from "axios";
 
+// Detect if running in Chrome Extension environment
+const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
+
 const API_BASE_URL = "http://localhost:8080/auth";
 
 // Developer Testing Mode - allows multiple sessions on same browser
 const DEV_MODE = true; // Set to false in production
 let currentSession = null;
 
+// Chrome Extension Storage Functions
+const chromeStorage = {
+  get: (key) => {
+    return new Promise((resolve) => {
+      if (!isExtension) {
+        resolve(null);
+        return;
+      }
+      chrome.storage.sync.get([key], (result) => {
+        resolve(result[key] || null);
+      });
+    });
+  },
+  
+  set: (key, value) => {
+    return new Promise((resolve) => {
+      if (!isExtension) {
+        resolve();
+        return;
+      }
+      chrome.storage.sync.set({ [key]: value }, () => {
+        resolve();
+      });
+    });
+  },
+  
+  remove: (key) => {
+    return new Promise((resolve) => {
+      if (!isExtension) {
+        resolve();
+        return;
+      }
+      chrome.storage.sync.remove([key], () => {
+        resolve();
+      });
+    });
+  }
+};
+
 // Get session identifier (for testing multiple accounts)
 function getSessionId() {
   if (!DEV_MODE) return '';
   
-  // Check URL params for session ID
+  if (isExtension) {
+    // For extensions, we don't use URL params, just use default session
+    if (!currentSession) {
+      currentSession = 'default';
+    }
+    return currentSession === 'default' ? '' : `_session_${currentSession}`;
+  }
+  
+  // Check URL params for session ID (web version)
   const urlParams = new URLSearchParams(window.location.search);
   const sessionParam = urlParams.get('session');
   
@@ -26,27 +76,125 @@ function getSessionId() {
   return currentSession === 'default' ? '' : `_session_${currentSession}`;
 }
 
+// Enhanced token management for both web and extension
+const tokenManager = {
+  async getToken() {
+    const tokenKey = `token${getSessionId()}`;
+    
+    if (isExtension) {
+      return await chromeStorage.get(tokenKey);
+    } else {
+      return localStorage.getItem(tokenKey);
+    }
+  },
+  
+  async setToken(token) {
+    const tokenKey = `token${getSessionId()}`;
+    
+    if (isExtension) {
+      await chromeStorage.set(tokenKey, token);
+      await chromeStorage.set('isLoggedIn', true);
+    } else {
+      localStorage.setItem(tokenKey, token);
+    }
+  },
+  
+  async removeToken() {
+    const tokenKey = `token${getSessionId()}`;
+    
+    if (isExtension) {
+      await chromeStorage.remove(tokenKey);
+      await chromeStorage.set('isLoggedIn', false);
+    } else {
+      localStorage.removeItem(tokenKey);
+    }
+  }
+};
+
 // Utility function to handle token-related errors
-function handleTokenError(error) {
+async function handleTokenError(error) {
   if (error.response && error.response.status === 401) {
     // Token is invalid or expired
-    localStorage.removeItem(`token${getSessionId()}`); // Clear the token
-    window.location.href = "/login"; // Redirect to login page
+    await tokenManager.removeToken();
+    
+    if (isExtension) {
+      // For extensions, send message to background script
+      chrome.runtime.sendMessage({ action: 'logout' });
+    } else {
+      // For web app, redirect normally
+      window.location.href = "/login";
+    }
   }
   throw error; // Re-throw the error for further handling
 }
 
 // Utility function to get the authorization token
-function getAuthToken() {
-  return localStorage.getItem(`token${getSessionId()}`);
+async function getAuthToken() {
+  return await tokenManager.getToken();
+}
+
+// Login function with Chrome extension support
+export async function loginUser(username, password) {
+  try {
+    console.log('Attempting login for:', username);
+    
+    const response = await axios.post("http://localhost:8080/login", {
+      username: username,
+      password: password,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      withCredentials: false // Disable credentials for CORS
+    });
+
+    console.log('Login response:', response.data);
+    
+    if (response.data.token) {
+      // Use the token manager for proper storage
+      await tokenManager.setToken(response.data.token);
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('Login API error:', error.response?.data || error.message);
+    await handleTokenError(error);
+  }
+}
+
+// Register function with Chrome extension support
+export async function registerUser(username, email, password) {
+  try {
+    console.log('Attempting registration for:', username);
+    
+    const response = await axios.post("http://localhost:8080/register", {
+      username: username,
+      email: email,
+      password: password,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      withCredentials: false // Disable credentials for CORS
+    });
+
+    console.log('Registration response:', response.data);
+    return response;
+  } catch (error) {
+    console.error('Registration API error:', error.response?.data || error.message);
+    throw error;
+  }
 }
 
 // Function to fetch user profile
 export async function fetchUserProfile() {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/profile`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     console.log("User Profile Response:", response.data); // Debug response
@@ -60,9 +208,10 @@ export async function fetchUserProfile() {
 // Function to fetch milestones
 export async function fetchMilestones(coupleId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/milestones?couple_id=${coupleId}`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data.milestones; // Return the milestones array
@@ -75,9 +224,10 @@ export async function fetchMilestones(coupleId) {
 // Fetch chat messages
 export async function fetchChats() {
     try {
+      const token = await getAuthToken();
       const response = await axios.get(`${API_BASE_URL}/chat/receive`, {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       console.log("Chat Messages Response:", response.data); // Debug response
@@ -91,12 +241,13 @@ export async function fetchChats() {
 // Send a new chat message
 export async function sendChatMessage(content, receiver, sender, timestamp) {
     try {
+      const token = await getAuthToken();
       const response = await axios.post(
         `${API_BASE_URL}/chat/send`,
         { content, receiver, sender, timestamp }, // Include the timestamp field
         {
           headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -111,9 +262,10 @@ export async function sendChatMessage(content, receiver, sender, timestamp) {
 // Fetch couple info
 export async function fetchCoupleInfo(coupleId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/couple/${coupleId}`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     console.log("Couple Info Response:", response.data); // Debug response
@@ -148,6 +300,7 @@ export async function addMilestone(coupleId, title, description, date) {
     // Convert the date to ISO 8601 format
     const isoDate = new Date(date).toISOString();
 
+    const token = await getAuthToken();
     const response = await axios.post(
       `${API_BASE_URL}/milestones`,
       {
@@ -158,7 +311,7 @@ export async function addMilestone(coupleId, title, description, date) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       }
     );
@@ -175,6 +328,7 @@ export async function updateMilestone(milestoneId, title, description, date) {
     // Convert the date to ISO 8601 format
     const isoDate = new Date(date).toISOString();
 
+    const token = await getAuthToken();
     const response = await axios.put(
       `${API_BASE_URL}/milestones/${milestoneId}`,
       {
@@ -184,7 +338,7 @@ export async function updateMilestone(milestoneId, title, description, date) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       }
     );
@@ -198,9 +352,10 @@ export async function updateMilestone(milestoneId, title, description, date) {
 // Delete a milestone
 export async function deleteMilestone(milestoneId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.delete(`${API_BASE_URL}/milestones/${milestoneId}`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+        Authorization: `Bearer ${token}`, // Include the token in the Authorization header
       },
     });
     return response.data;
@@ -213,12 +368,13 @@ export async function deleteMilestone(milestoneId) {
 // Link couple
 export async function linkCouple(partnerId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.post(
       `${API_BASE_URL}/couple/link`,
       { partner_id: partnerId }, // Send the partner ID in the request body
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       }
     );
@@ -232,12 +388,13 @@ export async function linkCouple(partnerId) {
 
 export async function addPhrase(userId, text) {
   try {
+    const token = await getAuthToken();
     const response = await axios.post(
       `${API_BASE_URL}/wordbank`,
       { userId, text },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       }
     );
@@ -250,10 +407,11 @@ export async function addPhrase(userId, text) {
 
 export async function getPhrases(userId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/wordbank`, {
       params: { userId }, // Pass userId as a query parameter
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+        Authorization: `Bearer ${token}`, // Include the token in the Authorization header
       },
     });
     return response.data;
@@ -266,6 +424,7 @@ export async function getPhrases(userId) {
 // Generate AI-powered date ideas
 export async function generateDateIdeas(location, preferences = "", budget = "") {
   try {
+    const token = await getAuthToken();
     const response = await axios.post(
       `${API_BASE_URL}/dateideas/generate`,
       { 
@@ -275,7 +434,7 @@ export async function generateDateIdeas(location, preferences = "", budget = "")
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       }
     );
@@ -289,6 +448,7 @@ export async function generateDateIdeas(location, preferences = "", budget = "")
 // Update user profile
 export async function updateUserProfile(fullName, email) {
   try {
+    const token = await getAuthToken();
     const response = await axios.put(
       `${API_BASE_URL}/profile`,
       {
@@ -297,7 +457,7 @@ export async function updateUserProfile(fullName, email) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -311,6 +471,7 @@ export async function updateUserProfile(fullName, email) {
 // Change user password
 export async function changeUserPassword(oldPassword, newPassword) {
   try {
+    const token = await getAuthToken();
     const response = await axios.put(
       `${API_BASE_URL}/password`,
       {
@@ -319,7 +480,7 @@ export async function changeUserPassword(oldPassword, newPassword) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -330,14 +491,15 @@ export async function changeUserPassword(oldPassword, newPassword) {
   }
 }
 
-// ===== NEW WORD BANK THEME SYSTEM =====
+// Word bank system
 
 // Get all available word themes
 export async function getWordThemes() {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/word-themes`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data.themes;
@@ -350,6 +512,7 @@ export async function getWordThemes() {
 // Add a word to the couple's word bank with theme
 export async function addWordToBank(coupleId, wordName, themeId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.post(
       `${API_BASE_URL}/word-bank`,
       {
@@ -359,7 +522,7 @@ export async function addWordToBank(coupleId, wordName, themeId) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -373,10 +536,11 @@ export async function addWordToBank(coupleId, wordName, themeId) {
 // Get couple's word bank
 export async function getWordBank(coupleId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/word-bank`, {
       params: { couple_id: coupleId },
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data.word_bank;
@@ -389,6 +553,7 @@ export async function getWordBank(coupleId) {
 // Update word theme
 export async function updateWordTheme(coupleId, wordId, newThemeId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.put(
       `${API_BASE_URL}/word-bank/theme`,
       {
@@ -398,7 +563,7 @@ export async function updateWordTheme(coupleId, wordId, newThemeId) {
       },
       {
         headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -412,13 +577,14 @@ export async function updateWordTheme(coupleId, wordId, newThemeId) {
 // Delete word from bank
 export async function deleteWordFromBank(coupleId, wordId) {
   try {
+    const token = await getAuthToken();
     const response = await axios.delete(`${API_BASE_URL}/word-bank`, {
       params: { 
         couple_id: coupleId,
         word_id: wordId 
       },
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;

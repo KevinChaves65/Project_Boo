@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -32,12 +33,42 @@ func main() {
 
 	r := gin.Default()
 
-	// Enable CORS
+	// Enable CORS with more explicit configuration for Chrome extensions
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // Frontend origin
+		AllowOriginFunc: func(origin string) bool {
+			// Allow localhost for development
+			if origin == "http://localhost:5173" {
+				return true
+			}
+			// Allow any Chrome extension
+			if len(origin) > 16 && origin[:16] == "chrome-extension" {
+				return true
+			}
+			// Allow any Firefox extension
+			if len(origin) > 13 && origin[:13] == "moz-extension" {
+				return true
+			}
+			return false
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Content-Type", "Authorization", "Origin", "Accept"},
 		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60, // 12 hours
+	}))
+
+	// Add a middleware to log requests for debugging
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
+			param.ClientIP,
+			param.TimeStamp.Format("02/Jan/2006:15:04:05 -0700"),
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
 	}))
 
 	r.POST("/register", controllers.Register)
