@@ -246,7 +246,47 @@ if (window.heyBooContentScriptLoaded) {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'storageChanged') {
       console.log('Hey Boo: Storage changed in content script', request.changes);
+    } else if (request.action === 'playNotificationSound') {
+      // Play notification sound
+      playNotificationSound(request.soundUrl);
+      sendResponse({ success: true, played: true });
+    } else if (request.action === 'navigateToChat') {
+      // Navigate to chat if we're in the extension
+      if (window.location.href.includes(chrome.runtime.getURL(''))) {
+        window.location.hash = '#/chats';
+        sendResponse({ success: true, navigated: true });
+      } else {
+        sendResponse({ success: false, reason: 'not_extension_page' });
+      }
     }
-    sendResponse({ success: true });
+    
+    if (!request.action || request.action === 'storageChanged') {
+      sendResponse({ success: true });
+    }
+    
+    return true; // Keep message channel open for async response
   });
+
+  // Function to play notification sound
+  function playNotificationSound(soundUrl) {
+    try {
+      console.log('Playing notification sound:', soundUrl);
+      const audio = new Audio(soundUrl);
+      audio.volume = 0.7; // Set moderate volume
+      
+      // Set up error handling
+      audio.onerror = (error) => {
+        console.log('Audio playback error:', error);
+      };
+      
+      // Play the sound
+      audio.play().then(() => {
+        console.log('Notification sound played successfully');
+      }).catch(error => {
+        console.log('Could not play notification sound:', error);
+      });
+    } catch (error) {
+      console.log('Error creating audio for notification:', error);
+    }
+  }
 }

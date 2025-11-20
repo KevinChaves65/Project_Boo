@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hey Boo Notification Test</title>
+</head>
+<body>
+    <h1>Hey Boo Notification Test Page</h1>
+    <p>This page is used to test notifications when the user is not on the Hey Boo extension page.</p>
+    <p>The content script should be injected here and be able to play notification sounds.</p>
+    <p>Open this page in a tab, then test notifications from another Hey Boo tab or when the extension is closed.</p>
+    
+    <button onclick="testBackgroundMessage()">Test Background Communication</button>
+    
+    <script>
+        function testBackgroundMessage() {
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                chrome.runtime.sendMessage({ action: 'testNotification' }, (response) => {
+                    console.log('Test notification response:', response);
+                    alert('Test notification sent!');
+                });
+            } else {
+                alert('Chrome runtime not available');
+            }
+        }
+        
+        console.log('Hey Boo test page loaded');
+        console.log('Chrome runtime available:', typeof chrome !== 'undefined' && chrome.runtime);
+    </script>
+</body>
+</html>

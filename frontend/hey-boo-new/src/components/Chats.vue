@@ -135,6 +135,7 @@ import { fetchChats, fetchCoupleInfo, fetchUserProfile, sendChatMessage } from "
 import chatWebSocket from "../services/chatWebSocket.js";
 import emojiService from "../services/emojiService.js";
 import themedMessageService from "../services/themedMessageService.js";
+import notificationService from "../services/notificationService.js";
 import TextEnhancer from "./TextEnhancer.vue";
 
 export default {
@@ -154,6 +155,7 @@ export default {
       showEmojiPicker: false, // Emoji picker visibility
       showTextEnhancer: false, // Text enhancer modal visibility
       isConnected: false, // WebSocket connection status
+      lastMessageCount: 0, // For tracking new messages
       
       // Emoji-related data
       loadingEmojis: false,
@@ -209,6 +211,10 @@ export default {
 
         console.log("Loaded Messages:", this.messages); // Debug loaded messages
 
+        // Initialize notification service message count
+        this.lastMessageCount = this.messages.length;
+        notificationService.updateMessageCount(this.lastMessageCount);
+
         // Initialize themed message service
         await themedMessageService.initialize(this.coupleId);
         
@@ -248,6 +254,14 @@ export default {
         newMessage.processedText = themedMessageService.processMessage(newMessage.text);
         
         this.messages.push(newMessage);
+        
+        // Update message count and trigger notification
+        this.lastMessageCount = this.messages.length;
+        notificationService.updateMessageCount(this.lastMessageCount);
+        
+        // Handle notification for new message from partner
+        notificationService.handleNewMessage(newMessage, false);
+        
         this.$nextTick(() => {
           this.scrollToBottom();
         });
@@ -325,6 +339,10 @@ export default {
         // Optimistically add the message to the chat window
         this.messages.push(message);
 
+        // Update message count
+        this.lastMessageCount = this.messages.length;
+        notificationService.updateMessageCount(this.lastMessageCount);
+
         // Clear the input field
         this.newMessage = "";
 
@@ -365,14 +383,40 @@ export default {
             "🤔 Hmm, maybe?",
           ];
           const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-          this.messages.push({
+          
+          const newMessage = {
             sender: this.partnerUsername,
             text: randomResponse,
             timestamp: Date.now(),
+          };
+          
+          // Process the message with themes
+          newMessage.processedText = themedMessageService.processMessage(randomResponse);
+          
+          this.messages.push(newMessage);
+          
+          // Update message count and handle notification
+          this.lastMessageCount = this.messages.length;
+          notificationService.updateMessageCount(this.lastMessageCount);
+          notificationService.handleNewMessage(newMessage, false);
+          
+          this.$nextTick(() => {
+            this.scrollToBottom();
           });
         }, responseDelay);
       }, typingDuration);
     },
+
+    // Test notification functionality
+    async testNotification() {
+      try {
+        await notificationService.testNotification();
+        console.log('Test notification triggered');
+      } catch (error) {
+        console.error('Error testing notification:', error);
+      }
+    },
+
     formatDate(timestamp) {
       if (!timestamp) return "";
       const date = new Date(timestamp);
@@ -563,7 +607,11 @@ export default {
     },
   },
 
-  created() {
+  async created() {
+    // Initialize notification service first
+    await notificationService.init();
+    
+    // Then fetch chat data
     this.fetchChatData();
     this.initializeEmojis();
   },

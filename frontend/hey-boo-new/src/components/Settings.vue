@@ -37,6 +37,48 @@
         </div>
       </section>
 
+      <!-- Notification Settings Section -->
+      <section class="settings-section">
+        <h2><i class="fas fa-bell"></i> Notification Settings</h2>
+        <div class="section-content">
+          <div class="settings-card">
+            <h3>Browser Notifications</h3>
+            <div class="setting-toggle">
+              <label class="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  v-model="notificationSettings.notifications"
+                  @change="updateNotificationSettings"
+                >
+                <span class="slider"></span>
+              </label>
+              <span>Enable browser notifications for new messages</span>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3>Sound Notifications</h3>
+            <div class="setting-toggle">
+              <label class="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  v-model="notificationSettings.soundNotifications"
+                  @change="updateNotificationSettings"
+                >
+                <span class="slider"></span>
+              </label>
+              <span>Play sound when receiving messages</span>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3>Test Notifications</h3>
+            <button @click="testNotification" class="test-button">
+              <i class="fas fa-volume-up"></i> Test Notification
+            </button>
+            <p class="help-text">Click to test your notification settings</p>
+          </div>
+        </div>
+      </section>
+
       <!-- Account Settings Section -->
       <section class="settings-section">
         <h2><i class="fas fa-user"></i> Account Settings</h2>
@@ -294,6 +336,7 @@
 
 <script>
 import { fetchUserProfile, updateUserProfile, changeUserPassword } from "../services/apiService";
+import notificationService from "../services/notificationService";
 import themeService from "../services/themeService.js";
 
 export default {
@@ -333,6 +376,12 @@ export default {
         calendar: true,
         occasions: true,
         partner: false,
+      },
+
+      // Notification settings for extension
+      notificationSettings: {
+        notifications: true,
+        soundNotifications: true,
       },
 
       // Privacy
@@ -571,9 +620,43 @@ export default {
     handleThemeChange(event) {
       this.selectedTheme = event.detail.theme;
     },
+
+    // Notification methods
+    async updateNotificationSettings() {
+      try {
+        await notificationService.setNotificationsEnabled(this.notificationSettings.notifications);
+        await notificationService.setSoundNotificationsEnabled(this.notificationSettings.soundNotifications);
+        this.showSuccessMessage = true;
+        setTimeout(() => {
+          this.showSuccessMessage = false;
+        }, 3000);
+      } catch (error) {
+        console.error('Error updating notification settings:', error);
+        alert('Failed to update notification settings');
+      }
+    },
+
+    async testNotification() {
+      try {
+        await notificationService.testNotification();
+      } catch (error) {
+        console.error('Error testing notification:', error);
+        alert('Failed to test notification');
+      }
+    },
+
+    async loadNotificationSettings() {
+      try {
+        const settings = await notificationService.getNotificationSettings();
+        this.notificationSettings = settings;
+      } catch (error) {
+        console.error('Error loading notification settings:', error);
+      }
+    },
   },
   created() {
     this.fetchUserProfile();
+    this.loadNotificationSettings();
   },
   mounted() {
     // Listen for theme changes from other parts of the app
@@ -1003,6 +1086,86 @@ input:checked + .toggle-slider:before {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Notification settings styles */
+.setting-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--text-muted);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.test-button {
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.test-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.help-text {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* Responsive adjustments */

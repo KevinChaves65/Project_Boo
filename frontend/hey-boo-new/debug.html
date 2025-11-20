@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hey Boo Debug Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .button {
+      background: #007cba;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .button:hover {
+      background: #005a87;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.info {
+      background: #cce7ff;
+      color: #004085;
+      border: 1px solid #b8daff;
+    }
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .log-entry {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-left: 3px solid #007cba;
+      background: #f8f9fa;
+    }
+    .timestamp {
+      color: #666;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Hey Boo Debug Tool</h1>
+    <p>Use this tool to debug the Chrome extension's background service worker and notification system.</p>
+    
+    <div class="section">
+      <h2>🔍 System Status</h2>
+      <button class="button" id="checkStatusBtn">Check Status</button>
+      <div id="statusResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>🧪 API Test</h2>
+      <button class="button" id="testAPIBtn">Test API Access</button>
+      <div id="apiResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>⏰ Alarm Management</h2>
+      <button class="button" id="checkAlarmsBtn">Check Alarms</button>
+      <button class="button" id="createTestAlarmBtn">Create Test Alarm</button>
+      <button class="button" id="clearAllAlarmsBtn">Clear All Alarms</button>
+      <div id="alarmResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>📢 Notification Test</h2>
+      <button class="button" id="testNotificationBtn">Test Notification</button>
+      <button class="button" id="forceMessageCheckBtn">Force Message Check</button>
+      <div id="notificationResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>💾 Storage Debug</h2>
+      <button class="button" id="showStorageBtn">Show Storage</button>
+      <button class="button" id="clearStorageBtn">Clear Storage</button>
+      <div id="storageResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>📋 Background Script Logs</h2>
+      <button class="button" id="startLogCaptureBtn">Start Log Capture</button>
+      <button class="button" id="stopLogCaptureBtn">Stop Log Capture</button>
+      <button class="button" id="clearLogsBtn">Clear Logs</button>
+      <div id="logContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    let logCapturing = false;
+    let logContainer = document.getElementById('logContainer');
+
+    function showStatus(message, type = 'info') {
+      return `<div class="status ${type}"><strong>${new Date().toLocaleTimeString()}:</strong> ${message}</div>`;
+    }
+
+    async function checkStatus() {
+      const resultDiv = document.getElementById('statusResult');
+      resultDiv.innerHTML = showStatus('Checking system status...', 'info');
+
+      try {
+        // Check storage
+        const storage = await chrome.storage.sync.get(null);
+        
+        // Check if service worker is responsive
+        const response = await chrome.runtime.sendMessage({ action: 'testAPI' });
+        
+        // Check alarms
+        const alarms = await chrome.alarms.getAll();
+        
+        const status = {
+          serviceWorkerResponsive: !!response,
+          storage: storage,
+          alarms: alarms,
+          extensionId: chrome.runtime.id,
+          permissions: {
+            notifications: await chrome.permissions.contains({ permissions: ['notifications'] }),
+            alarms: await chrome.permissions.contains({ permissions: ['alarms'] }),
+            storage: await chrome.permissions.contains({ permissions: ['storage'] })
+          }
+        };
+
+        resultDiv.innerHTML = showStatus('System status retrieved successfully!', 'success') + 
+                             `<pre>${JSON.stringify(status, null, 2)}</pre>`;
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testAPI() {
+      const resultDiv = document.getElementById('apiResult');
+      resultDiv.innerHTML = showStatus('Testing API access from background script...', 'info');
+
+      try {
+        const response = await chrome.runtime.sendMessage({ action: 'testAPI' });
+        
+        if (response.success) {
+          resultDiv.innerHTML = showStatus('API test successful!', 'success') + 
+                               `<pre>${JSON.stringify(response, null, 2)}</pre>`;
+        } else {
+          resultDiv.innerHTML = showStatus(`API test failed: ${response.error}`, 'error');
+        }
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error communicating with background script: ${error.message}`, 'error');
+      }
+    }
+
+    async function checkAlarms() {
+      const resultDiv = document.getElementById('alarmResult');
+      
+      try {
+        const alarms = await chrome.alarms.getAll();
+        resultDiv.innerHTML = showStatus(`Found ${alarms.length} active alarms`, 'info') + 
+                             `<pre>${JSON.stringify(alarms, null, 2)}</pre>`;
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function createTestAlarm() {
+      const resultDiv = document.getElementById('alarmResult');
+      
+      try {
+        await chrome.alarms.create('debugTest', { 
+          delayInMinutes: 0.1,
+          periodInMinutes: 1 
+        });
+        resultDiv.innerHTML = showStatus('Test alarm created successfully!', 'success');
+        setTimeout(() => checkAlarms(), 100);
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function clearAllAlarms() {
+      const resultDiv = document.getElementById('alarmResult');
+      
+      try {
+        await chrome.alarms.clearAll();
+        resultDiv.innerHTML = showStatus('All alarms cleared!', 'success');
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function testNotification() {
+      const resultDiv = document.getElementById('notificationResult');
+      
+      try {
+        const response = await chrome.runtime.sendMessage({ action: 'testNotification' });
+        
+        if (response.success) {
+          resultDiv.innerHTML = showStatus('Test notification sent!', 'success');
+        } else {
+          resultDiv.innerHTML = showStatus('Failed to send notification', 'error');
+        }
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function forceMessageCheck() {
+      const resultDiv = document.getElementById('notificationResult');
+      resultDiv.innerHTML = showStatus('Forcing message check...', 'info');
+      
+      try {
+        const response = await chrome.runtime.sendMessage({ action: 'forceMessageCheck' });
+        
+        if (response.success) {
+          resultDiv.innerHTML = showStatus('Message check completed!', 'success');
+        } else {
+          resultDiv.innerHTML = showStatus(`Message check failed: ${response.error}`, 'error');
+        }
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function showStorage() {
+      const resultDiv = document.getElementById('storageResult');
+      
+      try {
+        const storage = await chrome.storage.sync.get(null);
+        resultDiv.innerHTML = showStatus('Current storage contents:', 'info') + 
+                             `<pre>${JSON.stringify(storage, null, 2)}</pre>`;
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function clearStorage() {
+      const resultDiv = document.getElementById('storageResult');
+      
+      if (!confirm('Are you sure you want to clear all storage? This will log you out.')) {
+        return;
+      }
+      
+      try {
+        await chrome.storage.sync.clear();
+        resultDiv.innerHTML = showStatus('Storage cleared!', 'success');
+      } catch (error) {
+        resultDiv.innerHTML = showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function startLogCapture() {
+      if (logCapturing) return;
+      
+      logCapturing = true;
+      logContainer.innerHTML = '<div class="status info">Log capture started...</div>';
+      
+      // This is a simple demonstration - in a real implementation you'd need to 
+      // set up proper log capturing from the service worker
+      console.log('Log capture started');
+    }
+
+    function stopLogCapture() {
+      logCapturing = false;
+      logContainer.innerHTML += '<div class="status info">Log capture stopped.</div>';
+    }
+
+    function clearLogs() {
+      logContainer.innerHTML = '';
+    }
+
+    // Auto-refresh status every 30 seconds
+    setInterval(() => {
+      if (!logCapturing) return;
+      
+      chrome.runtime.sendMessage({ action: 'ping' }).then(response => {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<span class="timestamp">${new Date().toISOString()}</span><br>Background script ping: ${response ? 'responsive' : 'not responsive'}`;
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }).catch(error => {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<span class="timestamp">${new Date().toISOString()}</span><br>Background script error: ${error.message}`;
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      });
+    }, 5000);
+
+    // Initialize
+    window.addEventListener('load', () => {
+      console.log('Debug tool loaded');
+      
+      // Add event listeners to buttons
+      document.getElementById('checkStatusBtn').addEventListener('click', checkStatus);
+      document.getElementById('testAPIBtn').addEventListener('click', testAPI);
+      document.getElementById('checkAlarmsBtn').addEventListener('click', checkAlarms);
+      document.getElementById('createTestAlarmBtn').addEventListener('click', createTestAlarm);
+      document.getElementById('clearAllAlarmsBtn').addEventListener('click', clearAllAlarms);
+      document.getElementById('testNotificationBtn').addEventListener('click', testNotification);
+      document.getElementById('forceMessageCheckBtn').addEventListener('click', forceMessageCheck);
+      document.getElementById('showStorageBtn').addEventListener('click', showStorage);
+      document.getElementById('clearStorageBtn').addEventListener('click', clearStorage);
+      document.getElementById('startLogCaptureBtn').addEventListener('click', startLogCapture);
+      document.getElementById('stopLogCaptureBtn').addEventListener('click', stopLogCapture);
+      document.getElementById('clearLogsBtn').addEventListener('click', clearLogs);
+    });
+  </script>
+</body>
+</html>

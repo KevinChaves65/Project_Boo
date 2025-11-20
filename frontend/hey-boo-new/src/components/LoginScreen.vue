@@ -88,6 +88,14 @@ export default {
         const response = await loginUser(this.username, this.password);
         
         console.log('Login successful:', response.data);
+        
+        // Notify background script about login (Chrome extension only)
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+          chrome.runtime.sendMessage({ action: 'login' }).catch(err => {
+            console.warn('Could not notify background script of login:', err);
+          });
+        }
+        
         this.$router.push("/dashboard");
       } catch (error) {
         console.error("Login failed:", error.response?.data || error.message);
