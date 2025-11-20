@@ -1,7 +1,13 @@
 <template>
   <div class="link-partner-container">
     <div class="link-partner-box">
-      <h2>Link with a Partner</h2>
+      <div class="header-section">
+        <h2>Link with a Partner</h2>
+        <button @click="logout" class="logout-button">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
       
       <!-- Display user's account ID -->
       <div class="account-id-section">
@@ -79,6 +85,22 @@ export default {
         this.isLoading = false;
       }
     },
+    async logout() {
+      try {
+        // Clear user data from storage
+        await chrome.storage.sync.clear();
+        
+        // Notify background script of logout
+        chrome.runtime.sendMessage({ action: 'logout' });
+        
+        // Redirect to login screen
+        this.$router.push('/login');
+      } catch (error) {
+        console.error('Logout failed:', error);
+        // Fallback - still redirect to login
+        this.$router.push('/login');
+      }
+    },
   },
 };
 </script>
@@ -102,9 +124,40 @@ export default {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.link-partner-box h2 {
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
+  width: 100%;
+}
+
+.link-partner-box h2 {
+  margin: 0;
   font-family: "Helvetica Neue", sans-serif;
+  flex-grow: 1;
+}
+
+.logout-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.logout-button i {
+  font-size: 0.9rem;
 }
 
 .account-id-section {
