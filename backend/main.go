@@ -48,6 +48,9 @@ func main() {
 			if len(origin) > 13 && origin[:13] == "moz-extension" {
 				return true
 			}
+			if origin == "https://heyboo.ca" {
+				return true
+			}
 			return false
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
