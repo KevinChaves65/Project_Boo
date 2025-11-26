@@ -16,15 +16,18 @@ import (
 )
 
 func main() {
-	// Load .env file from the root directory
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Println("No local .env file found, relying on Docker/host environment variables.")
+
+	if os.Getenv("APP_ENV") != "production" {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No local .env file found, using local environment variables")
+		}
 	}
 
-	go services.HandleMessages()
-
-	// Connect to the database
+	// ✅ CONNECT TO DATABASE FIRST (BLOCKING)
 	config.ConnectDB()
+
+	// ✅ Start background services AFTER DB is ready
+	go services.HandleMessages()
 
 	// Initialize default word themes
 	if err := models.InitializeDefaultThemes(); err != nil {
@@ -33,18 +36,14 @@ func main() {
 
 	r := gin.Default()
 
-	// Enable CORS with more explicit configuration for Chrome extensions
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
-			// Allow localhost for development
 			if origin == "http://localhost:5173" {
 				return true
 			}
-			// Allow any Chrome extension
 			if len(origin) > 16 && origin[:16] == "chrome-extension" {
 				return true
 			}
-			// Allow any Firefox extension
 			if len(origin) > 13 && origin[:13] == "moz-extension" {
 				return true
 			}
@@ -56,10 +55,9 @@ func main() {
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization", "Origin", "Accept"},
 		AllowCredentials: true,
-		MaxAge:           12 * 60 * 60, // 12 hours
+		MaxAge:           12 * 60 * 60,
 	}))
 
-	// Add a middleware to log requests for debugging
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
 			param.ClientIP,
@@ -74,11 +72,13 @@ func main() {
 		)
 	}))
 
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
 	r.GET("/user/public", controllers.GetPublicUserInfo)
-
-	// WebSocket route for real-time chat
 	r.GET("/ws", gin.WrapF(controllers.ChatHandler))
 
 	auth := r.Group("/auth")
@@ -87,35 +87,28 @@ func main() {
 	auth.PUT("/profile", controllers.UpdateProfile)
 	auth.PUT("/password", controllers.ChangePassword)
 
-	// Chat routes
 	auth.POST("/chat/send", controllers.SendMessage)
 	auth.GET("/chat/receive", controllers.ReceiveMessages)
 
-	// Couple routes
 	auth.POST("/couple/link", controllers.LinkCouple)
 	auth.GET("/couple/:id", controllers.GetCouple)
 	auth.DELETE("/couple/:id", controllers.DeleteCouple)
 
-	// Milestone routes
 	auth.POST("/milestones", controllers.AddMilestone)
 	auth.GET("/milestones", controllers.GetMilestones)
 	auth.PUT("/milestones/:id", controllers.UpdateMilestone)
 	auth.DELETE("/milestones/:id", controllers.DeleteMilestone)
 
-	// Calendar routes
 	auth.POST("/calendar/sync", controllers.SyncCalendar)
 	auth.POST("/calendar/add", controllers.AddToCalendar)
 
-	// Date Ideas routes
 	auth.POST("/dateideas/generate", controllers.GenerateDateIdeas)
 
-	// Saved Suggestions routes
 	auth.POST("/saved-suggestions", controllers.SaveSuggestion)
 	auth.GET("/saved-suggestions", controllers.GetSavedSuggestions)
 	auth.DELETE("/saved-suggestions/:id", controllers.DeleteSavedSuggestion)
 	auth.GET("/saved-suggestions/check", controllers.CheckIfSaved)
 
-	// New themed word bank routes
 	auth.GET("/word-themes", controllers.GetWordThemesHandler)
 	auth.POST("/word-bank", controllers.AddWordToBankHandler)
 	auth.GET("/word-bank", controllers.GetWordBankHandler)
@@ -124,8 +117,9 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // default port
+		port = "8080"
 	}
 
+	log.Println("Server running on port", port)
 	r.Run(":" + port)
 }
