@@ -1,0 +1,11 @@
+[build]
+builder = "GO"
+
+[deploy]
+startCommand = "./heyboo-api"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+
+[env]
+PORT = "8080"

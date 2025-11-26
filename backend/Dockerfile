@@ -1,21 +1,14 @@
-FROM golang:1.24-alpine AS build
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
-
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-
-RUN go build -o server .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o heyboo-api
 
 FROM alpine:latest
-
 WORKDIR /root/
-
-COPY --from=build /app/server .
-
+COPY --from=builder /app/heyboo-api .
 EXPOSE 8080
-
-# Run the binary
-CMD ["./server"]
+CMD ["./heyboo-api"]
