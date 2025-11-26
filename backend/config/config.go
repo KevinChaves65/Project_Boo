@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,50 +12,38 @@ import (
 
 var DB *mongo.Database
 
-func ConnectDB() (*mongo.Client, error) {
+func ConnectDB() {
 	mongoURI := os.Getenv("MONGO_URI")
 	dbName := os.Getenv("DB_NAME")
 
-	// Debug logs (safe – does not expose secrets)
-	log.Println("MONGO_URI exists:", mongoURI != "")
-	log.Println("DB_NAME:", dbName)
-
-	if mongoURI == "" {
-		return nil, fmt.Errorf(" MONGO_URI is not set in environment variables")
-	}
-
 	if dbName == "" {
 		dbName = "auth_project"
-		log.Println(" DB_NAME not provided, using default:", dbName)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	if mongoURI == "" {
+		log.Fatal("MONGO_URI missing")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	clientOptions := options.Client().
-		ApplyURI(mongoURI).
-		SetMaxPoolSize(20).
-		SetServerSelectionTimeout(10 * time.Second)
-
-	client, err := mongo.Connect(ctx, clientOptions)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		return nil, fmt.Errorf("Mongo connection error: %w", err)
+		log.Fatalf("❌ Mongo connection error: %v", err)
 	}
 
-	// Ping to confirm live connection
-	if err := client.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("Mongo ping failed: %w", err)
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("❌ Mongo ping failed: %v", err)
 	}
 
 	DB = client.Database(dbName)
-	log.Println("Connected to MongoDB successfully!")
-
-	return client, nil
+	log.Println("✅ MongoDB connected successfully")
 }
 
 func GetDB() *mongo.Database {
 	if DB == nil {
-		log.Fatal("Database connection is not established")
+		log.Fatal("❌ Database connection is not established")
 	}
 	return DB
 }

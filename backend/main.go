@@ -18,21 +18,15 @@ import (
 func main() {
 
 	if os.Getenv("APP_ENV") != "production" {
-		if err := godotenv.Load(); err != nil {
-			log.Println("No local .env file found, using local environment variables")
-		}
+		godotenv.Load()
 	}
 
-	// ✅ CONNECT TO DATABASE FIRST (BLOCKING)
 	config.ConnectDB()
 
-	// ✅ Start background services AFTER DB is ready
-	go services.HandleMessages()
-
-	// Initialize default word themes
 	if err := models.InitializeDefaultThemes(); err != nil {
 		log.Printf("Failed to initialize default themes: %v", err)
 	}
+	go services.HandleMessages()
 
 	r := gin.Default()
 
