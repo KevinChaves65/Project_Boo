@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Hey Boo - Sign Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+            Arial, sans-serif;
+        }
+
+        .signup-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: linear-gradient(
+            135deg,
+            rgba(255, 128, 176, 0.8),
+            rgba(168, 102, 221, 0.8)
+          );
+          padding: 1rem;
+        }
+
+        .signup-box {
+          background-color: #ffffff;
+          padding: 2rem;
+          border-radius: 16px;
+          max-width: 480px;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .heyboo-logo {
+          width: 80px;
+          height: auto;
+          margin-bottom: 1rem;
+          border-radius: 15%;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+          margin-bottom: 1.5rem;
+          color: #333;
+        }
+
+        form {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .form-row {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .form-row input {
+          flex: 1;
+          min-width: 0;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="date"] {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 8px;
+          border: 1px solid #d1d5db;
+          font-size: 0.95rem;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: #8c68db;
+          box-shadow: 0 0 0 3px rgba(140,104,219,0.15);
+        }
+
+        .gender-row {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          flex-wrap: wrap;
+          font-size: 0.9rem;
+        }
+
+        .gender-row label {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        button[type="submit"] {
+          padding: 0.85rem;
+          border-radius: 25px;
+          border: none;
+          background: #ff80b0;
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 0.5rem;
+        }
+
+        button[type="submit"]:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+        }
+
+        .back-to-login {
+          margin-top: 0.75rem;
+          font-size: 0.9rem;
+          color: #555;
+        }
+
+        .back-to-login a {
+          color: #8c68db;
+          text-decoration: none;
+          font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="signup-container">
+    <div class="signup-box">
+        <img src="logo.jpeg" alt="Hey Boo Logo" class="heyboo-logo" />
+        <h1>Create an Account</h1>
+
+        <form id="signupForm">
+            <!-- Row 1: Full Name, Username -->
+            <div class="form-row">
+                <input
+                        id="full-name-input"
+                        type="text"
+                        placeholder="Full Name"
+                        required
+                />
+                <input
+                        id="username-input"
+                        type="text"
+                        placeholder="Username"
+                        required
+                />
+            </div>
+
+            <!-- Row 2: Password, Confirm Password -->
+            <div class="form-row">
+                <input
+                        id="password-input"
+                        type="password"
+                        placeholder="Password"
+                        required
+                />
+                <input
+                        id="confirm-password-input"
+                        type="password"
+                        placeholder="Confirm Password"
+                        required
+                />
+            </div>
+
+            <!-- Row 3: Email, Phone Number -->
+            <div class="form-row">
+                <input
+                        id="email-input"
+                        type="email"
+                        placeholder="Email"
+                        required
+                />
+                <input
+                        id="phone-input"
+                        type="text"
+                        placeholder="Phone Number (optional)"
+                />
+            </div>
+
+            <!-- Row 4: Birthday -->
+            <div class="form-row">
+                <input
+                        id="birthday-input"
+                        type="date"
+                        placeholder="Birthday (optional)"
+                />
+            </div>
+
+            <!-- Gender Options -->
+            <div class="gender-row">
+                <label>
+                    <input type="radio" name="gender" value="male" /> Male
+                </label>
+                <label>
+                    <input type="radio" name="gender" value="female" /> Female
+                </label>
+                <label>
+                    <input type="radio" name="gender" value="none" /> Prefer not to say
+                </label>
+            </div>
+
+            <!-- Sign Up Button -->
+            <button type="submit" id="signupButton">
+                <span id="signupBtnText">Sign Up</span>
+            </button>
+        </form>
+
+        <p class="back-to-login">
+            Already have an account?
+            <a href="index.html" onclick="goToLogin(event)">Back to Login</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    // 🔗 Backend URL – emulator vs real device
+    const API_BASE_URL = "http://10.0.2.2:8080";
+    // For a real phone on Wi-Fi, swap to: const API_BASE_URL = "http://YOUR_PC_IP:8080";
+
+    const form = document.getElementById("signupForm");
+    const fullNameInput = document.getElementById("full-name-input");
+    const usernameInput = document.getElementById("username-input");
+    const passwordInput = document.getElementById("password-input");
+    const confirmPasswordInput = document.getElementById("confirm-password-input");
+    const emailInput = document.getElementById("email-input");
+    const phoneInput = document.getElementById("phone-input");
+    const birthdayInput = document.getElementById("birthday-input");
+    const signupButton = document.getElementById("signupButton");
+    const signupBtnText = document.getElementById("signupBtnText");
+
+    let isLoading = false;
+
+    function goToLogin(event) {
+      event.preventDefault();
+      window.location.href = "mobile_index.html"; // or index.html, depending on what you want
+    }
+
+    async function registerUser(payload) {
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const msg = data.error || "Failed to create an account.";
+        throw new Error(msg);
+      }
+
+      return data;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (isLoading) return;
+
+      const fullName = fullNameInput.value.trim();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const confirmPassword = confirmPasswordInput.value.trim();
+      const email = emailInput.value.trim();
+      const phoneNumber = phoneInput.value.trim();
+      const birthday = birthdayInput.value; // "" if not set
+
+      const genderRadio = document.querySelector('input[name="gender"]:checked');
+      const gender = genderRadio ? genderRadio.value : "";
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      isLoading = true;
+      signupButton.disabled = true;
+      signupBtnText.textContent = "Signing Up...";
+
+      try {
+        // Match the Vue component payload as closely as possible:
+        const payload = {
+          full_name: fullName,
+          username: username,
+          password: password,
+          confirm_password: confirmPassword,
+          email: email,
+          phone_number: phoneNumber || null,
+          birthday: birthday || null,
+          gender: gender || null,
+          couple_id: null,
+        };
+
+        const result = await registerUser(payload);
+
+        // Your backend might return { message: "..." } like the Vue version expects
+        if (result.message) {
+          alert(result.message);
+        } else {
+          alert("Account created successfully!");
+        }
+
+        // Go back to login
+        window.location.href = "mobile_index.html";
+      } catch (err) {
+        console.error("Sign-up failed:", err);
+        alert(err.message || "Failed to create an account. Please try again.");
+      } finally {
+        isLoading = false;
+        signupButton.disabled = false;
+        signupBtnText.textContent = "Sign Up";
+      }
+    });
+</script>
+</body>
+</html>

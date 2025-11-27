@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>Hey Boo - Login</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* Reset and base styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container styling */
+        .login-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: linear-gradient(135deg, rgba(255, 128, 176, 0.9), rgba(168, 102, 221, 0.9));
+          padding: 1rem;
+        }
+
+        /* Card styling */
+        .login-card {
+          background-color: #ffffff;
+          padding: 2.5rem 2rem;
+          border-radius: 16px;
+          max-width: 380px;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Logo */
+        .heyboo-logo {
+          width: 70px;
+          height: auto;
+          margin-bottom: 1.5rem;
+          border-radius: 15%;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+          font-size: 1.6rem;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+          font-size: 0.95rem;
+          color: #667;
+          margin-bottom: 2rem;
+        }
+
+        /* Form styling */
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+          text-align: left;
+          position: relative;
+        }
+
+        .input-wrapper {
+          position: relative;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #aaa;
+          font-size: 0.9rem;
+          pointer-events: none;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+          width: 100%;
+          padding: 0.85rem 1rem 0.85rem 2.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 1rem;
+          color: #333;
+          background-color: #fdfdff;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+          outline: none;
+          border-color: #8c68db;
+          box-shadow: 0 0 0 3px rgba(140, 104, 219, 0.15);
+        }
+
+        /* Login button */
+        .login-button {
+          width: 100%;
+          padding: 0.85rem 1.5rem;
+          font-size: 1rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          background: #ff80b0;
+          color: white;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          transition: all 0.25s ease;
+          box-shadow: 0 3px 8px rgba(255, 128, 176, 0.3);
+        }
+
+        .login-button:hover:not(:disabled) {
+          background-color: #ff66a3;
+          box-shadow: 0 5px 12px rgba(255, 128, 176, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .login-button:disabled {
+          background-color: #cccccc;
+          color: #888;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        /* Signup link */
+        .signup-prompt {
+          font-size: 0.9rem;
+          color: #556;
+        }
+
+        .signup-link {
+          color: #8c68db;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .signup-link:hover {
+          color: #7a5fc7;
+          text-decoration: underline;
+        }
+
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="login-container">
+    <div class="login-card">
+        <img src="logo.jpeg" alt="Hey Boo Logo" class="heyboo-logo" />
+        <h2>Welcome Back!</h2>
+        <p class="subtitle">Log in to continue your journey.</p>
+
+        <form id="loginForm" class="login-form">
+
+            <!-- Username Input -->
+            <div class="form-group">
+                <label for="username-input" class="sr-only">Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input
+                            id="username-input"
+                            type="text"
+                            placeholder="Username"
+                            required
+                    />
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label for="password-input" class="sr-only">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input
+                            id="password-input"
+                            type="password"
+                            placeholder="Password"
+                            required
+                    />
+                </div>
+            </div>
+
+            <!-- Login button -->
+            <button class="login-button" type="submit" id="loginButton">
+                <i class="fas fa-sign-in-alt"></i> Log In
+            </button>
+        </form>
+
+        <div class="signup-prompt">
+            Don't have an account?
+            <a href="#" class="signup-link" onclick="handleSignup(event)">Sign Up</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = "http://10.0.2.2:8080";
+
+    const form = document.getElementById("loginForm");
+    const usernameInput = document.getElementById("username-input");
+    const passwordInput = document.getElementById("password-input");
+    const loginButton = document.getElementById("loginButton");
+
+    let isLoading = false;
+
+    // Call backend /login – saves JWT only
+    async function backendLogin(username, password) {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Invalid username or password");
+      }
+
+      if (!data.token) {
+        throw new Error("No token returned from server.");
+      }
+
+      // Save JWT for authenticated calls
+      localStorage.setItem("authToken", data.token);
+
+      return data;
+    }
+
+    // Fetch profile to see if user is linked (has couple_id)
+    async function fetchUserProfile() {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("Missing auth token");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch profile");
+      }
+
+      if (!data.user) {
+        throw new Error("No user in profile response");
+      }
+
+      // Save full user (includes id, email, couple_id, etc.)
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      return data.user;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password || isLoading) return;
+
+      isLoading = true;
+      loginButton.disabled = true;
+      const originalText = loginButton.innerHTML;
+      loginButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Logging In...';
+
+      try {
+        // 1) Log in (get token)
+        await backendLogin(username, password);
+
+        // 2) Fetch profile (get couple_id + id)
+        const user = await fetchUserProfile();
+
+        // 3) Decide where to go:
+        //    - No couple_id => go to linkpartner.html
+        //    - Has couple_id => go to dashboard.html
+        if (!user.couple_id) {
+          window.location.href = "linkpartner.html";
+        } else {
+          window.location.href = "dashboard.html";
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert(err.message || "Login failed. Please try again.");
+
+        isLoading = false;
+        loginButton.disabled = false;
+        loginButton.innerHTML = originalText;
+      }
+    });
+
+    function handleSignup(event) {
+      event.preventDefault();
+      window.location.href = "signup.html";
+    }
+</script>
+
+
+</body>
+</html>

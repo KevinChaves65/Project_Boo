@@ -2530,9 +2530,90 @@
 </div>
 
 <script>
+    // Backend base URL for Android emulator to talk to your PC
+    const API_BASE_URL = "http://10.0.2.2:8080";
+
     // ==================== GLOBAL STATE ====================
     let currentView = 'home';
     let currentUser = null;
+
+    // ==================== WEBSOCKET CONFIG ====================
+    const WS_URL = "ws://10.0.2.2:8080/ws";   // Android emulator → backend
+
+    let chatSocket = null;
+    let chatSocketReconnectTimer = null;
+
+    function connectChatSocket() {
+  if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+    return;
+  }
+
+  try {
+    console.log("Connecting WebSocket to", WS_URL);
+    chatSocket = new WebSocket(WS_URL);
+
+    chatSocket.onopen = () => {
+      console.log("Chat WebSocket connected");
+    };
+
+    chatSocket.onmessage = (event) => {
+      console.log("WS message:", event.data);
+
+      let payload;
+      try {
+        payload = JSON.parse(event.data);
+      } catch (e) {
+        console.warn("Non-JSON WS message:", event.data);
+        return;
+      }
+
+      const msg = payload.message || payload;
+
+      if (!msg) return;
+
+      const sender = (msg.sender || msg.Sender || "").toString();
+      const receiver = (msg.receiver || msg.Receiver || "").toString();
+      const me = currentUsername ? currentUsername.toLowerCase() : null;
+
+      // only show messages involving this user
+      if (
+        me &&
+        sender &&
+        receiver &&
+        sender.toLowerCase() !== me &&
+        receiver.toLowerCase() !== me
+      ) {
+        return;
+      }
+
+      chatMessages.push(msg);
+      renderMessages();
+      updateMessageCount();
+      scrollChatToBottom();
+    };
+
+    chatSocket.onclose = () => {
+      console.warn("Chat WebSocket closed, retrying soon...");
+      chatSocket = null;
+
+      if (!chatSocketReconnectTimer) {
+        chatSocketReconnectTimer = setTimeout(() => {
+          chatSocketReconnectTimer = null;
+          connectChatSocket();
+        }, 5000);
+      }
+    };
+
+    chatSocket.onerror = (err) => {
+      console.error("Chat WebSocket error:", err);
+    };
+
+  } catch (err) {
+    console.error("Failed to create WebSocket:", err);
+  }
+}
+
+
 
     // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
@@ -2855,202 +2936,499 @@
       });
     }
 
-    // ==================== CHAT FUNCTIONS ====================
-    let messages = [
-      { sender: "You", text: "Hey Boo! How was your day? 😊", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) },
-      { sender: "Partner", text: "It was pretty good! Long meeting but productive. How about yours? ❤️", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2.9) },
-      { sender: "You", text: "Mine was okay, just glad it's almost over! Thinking about dinner?", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
-      { sender: "Partner", text: "Yes! Craving that pizza place 🍕", timestamp: new Date(Date.now() - 1000 * 60 * 28) },
-    ];
-    let isPartnerTyping = false;
-    let showEmojiPicker = false;
-    const commonEmojis = ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"];
+  // ==================== CHAT FUNCTIONS ====================
 
-    function initChat() {
-      renderEmojis();
-      updateMessageCount();
+let chatMessages = [];
+let showEmojiPicker = false;
+let chatPollingIntervalId = null;
+
+const commonEmojis = ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"];
+
+currentUser = currentUser || null;
+currentUsername = currentUsername || null;
+
+// New: partner username resolved from /auth/couple/:id
+if (typeof partnerUsername === "undefined") {
+  var partnerUsername = null;
+}
+
+// Helper: get username from stored user object
+function getUsernameFromUser(user) {
+  if (!user || typeof user !== "object") return null;
+  if (user.username) return user.username;
+  if (user.email) return user.email; // fallback
+  return null;
+}
+
+// 🔹 Helper to normalize an ID (string or { "$oid": "..." } etc.)
+function normalizeId(val) {
+  if (!val) return null;
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    if (val.$oid) return val.$oid;
+    if (val.oid) return val.oid;
+    if (val._id) return val._id;
+  }
+  return String(val);
+}
+
+async function loadPartnerUsername(coupleId) {
+  if (!coupleId) {
+    console.warn("No couple_id found on user; cannot resolve partner.");
+    return;
+  }
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    console.warn("No auth token while trying to load partner.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/couple/${coupleId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Failed to load couple info:", data);
+      return;
     }
 
-    function renderEmojis() {
-      const grid = document.getElementById('emojiGrid');
-      grid.innerHTML = commonEmojis.map(emoji =>
-        `<button class="emoji-button" onclick="addEmoji('${emoji}')">${emoji}</button>`
-      ).join('');
-    }
+    const couple = data.couple || data;
+    console.log("Couple data:", couple);
 
-    function renderMessages() {
-      const chatWindow = document.getElementById('chatWindow');
-      let html = '';
-      let lastDate = null;
+    const myId = normalizeId(
+      currentUser && (currentUser._id || currentUser.id)
+    );
+    const myUsernameLower = currentUsername
+      ? currentUsername.toLowerCase()
+      : null;
 
-      messages.forEach((msg, index) => {
-        const msgDate = formatChatDate(msg.timestamp);
+    const user1Id = normalizeId(couple.user1_id);
+    const user2Id = normalizeId(couple.user2_id);
 
-        if (msgDate !== lastDate) {
-          html += `
-            <div class="date-divider">
-              <span>${msgDate}</span>
-            </div>
-          `;
-          lastDate = msgDate;
-        }
+    const user1Username = couple.user1_username || couple.user1Name || null;
+    const user2Username = couple.user2_username || couple.user2Name || null;
 
-        const isOwn = msg.sender === "You";
-        html += `
-          <div class="message-container ${isOwn ? 'own-message' : ''}">
-            <div class="message-bubble">
-              <span class="message-text">${escapeHtml(msg.text)}</span>
-              <span class="message-time">${formatChatTime(msg.timestamp)}</span>
-            </div>
-          </div>
-        `;
-      });
+    console.log(
+      "myId:",
+      myId,
+      "user1Id:",
+      user1Id,
+      "user2Id:",
+      user2Id,
+      "user1Username:",
+      user1Username,
+      "user2Username:",
+      user2Username
+    );
 
-      if (isPartnerTyping) {
-        html += `
-          <div class="message-container typing-indicator-container">
-            <div class="message-bubble">
-              <div class="typing-indicator">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-              </div>
-            </div>
-          </div>
-        `;
+    let resolvedPartnerUsername = null;
+
+    // 🔹 Prefer username-based matching (more robust across environments)
+    if (myUsernameLower && user1Username && user2Username) {
+      const u1Lower = user1Username.toLowerCase();
+      const u2Lower = user2Username.toLowerCase();
+
+      if (myUsernameLower === u1Lower) {
+        resolvedPartnerUsername = user2Username;
+      } else if (myUsernameLower === u2Lower) {
+        resolvedPartnerUsername = user1Username;
       }
-
-      chatWindow.innerHTML = html;
     }
-
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      messages.push({
-        sender: "You",
-        text: text,
-        timestamp: new Date()
-      });
-
-      input.value = '';
-      adjustTextareaHeight();
-      updateSendButton();
-      updateMessageCount();
-
-      if (showEmojiPicker) {
-        toggleEmojiPicker();
+    if (!resolvedPartnerUsername && myId && user1Id && user2Id) {
+      if (myId === user1Id && user2Username) {
+        resolvedPartnerUsername = user2Username;
+      } else if (myId === user2Id && user1Username) {
+        resolvedPartnerUsername = user1Username;
       }
-
-      renderMessages();
-      scrollChatToBottom();
-      simulatePartnerResponse();
     }
 
-    function simulatePartnerResponse() {
-      if (isPartnerTyping) return;
+    if (!resolvedPartnerUsername) {
+      console.warn(
+        "Could not determine partner username from couple data.",
+        couple
+      );
+      return;
+    }
 
-      const responses = ["Okay!", "Sounds good 😊", "Miss you too!", "Can't wait!", "❤️", "Got it.", "Let's do it!", "Perfect!", "🤔 Hmm, maybe?"];
+    partnerUsername = resolvedPartnerUsername;
+    console.log("Resolved partner username:", partnerUsername);
 
-      isPartnerTyping = true;
-      renderMessages();
-      scrollChatToBottom();
+    if (currentUser) {
+      currentUser.partner_username = partnerUsername;
+      try {
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } catch (e) {
+        console.warn("Could not persist partner_username on user:", e);
+      }
+    }
+  } catch (err) {
+    console.error("Error loading partner username:", err);
+  }
+}
 
-      setTimeout(() => {
-        isPartnerTyping = false;
+// Called when dashboard/chat loads
+async function initChat() {
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("authToken");
 
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        messages.push({
-          sender: "Partner",
-          text: randomResponse,
-          timestamp: new Date()
-        });
+  if (!token || !storedUser) {
+    console.warn("No auth token or user stored; chat disabled.");
+    return;
+  }
 
-        updateMessageCount();
+  try {
+    currentUser = JSON.parse(storedUser);
+    currentUsername = getUsernameFromUser(currentUser);
+  } catch (e) {
+    console.error("Failed to parse stored user for chat:", e);
+    return;
+  }
+
+  if (!currentUsername) {
+    console.warn("No username found on stored user; chat may not work.");
+  }
+
+  // If user is linked, resolve partner from couple collection
+  if (currentUser.couple_id) {
+    await loadPartnerUsername(currentUser.couple_id);
+  } else {
+    console.warn("User not linked to a partner yet (no couple_id).");
+  }
+
+  renderEmojis();
+  fetchChatMessages(true);
+
+  // Poll for new messages every 3s
+  if (chatPollingIntervalId) clearInterval(chatPollingIntervalId);
+  chatPollingIntervalId = setInterval(() => {
+    fetchChatMessages(false);
+  }, 3000);
+
+  connectChatSocket();
+}
+
+// Fetch chat messages from backend
+async function fetchChatMessages(initial = false) {
+  const token = localStorage.getItem("authToken");
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/chat/receive`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Failed to load chat messages:", data);
+      return;
+    }
+
+    if (!Array.isArray(data.messages)) {
+      console.warn("No messages array in chat response");
+      return;
+    }
+
+    chatMessages = data.messages;
+    renderMessages();
+    updateMessageCount();
+    if (initial) scrollChatToBottom(true);
+  } catch (err) {
+    console.error("Error fetching chat messages:", err);
+  }
+}
+
+// Send a message to backend
+async function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input ? input.value.trim() : "";
+  const button = document.getElementById("sendButton");
+
+  if (!text) return;
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    alert("You must be logged in to send messages.");
+    return;
+  }
+
+  // 🔹 Who is sending?
+  const sender = currentUsername;
+  if (!sender) {
+    alert("No sender username found. Please log in again.");
+    return;
+  }
+
+  // 🔹 Ensure we have a receiver (partner) — retry resolve once if needed
+  if (!partnerUsername && currentUser && currentUser.couple_id) {
+    console.warn("partnerUsername is empty, attempting to resolve again...");
+    await loadPartnerUsername(currentUser.couple_id);
+  }
+
+  let receiver = null;
+
+  if (partnerUsername) {
+    receiver = partnerUsername;
+  } else if (currentUser && currentUser.couple_id) {
+    // Still no partner after retry
+    alert("Could not determine your partner's username. Please try reloading the app.");
+    return;
+  } else {
+    // Not linked yet
+    alert("You must link a partner before sending messages.");
+    return;
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+
+  if (button) button.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/chat/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        sender: sender,
+        receiver: receiver,
+        content: text,
+        timestamp: timestamp,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Failed to send message:", data);
+      alert(data.error || "Failed to send message.");
+    } else {
+      if (data.message) {
+        chatMessages.push(data.message);
         renderMessages();
+        updateMessageCount();
         scrollChatToBottom();
-      }, Math.random() * 1500 + 1000);
-    }
-
-    function updateMessageCount() {
-      const partnerMessages = messages.filter(m => m.sender === "Partner");
-      const el = document.getElementById('messageCount');
-      if (el) el.textContent = partnerMessages.length;
-    }
-
-    function handleChatInput() {
-      adjustTextareaHeight();
-      updateSendButton();
-    }
-
-    function handleChatKeyDown(event) {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    }
-
-    function adjustTextareaHeight() {
-      const textarea = document.getElementById('messageInput');
-      textarea.style.height = 'auto';
-      const maxHeight = 100;
-      textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
-    }
-
-    function updateSendButton() {
-      const input = document.getElementById('messageInput');
-      const button = document.getElementById('sendButton');
-      button.disabled = !input.value.trim();
-    }
-
-    function toggleEmojiPicker() {
-      showEmojiPicker = !showEmojiPicker;
-      const picker = document.getElementById('emojiPicker');
-      const toggleBtn = document.querySelector('.emoji-toggle-button');
-
-      if (showEmojiPicker) {
-        picker.classList.add('active');
-        toggleBtn.classList.add('active');
       } else {
-        picker.classList.remove('active');
-        toggleBtn.classList.remove('active');
+        await fetchChatMessages(false);
       }
     }
-
-    function addEmoji(emoji) {
-      const input = document.getElementById('messageInput');
-      input.value += emoji;
-      input.focus();
+  } catch (err) {
+    console.error("Error sending message:", err);
+    alert("Error sending message. Please try again.");
+  } finally {
+    if (input) {
+      input.value = "";
       adjustTextareaHeight();
       updateSendButton();
     }
+    if (button) button.disabled = false;
+  }
+}
 
-    function scrollChatToBottom(instant = false) {
-      const chatWindow = document.getElementById('chatWindow');
-      if (chatWindow) {
-        chatWindow.scrollTo({
-          top: chatWindow.scrollHeight,
-          behavior: instant ? 'instant' : 'smooth'
-        });
-      }
+// Render emojis into the emoji picker
+function renderEmojis() {
+  const grid = document.getElementById("emojiGrid");
+  if (!grid) return;
+
+  grid.innerHTML = commonEmojis
+    .map(
+      (emoji) =>
+        `<button class="emoji-button" onclick="addEmoji('${emoji}')">${emoji}</button>`
+    )
+    .join("");
+}
+
+// Render chat messages into the chat window
+function renderMessages() {
+  const chatWindow = document.getElementById("chatWindow");
+  if (!chatWindow) return;
+
+  let html = "";
+  let lastDate = null;
+
+  chatMessages.forEach((msg) => {
+    const ts = getChatTimestamp(msg);
+    const msgDate = formatChatDate(ts);
+
+    if (msgDate !== lastDate) {
+      html += `
+        <div class="date-divider">
+          <span>${msgDate}</span>
+        </div>
+      `;
+      lastDate = msgDate;
     }
 
-    function formatChatTime(timestamp) {
-      return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    }
+    const sender =
+      (msg.sender || msg.Sender || msg.from || msg.From || "").toString();
+    const isOwn =
+      currentUsername &&
+      sender &&
+      sender.toLowerCase() === currentUsername.toLowerCase();
 
-    function formatChatDate(timestamp) {
-      const date = new Date(timestamp);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+    const text = msg.content || msg.Content || msg.text || msg.Text || "";
 
-      if (date.toDateString() === today.toDateString()) return "Today";
-      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
+    html += `
+      <div class="message-container ${isOwn ? "own-message" : ""}">
+        <div class="message-bubble">
+          <span class="message-text">${escapeHtml(text)}</span>
+          <span class="message-time">${formatChatTime(ts)}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  chatWindow.innerHTML = html;
+}
+
+// Count partner messages (anything not sent by you)
+function updateMessageCount() {
+  if (!currentUsername) return;
+
+  const partnerMessages = chatMessages.filter((msg) => {
+    const sender =
+      (msg.sender || msg.Sender || msg.from || msg.From || "").toString();
+    return (
+      sender &&
+      currentUsername &&
+      sender.toLowerCase() !== currentUsername.toLowerCase()
+    );
+  });
+
+  const el = document.getElementById("messageCount");
+  if (el) el.textContent = partnerMessages.length;
+}
+
+// Input handling
+function handleChatInput() {
+  adjustTextareaHeight();
+  updateSendButton();
+}
+
+function handleChatKeyDown(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function adjustTextareaHeight() {
+  const textarea = document.getElementById("messageInput");
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const maxHeight = 100;
+  textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+}
+
+function updateSendButton() {
+  const input = document.getElementById("messageInput");
+  const button = document.getElementById("sendButton");
+  if (!input || !button) return;
+  button.disabled = !input.value.trim();
+}
+
+// Emoji picker
+function toggleEmojiPicker() {
+  showEmojiPicker = !showEmojiPicker;
+  const picker = document.getElementById("emojiPicker");
+  const toggleBtn = document.querySelector(".emoji-toggle-button");
+
+  if (!picker || !toggleBtn) return;
+
+  if (showEmojiPicker) {
+    picker.classList.add("active");
+    toggleBtn.classList.add("active");
+  } else {
+    picker.classList.remove("active");
+    toggleBtn.classList.remove("active");
+  }
+}
+
+function addEmoji(emoji) {
+  const input = document.getElementById("messageInput");
+  if (!input) return;
+  input.value += emoji;
+  input.focus();
+  adjustTextareaHeight();
+  updateSendButton();
+}
+
+// Scroll to bottom of chat
+function scrollChatToBottom(instant = false) {
+  const chatWindow = document.getElementById("chatWindow");
+  if (!chatWindow) return;
+  chatWindow.scrollTo({
+    top: chatWindow.scrollHeight,
+    behavior: instant ? "instant" : "smooth",
+  });
+}
+
+// Timestamp helpers
+function getChatTimestamp(msg) {
+  if (!msg) return null;
+
+  // If backend uses Unix seconds
+  if (typeof msg.timestamp === "number") {
+    return new Date(msg.timestamp * 1000);
+  }
+  if (typeof msg.Timestamp === "number") {
+    return new Date(msg.Timestamp * 1000);
+  }
+
+  // Or ISO string
+  const raw =
+    msg.timestamp ||
+    msg.Timestamp ||
+    msg.created_at ||
+    msg.createdAt ||
+    msg.time;
+  if (!raw) return null;
+  return new Date(raw);
+}
+
+function formatChatTime(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatChatDate(timestamp) {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// Escape HTML
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 
     // ==================== DATE IDEAS FUNCTIONS ====================
     let suggestions = [
