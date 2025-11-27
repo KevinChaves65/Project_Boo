@@ -69,13 +69,8 @@
           background-color: #e1e8ed;
         }
 
-        .date-divider::before {
-          left: 0;
-        }
-
-        .date-divider::after {
-          right: 0;
-        }
+        .date-divider::before { left: 0; }
+        .date-divider::after  { right: 0; }
 
         /* Message Container */
         .message-container {
@@ -122,51 +117,6 @@
 
         .message-container.own-message .message-time {
           color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* Typing Indicator */
-        .typing-indicator-container {
-          align-self: flex-start;
-          margin-top: 0.25rem;
-        }
-
-        .typing-indicator {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 8px 12px;
-          gap: 4px;
-        }
-
-        .typing-indicator .dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background-color: #b0b0b0;
-          animation: typing-pulse 1.4s infinite ease-in-out;
-        }
-
-        .typing-indicator .dot:nth-child(1) {
-          animation-delay: 0s;
-        }
-
-        .typing-indicator .dot:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-
-        .typing-indicator .dot:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-
-        @keyframes typing-pulse {
-          0%, 40%, 100% {
-            transform: scale(0.8);
-            opacity: 0.6;
-          }
-          20% {
-            transform: scale(1);
-            opacity: 1;
-          }
         }
 
         /* Input Area */
@@ -270,14 +220,8 @@
         }
 
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(5px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(5px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
         .emoji-grid {
@@ -364,23 +308,58 @@
 </div>
 
 <script>
-    // Global state
-    let messages = [
-      { sender: "You", text: "Hey Boo! How was your day? 😊", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) },
-      { sender: "Partner", text: "It was pretty good! Long meeting but productive. How about yours? ❤️", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2.9) },
-      { sender: "You", text: "Mine was okay, just glad it's almost over! Thinking about dinner?", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
-      { sender: "Partner", text: "Yes! Craving that pizza place 🍕", timestamp: new Date(Date.now() - 1000 * 60 * 28) },
-    ];
+    const API_BASE_URL = "http://10.0.2.2:8080";
 
-    let isPartnerTyping = false;
+    let messages = [];
     let showEmojiPicker = false;
+    let pollingIntervalId = null;
+
     const commonEmojis = ["❤️", "😊", "😘", "🥰", "😍", "🤗", "😂", "🤔", "👍", "🎉", "🍕", "✨", "👋", "💕", "🥺", "🙏"];
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
+    let currentUser = null;
+    let currentUsername = null;
+
+    // ===== Helper: get username from stored user =====
+    function getUsernameFromUser(user) {
+      if (!user || typeof user !== "object") return null;
+      if (user.username) return user.username;
+      if (user.email)    return user.email; // fallback
+      return null;
+    }
+
+    // ===== Init =====
+    document.addEventListener('DOMContentLoaded', () => {
+      const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("authToken");
+
+      if (!token || !storedUser) {
+        // Not logged in, send back to login
+        window.location.href = "mobile_index.html";
+        return;
+      }
+
+      try {
+        currentUser = JSON.parse(storedUser);
+        currentUsername = getUsernameFromUser(currentUser);
+      } catch (e) {
+        console.error("Failed to parse stored user:", e);
+        window.location.href = "mobile_index.html";
+        return;
+      }
+
+      // If not linked, don't allow chat
+      if (!currentUser.couple_id) {
+        window.location.href = "linkpartner.html";
+        return;
+      }
+
       renderEmojis();
-      renderMessages();
-      scrollToBottom(true);
+      fetchMessages(true);
+
+      // Poll for new messages every 3s
+      pollingIntervalId = setInterval(() => {
+        fetchMessages(false);
+      }, 3000);
 
       // Close emoji picker on outside click
       document.addEventListener('click', function(e) {
@@ -395,7 +374,95 @@
       });
     });
 
-    // Render emoji grid
+    // ===== Fetch chat history from backend =====
+    async function fetchMessages(initial = false) {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/chat/receive`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed to load messages:", data);
+          return;
+        }
+
+        if (!Array.isArray(data.messages)) {
+          console.warn("No messages array in response");
+          return;
+        }
+
+        messages = data.messages;
+        renderMessages();
+        if (initial) scrollToBottom(true);
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+      }
+    }
+
+    // ===== Send message to backend =====
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      const button = document.getElementById('sendButton');
+
+      if (!text) return;
+
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        alert("You must be logged in to send messages.");
+        return;
+      }
+
+      button.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/chat/send`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          // If your backend needs receiver info, you can add it here.
+          // For a couple chat, backend can infer receiver from couple_id.
+          body: JSON.stringify({ content: text }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed to send message:", data);
+          alert(data.error || "Failed to send message.");
+        } else {
+          // If backend returns full message, you can push it:
+          if (data.message) {
+            messages.push(data.message);
+            renderMessages();
+            scrollToBottom();
+          } else {
+            // Otherwise re-fetch messages to stay in sync
+            await fetchMessages(false);
+          }
+        }
+      } catch (err) {
+        console.error("Error sending message:", err);
+        alert("Error sending message. Please try again.");
+      } finally {
+        input.value = "";
+        adjustTextareaHeight();
+        updateSendButton();
+        button.disabled = false;
+      }
+    }
+
+    // ===== Rendering =====
     function renderEmojis() {
       const grid = document.getElementById('emojiGrid');
       grid.innerHTML = commonEmojis.map(emoji =>
@@ -403,16 +470,18 @@
       ).join('');
     }
 
-    // Render messages
     function renderMessages() {
       const chatWindow = document.getElementById('chatWindow');
+      if (!chatWindow) return;
+
       let html = '';
       let lastDate = null;
 
-      messages.forEach((msg, index) => {
-        const msgDate = formatDate(msg.timestamp);
+      messages.forEach(msg => {
+        const ts = getMessageTimestamp(msg);
+        const msgDate = formatDate(ts);
 
-        // Add date divider
+        // Date divider per day
         if (msgDate !== lastDate) {
           html += `
             <div class="date-divider">
@@ -422,96 +491,65 @@
           lastDate = msgDate;
         }
 
-        // Add message
-        const isOwn = msg.sender === "You";
+        const sender = (msg.sender || msg.Sender || "").toString();
+        const isOwn = currentUsername && sender &&
+                      (sender.toLowerCase() === currentUsername.toLowerCase());
+
         html += `
-          <div class="message-container ${isOwn ? 'own-message' : ''}">
+          <div class="message-container ${isOwn ? "own-message" : ""}">
             <div class="message-bubble">
-              <span class="message-text">${escapeHtml(msg.text)}</span>
-              <span class="message-time">${formatTime(msg.timestamp)}</span>
+              <span class="message-text">${escapeHtml(msg.content || msg.Content || "")}</span>
+              <span class="message-time">${formatTime(ts)}</span>
             </div>
           </div>
         `;
       });
-
-      // Add typing indicator if partner is typing
-      if (isPartnerTyping) {
-        html += `
-          <div class="message-container typing-indicator-container">
-            <div class="message-bubble">
-              <div class="typing-indicator">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
 
       chatWindow.innerHTML = html;
     }
 
-    // Send message
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const text = input.value.trim();
+    // ===== Timestamp helpers =====
+    function getMessageTimestamp(msg) {
+      if (!msg) return null;
 
-      if (!text) return;
-
-      messages.push({
-        sender: "You",
-        text: text,
-        timestamp: new Date()
-      });
-
-      input.value = '';
-      adjustTextareaHeight();
-      updateSendButton();
-
-      if (showEmojiPicker) {
-        toggleEmojiPicker();
+      // If backend returns unix seconds (int64)
+      if (typeof msg.timestamp === "number") {
+        return new Date(msg.timestamp * 1000);
+      }
+      if (typeof msg.Timestamp === "number") {
+        return new Date(msg.Timestamp * 1000);
       }
 
-      renderMessages();
-      scrollToBottom();
-
-      // Simulate partner response
-      simulatePartnerResponse();
+      // Or ISO string
+      const raw = msg.timestamp || msg.Timestamp || msg.created_at || msg.createdAt || msg.time;
+      if (!raw) return null;
+      return new Date(raw);
     }
 
-    // Simulate partner typing and response
-    function simulatePartnerResponse() {
-      if (isPartnerTyping) return;
-
-      const responses = ["Okay!", "Sounds good 😊", "Miss you too!", "Can't wait!", "❤️", "Got it.", "Let's do it!", "Perfect!", "🤔 Hmm, maybe?"];
-
-      isPartnerTyping = true;
-      renderMessages();
-      scrollToBottom();
-
-      setTimeout(() => {
-        isPartnerTyping = false;
-
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        messages.push({
-          sender: "Partner",
-          text: randomResponse,
-          timestamp: new Date()
-        });
-
-        renderMessages();
-        scrollToBottom();
-      }, Math.random() * 1500 + 1000);
+    function formatTime(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
 
-    // Handle textarea input
+    function formatDate(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) return "Today";
+      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // ===== Input + emoji handlers =====
     function handleInput() {
       adjustTextareaHeight();
       updateSendButton();
     }
 
-    // Handle Enter key
     function handleKeyDown(event) {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
@@ -519,7 +557,6 @@
       }
     }
 
-    // Adjust textarea height
     function adjustTextareaHeight() {
       const textarea = document.getElementById('messageInput');
       textarea.style.height = 'auto';
@@ -527,14 +564,12 @@
       textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
     }
 
-    // Update send button state
     function updateSendButton() {
       const input = document.getElementById('messageInput');
       const button = document.getElementById('sendButton');
       button.disabled = !input.value.trim();
     }
 
-    // Toggle emoji picker
     function toggleEmojiPicker() {
       showEmojiPicker = !showEmojiPicker;
       const picker = document.getElementById('emojiPicker');
@@ -549,7 +584,6 @@
       }
     }
 
-    // Add emoji
     function addEmoji(emoji) {
       const input = document.getElementById('messageInput');
       input.value += emoji;
@@ -558,35 +592,13 @@
       updateSendButton();
     }
 
-    // Scroll to bottom
     function scrollToBottom(instant = false) {
       const chatWindow = document.getElementById('chatWindow');
-      if (chatWindow) {
-        chatWindow.scrollTo({
-          top: chatWindow.scrollHeight,
-          behavior: instant ? 'instant' : 'smooth'
-        });
-      }
-    }
-
-    // Format time
-    function formatTime(timestamp) {
-      if (!timestamp) return "";
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    }
-
-    // Format date
-    function formatDate(timestamp) {
-      if (!timestamp) return "";
-      const date = new Date(timestamp);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (date.toDateString() === today.toDateString()) return "Today";
-      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (!chatWindow) return;
+      chatWindow.scrollTo({
+        top: chatWindow.scrollHeight,
+        behavior: instant ? "instant" : "smooth",
+      });
     }
 
     // Escape HTML

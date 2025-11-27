@@ -193,7 +193,15 @@
         </div>
 
         <h2>Link with Your Partner</h2>
-        <p class="subtitle">Enter your partner's unique Hey Boo ID to connect your accounts.</p>
+        <p class="subtitle">
+            Share this Hey Boo ID with your partner:
+            <br />
+            <strong id="myLinkCode">Loading...</strong>
+        </p>
+        <p class="subtitle">
+            Then enter <em>their</em> Hey Boo ID below to link your accounts.
+        </p>
+
 
         <form id="linkForm" class="link-form">
             <div class="form-group">
@@ -223,118 +231,146 @@
 
 
 <script>
-    // Get form elements
-    const form = document.getElementById('linkForm');
-    const partnerIdInput = document.getElementById('partnerId');
-    const linkButton = document.getElementById('linkButton');
+    const API_BASE_URL = "http://10.0.2.2:8080";
+
+    const form = document.getElementById("linkForm");
+    const partnerIdInput = document.getElementById("partnerId");
+    const linkButton = document.getElementById("linkButton");
+    const myLinkCodeSpan = document.getElementById("myLinkCode");
 
     let isLoading = false;
 
-    // Handle form submission
-    form.addEventListener('submit', async function(event) {
-      event.preventDefault();
+    // Helper: figure out the best HeyBooID from the user object
+    function getHeyBooIdFromUser(user) {
+      if (!user || typeof user !== "object") return null;
 
-      // Get partner ID value
-      const partnerId = partnerIdInput.value.trim();
+      // If backend already exposes a dedicated field
+      if (user.heyBooId) return user.heyBooId;
+      if (user.heyboo_id) return user.heyboo_id;
 
-      // Basic validation
-      if (!partnerId || isLoading) {
+      // Common patterns
+      if (user.id) return user.id; // e.g. "6926..."
+      if (typeof user._id === "string") return user._id;
+      if (user._id && typeof user._id === "object" && user._id.$oid) {
+        return user._id.$oid; // e.g. {_id: {$oid: "6926..."}}
+      }
+
+      return null;
+    }
+
+    // On page load: show my link ID and redirect if already linked
+    document.addEventListener("DOMContentLoaded", () => {
+      const userJson = localStorage.getItem("user");
+      if (!userJson) {
+        // Not logged in – back to login
+        window.location.href = "mobile_index.html";
         return;
       }
 
-      isLoading = true;
-      console.log('Attempting to link with partner ID:', partnerId);
-
-      // Update button to loading state
-      linkButton.disabled = true;
-      linkButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Linking...';
-
-      // Simulate API call (replace with your actual linking logic)
+      let user = null;
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+        user = JSON.parse(userJson);
+      } catch (e) {
+        console.error("Failed to parse user from localStorage:", e);
+        window.location.href = "mobile_index.html";
+        return;
+      }
 
-        // Simulate success/failure (80% success rate)
-        const success = Math.random() > 0.2;
+      // Try to compute HeyBooID from various possible shapes
+      const heyBooId = getHeyBooIdFromUser(user);
 
-        if (success) {
-          console.log('Successfully linked with partner');
+      if (myLinkCodeSpan) {
+        myLinkCodeSpan.textContent = heyBooId || "Unavailable";
+      }
 
-          // Save partner link to localStorage (example)
-          localStorage.setItem('partnerId', partnerId);
-          localStorage.setItem('hasPartner', 'true');
-
-          // Show success feedback
-          alert('Successfully linked with your partner!');
-
-          // Navigate to dashboard
-          window.location.href = 'dashboard.html';
-        } else {
-          console.log('Failed to link accounts');
-          alert('Failed to link accounts. Please check the Partner ID and try again.');
-
-          // Clear input on failure
-          partnerIdInput.value = '';
-
-          // Reset button state
-          isLoading = false;
-          linkButton.disabled = false;
-          linkButton.innerHTML = '<i class="fas fa-link"></i> Link Accounts';
-        }
-      } catch (error) {
-        console.error('Linking error:', error);
-        alert('An error occurred. Please try again.');
-
-        // Reset button state
-        isLoading = false;
-        linkButton.disabled = false;
-        linkButton.innerHTML = '<i class="fas fa-link"></i> Link Accounts';
+      // If user already has a couple_id, send them to dashboard
+      if (user.couple_id) {
+        window.location.href = "dashboard.html";
       }
     });
 
+    // Call backend to link with partner
+    async function linkPartner(partnerId) {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("You must be logged in to link accounts.");
+      }
 
-         const days = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      const response = await fetch(`${API_BASE_URL}/auth/couple/link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ partner_id: partnerId }),
+      });
 
-        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-        days.push({
-        number: lastDayOfPrevMonth - i,
-        currentMonth: false,
-        date: new Date(year, month - 1, lastDayOfPrevMonth - i)
-        });
-        }
+      const data = await response.json();
 
-        for (let i = 1; i <= lastDay.getDate(); i++) {
-        const date = new Date(year, month, i);
-        days.push({
-        number: i,
-        currentMonth: true,
-        isToday: date.getTime() === today.getTime(),
-        date: date
-        });
-        }
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to link accounts.");
+      }
 
-    // Handle skip for now
-    function skipLinking(event) {
-      event.preventDefault();
-
-      // Optionally save that user skipped linking
-      localStorage.setItem('skippedLinking', 'true');
-
-      // Navigate to dashboard
-      window.location.href = 'dashboard.html';
+      return data;
     }
 
-    // Enable/disable button based on input
+    // Optional: refresh profile after linking
+    async function refreshProfile() {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok && data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const partnerId = partnerIdInput.value.trim();
+      if (!partnerId || isLoading) return;
+
+      isLoading = true;
+      linkButton.disabled = true;
+      const originalText = linkButton.innerHTML;
+      linkButton.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Linking...';
+
+      try {
+        await linkPartner(partnerId);
+        await refreshProfile();
+        alert("Successfully linked with your partner!");
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        console.error("Linking error:", error);
+        alert(
+          error.message ||
+            "Failed to link accounts. Please check the Partner ID and try again."
+        );
+      } finally {
+        isLoading = false;
+        linkButton.disabled = false;
+        linkButton.innerHTML =
+          '<i class="fas fa-link"></i> Link Accounts';
+      }
+    });
+
     function checkFormValidity() {
       const partnerId = partnerIdInput.value.trim();
       linkButton.disabled = !partnerId || isLoading;
     }
 
-    partnerIdInput.addEventListener('input', checkFormValidity);
-
-    // Initial check
+    partnerIdInput.addEventListener("input", checkFormValidity);
     checkFormValidity();
 </script>
+
 </body>
 </html>

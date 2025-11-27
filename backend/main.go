@@ -32,6 +32,10 @@ func main() {
 
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
+			
+        	if origin == "" || origin == "null" {
+            return true
+        	}
 			if origin == "http://localhost:5173" {
 				return true
 			}
